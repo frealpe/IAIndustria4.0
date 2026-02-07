@@ -1,0 +1,52 @@
+/* Contenedor Principal para ambos Sidebars */
+.sidebar-container {
+  position: relative;
+  display: flex;
+}
+
+/* Sidebar Principal */
+.sidebar-coreui-right {
+  position: fixed;
+  top: 10px;
+  right: 1px;
+  height: 24vh;
+  width: 260px;
+  z-index: 2000;
+  background-color: rgba(173, 216, 230, 0.8) !important; /* Azul claro con transparencia */
+  overflow-y: auto;
+}
+/* Estilo por defecto del texto */
+/* Estilo por defecto del texto */
+.sidebar-coreui-right .c-nav-link {
+  color: black; /* Letra negra por defecto */
+  background-color: transparent; /* Fondo transparente por defecto */
+  transition: color 0.3s, background-color 0.3s;
+}
+
+/* Efecto al pasar el ratón por encima */
+.sidebar-coreui-right .c-nav-link:hover {
+  color: #007bff; /* Azul oscuro al pasar el ratón */
+  background-color: rgba(240, 240, 240, 0.8); /* Fondo blanco con transparencia */
+  border-radius: 5px;
+}
+/* Personalización del Select */
+/* Personalización del Select */
+.custom-select {
+  width: 210px;
+  padding: 8px;
+  font-size: 14px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  background-color: rgba(173, 216, 230, 0.9); 
+  margin-bottom: 10px;
+  position: fixed;
+  top: 10px;
+  right: 270px; /* Ajusta este valor para moverlo más a la izquierda */
+  z-index: 1150;
+}
+
+.custom-select:focus {
+  outline: none;
+  border-color: #0056b3;
+  background-color: rgba(173, 216, 230, 1); /* Fondo sólido al enfocarse */
+}

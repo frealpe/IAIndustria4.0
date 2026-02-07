@@ -1,0 +1,5671 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass book
+\use_default_options true
+\maintain_unincluded_children false
+\language spanish
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures false
+\graphics default
+\default_output_format default
+\output_sync 1
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style french
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle empty
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+Esp32
+\end_layout
+
+\begin_layout Section
+Qué es PlatformIO? PlatformIO 
+\end_layout
+
+\begin_layout Standard
+Es un ecosistema para el desarrollo de sistemas embebidos (como el ESP32)
+ que funciona como una extensión dentro de Visual Studio Code.
+ A diferencia de herramientas básicas, este permite gestionar automáticamente
+ las librerías y las placas, lo cual es ideal para proyectos complejos como
+ el control de procesos industriales o asistentes de IA.
+\end_layout
+
+\begin_layout Enumerate
+Instalación Paso a Paso Descargar VS Code: 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Instala Visual Studio Code en tu ordenador.
+\end_layout
+
+\begin_layout Standard
+Instalar la Extensión: Abre VS Code, ve al icono de extensiones (cuadrados
+ en la barra lateral) y busca "PlatformIO IDE".
+ Haz clic en instalar.
+\end_layout
+
+\begin_layout Standard
+Reiniciar: Una vez instalado, aparecerá un pequeño icono de una hormiga
+ en la barra lateral izquierda.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Creación de un Nuevo Proyecto Al hacer clic en el icono de la hormiga y
+ seleccionar "Open" > "New Project", deberás completar tres campos clave:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Nombre: Elige un nombre para tu proyecto (ej.
+ Control_Autonomo_ESP32).
+\end_layout
+
+\begin_layout Standard
+Placa (Board): Para la mayoría de los módulos comunes, selecciona Espressif
+ ESP32 Dev Module.
+\end_layout
+
+\begin_layout Standard
+Framework: Selecciona Arduino, que es el más amigable para principiantes
+ ver
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Proyecto-MCP"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename PlatformIO.png
+	lyxscale 20
+	width 5cm
+	height 5cm
+	keepAspectRatio
+
+\end_inset
+
+ 
+\begin_inset Graphics
+	filename Configuracion.png
+	lyxscale 20
+	width 5cm
+	height 5cm
+	keepAspectRatio
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Proyecto MCP
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Proyecto-MCP"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Estructura del Proyecto Un proyecto de PlatformIO se organiza de forma lógica
+ para evitar el desorden:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+src/: Aquí es donde escribes tu código principal (archivo main.cpp).
+\end_layout
+
+\begin_layout Standard
+lib/: Para tus propias librerías locales.
+\end_layout
+
+\begin_layout Standard
+platformio.ini: Este es el archivo de configuración o "cerebro" del proyecto
+ ver 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Estructura-del-proyecto"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename Estructura.png
+	lyxscale 20
+	width 10cm
+	height 10cm
+	keepAspectRatio
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Estructura del proyecto
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Estructura-del-proyecto"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+El Archivo platformio.ini, es un archivo de texto donde le dices a PlatformIO
+ cómo debe tratar a tu placa.
+ Un ejemplo estándar se ve así 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:platformio.ini."
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+[env:esp32dev]
+\end_layout
+
+\begin_layout Plain Layout
+
+platform = espressif32
+\end_layout
+
+\begin_layout Plain Layout
+
+board = esp32dev
+\end_layout
+
+\begin_layout Plain Layout
+
+framework = arduino
+\end_layout
+
+\begin_layout Plain Layout
+
+monitor_speed = 115200 ; 
+\end_layout
+
+\begin_layout Plain Layout
+
+upload_port = /dev/ttyUSB0
+\end_layout
+
+\begin_layout Plain Layout
+
+Configuración para ver datos en consola
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+platformio.ini.
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:platformio.ini."
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Para compilar y cargar el programa por terminal puede escribir las siguientes
+ lineas de codigo ver.
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+#1 pio run -e esp32dev
+\end_layout
+
+\begin_layout Plain Layout
+
+#2 pio run -e esp32dev -t upload
+\end_layout
+
+\begin_layout Plain Layout
+
+#3 ls -l /dev/ttyUSB* /dev/ttyACM* /dev/serial/by-id || true
+\end_layout
+
+\begin_layout Plain Layout
+
+#4 pio run -e esp32dev -t upload --upload-port /dev/ttyUSB0
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Compilar y cargar
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Compilar-y-cargar"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Compilación del Proyecto pio run -e esp32dev
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+¿Qué hace?: Compila (Build) el código fuente del proyecto.
+\end_layout
+
+\begin_layout Itemize
+Detalle: La opción -e esp32dev le indica a PlatformIO que use el entorno
+ específico llamado esp32dev definido en tu archivo platformio.ini.
+ Sirve para verificar si hay errores de sintaxis sin necesidad de conectar
+ la placa.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Subida del Código (Automática) pio run -e esp32dev -t upload
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+¿Qué hace?: Compila el código y luego intenta subirlo (Flash) a la placa
+ conectada.
+\end_layout
+
+\begin_layout Enumerate
+Detalle: El parámetro -t upload (target upload) activa el protocolo de transfere
+ncia.
+ PlatformIO buscará automáticamente en qué puerto USB está conectada tu
+ placa.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Identificación de Puertos (Solo Linux/macOS) ls -l /dev/ttyUSB* /dev/ttyACM*
+ /dev/serial/by-id || true
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+¿Qué hace?: Lista todos los dispositivos seriales y USB conectados al sistema.
+\end_layout
+
+\begin_layout Enumerate
+Detalle: Es una herramienta de diagnóstico.
+ Si tu placa no aparece aquí, es probable que el cable USB esté fallando
+ o falten los drivers (CP2102/CH340).
+ El || true evita que la terminal marque un error si no encuentra ningún
+ dispositivo.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Subida Forzada a un Puerto Específico pio run -e esp32dev -t upload --upload-por
+t /dev/ttyUSB0
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+¿Qué hace?: Obliga a PlatformIO a subir el código a un puerto específico,
+ en este caso /dev/ttyUSB0.
+\end_layout
+
+\begin_layout Enumerate
+Detalle: Se usa cuando tienes varios dispositivos conectados al mismo tiempo
+ (como dos ESP32 o un sensor NPK USB) y quieres asegurarte de que el código
+ vaya exactamente a la placa de control de tu arquitectura.
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Enumerate
+La configuración del archivo para nuestro proyecto se muestra en
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\align center
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "basicstyle={\tiny}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+;MCP PlatformIO configuration file 
+\end_layout
+
+\begin_layout Plain Layout
+
+;Archivo de configuración de PlatformIO con explicaciones en cada línea
+\end_layout
+
+\begin_layout Plain Layout
+
+;[platformio] (Ajustes Globales) 
+\end_layout
+
+\begin_layout Plain Layout
+
+;Es la sección de configuración general del proyecto.
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+;Todo lo que pongas aquí afecta a todo el archivo platformio.ini,
+\end_layout
+
+\begin_layout Plain Layout
+
+;sin importar qué placa o entorno estés usando.
+\end_layout
+
+\begin_layout Plain Layout
+
+;Para qué sirve: Define rutas de carpetas (como data_dir) 
+\end_layout
+
+\begin_layout Plain Layout
+
+;o cuál de todos tus entornos debe ser el prioritario por defecto (default_env).
+\end_layout
+
+\begin_layout Plain Layout
+
+[platformio] 
+\end_layout
+
+\begin_layout Plain Layout
+
+;default_env: entorno que se usará por defecto si no se especifica con -e
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+default_env = esp32dev
+\end_layout
+
+\begin_layout Plain Layout
+
+;data_dir: carpeta donde se almacenan datos del proyecto (ej.
+ archivos para upload) 
+\end_layout
+
+\begin_layout Plain Layout
+
+data_dir = src/data
+\end_layout
+
+\begin_layout Plain Layout
+
+;[common] (Sección de Herencia/Plantilla)
+\end_layout
+
+\begin_layout Plain Layout
+
+;Esta no es una sección oficial de PlatformIO,
+\end_layout
+
+\begin_layout Plain Layout
+
+;sino una convención que usamos los desarrolladores para no repetir código.
+\end_layout
+
+\begin_layout Plain Layout
+
+;Para qué sirve: Es como una "bolsa" donde guardas configuraciones que quieres
+ usar en múltiples placas.
+\end_layout
+
+\begin_layout Plain Layout
+
+;Por ejemplo, si tienes 5 modelos de ESP32 diferentes, defines la versión
+ o las librerías
+\end_layout
+
+\begin_layout Plain Layout
+
+;aquí una sola vez y luego las "llamas" desde los otros entornos usando
+ ${common.nombre_de_variable}.
+\end_layout
+
+\begin_layout Plain Layout
+
+;Dato curioso: Puedes llamarla [common], [config] o como quieras, mientras
+ luego la referencies correctamente.
+\end_layout
+
+\begin_layout Plain Layout
+
+[common] 
+\end_layout
+
+\begin_layout Plain Layout
+
+;version: bandera de preprocesador que se añade a la compilación (ej.
+ para identificar builds) 
+\end_layout
+
+\begin_layout Plain Layout
+
+version = -D BUILD_TAG=V1.0.a0-Build-20260202 
+\end_layout
+
+\begin_layout Plain Layout
+
+;lib_deps: dependencias comunes de librerías (vacío si no hay dependencias
+ compartidas) 
+\end_layout
+
+\begin_layout Plain Layout
+
+lib_deps =
+\end_layout
+
+\begin_layout Plain Layout
+
+;[env:nombre_del_entorno] (Configuración del Entorno) 
+\end_layout
+
+\begin_layout Plain Layout
+
+;Esta es la sección más importante.
+ Cada bloque que empiece con env: define una tarea de compilación específica.
+\end_layout
+
+\begin_layout Plain Layout
+
+;Para qué sirve: Aquí especificas los "fierros" (el hardware).
+\end_layout
+
+\begin_layout Plain Layout
+
+;Le dices a PlatformIO: "Para este entorno llamado 'esp32dev',
+\end_layout
+
+\begin_layout Plain Layout
+
+;usa estas librerías, esta velocidad de subida y este framework".
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+;Multi-entorno: Puedes tener varios.
+ Por ejemplo: ;[env:debug] (para pruebas lentas con muchos mensajes).
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+;[env:release] (para la versión final optimizada).
+\end_layout
+
+\begin_layout Plain Layout
+
+[env:esp32dev] 
+\end_layout
+
+\begin_layout Plain Layout
+
+;platform: plataforma de desarrollo (núcleo y toolchain), aquí Espressif32
+ para ESP32 
+\end_layout
+
+\begin_layout Plain Layout
+
+platform = espressif32 
+\end_layout
+
+\begin_layout Plain Layout
+
+;framework: framework usado por el proyecto (Arduino en este caso) 
+\end_layout
+
+\begin_layout Plain Layout
+
+framework = arduino 
+\end_layout
+
+\begin_layout Plain Layout
+
+;board: placa objetivo definida por PlatformIO (define pines, flash, etc.)
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+board = esp32dev 
+\end_layout
+
+\begin_layout Plain Layout
+
+;board_build.mcu: identificador del microcontrolador (opcional, usado para
+ algunos ajustes) 
+\end_layout
+
+\begin_layout Plain Layout
+
+board_build.mcu = esp32 
+\end_layout
+
+\begin_layout Plain Layout
+
+;board_build.partitions: 
+\end_layout
+
+\begin_layout Plain Layout
+
+ruta a una tabla de particiones personalizada (vacía = usar la por defecto)
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+board_build.partitions = default_ota.csv
+\end_layout
+
+\begin_layout Plain Layout
+
+;upload_protocol: protocolo/utilidad que se usa para subir el firmware (esptool
+ es común en ESP32) 
+\end_layout
+
+\begin_layout Plain Layout
+
+upload_protocol = esptool
+\end_layout
+
+\begin_layout Plain Layout
+
+;lib_deps: dependencias de librerías específicas de este entorno; aquí se
+ incluye lo común 
+\end_layout
+
+\begin_layout Plain Layout
+
+lib_deps =     
+\end_layout
+
+\begin_layout Plain Layout
+
+	${common.lib_deps}
+\end_layout
+
+\begin_layout Plain Layout
+
+; src_build_flags: flags de compilación/definiciones para el código fuente
+ (usa la variable common.version) 
+\end_layout
+
+\begin_layout Plain Layout
+
+src_build_flags = ${common.version}
+\end_layout
+
+\begin_layout Plain Layout
+
+;upload_speed: baudrate usado por la herramienta de subida (esptool) 
+\end_layout
+
+\begin_layout Plain Layout
+
+upload_speed = 921600 
+\end_layout
+
+\begin_layout Plain Layout
+
+;monitor_speed: baudrate para el monitor serie
+\end_layout
+
+\begin_layout Plain Layout
+
+monitor_speed = 115200 
+\end_layout
+
+\begin_layout Plain Layout
+
+;upload_port: puerto serie a usar para subir el firmware.
+\end_layout
+
+\begin_layout Plain Layout
+
+;Si se deja comentado, PlatformIO intentará autodetectar el puerto.
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+;upload_port = /dev/ttyUSB0
+\end_layout
+
+\begin_layout Plain Layout
+
+;monitor_port: puerto a usar para el monitor serie (comentado para autodetección
+)
+\end_layout
+
+\begin_layout Plain Layout
+
+;monitor_port = /dev/ttyUSB0 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Configuración de platformio.in
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Archivos de distribución de memoria
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="6" columns="7">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Nombre
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Tipo
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Subtipo
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none" width="2cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Offset(inicio)
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none" width="2cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Tamaño(hex)
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none" width="2cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Tamaño aprox
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+¿Para qué sirve?
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+nvs
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+data
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+nvs
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0x9000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0x5000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+20KB
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none" width="4cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Guarda configuraciones persistentes (WiFi, parámetros, calibración)
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+otadata
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+data
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ota
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0xE000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0x2000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+8KB
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none" width="4cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Indica qué firmware OTA está activo
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ota_0
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+app
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ota_0
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0x10000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0x1E0000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\eqsim1.9MB$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none" width="4cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Firmware principal (aplicación)
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ota_1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+app
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ota_1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0x1F0000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0x1E0000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\eqsim1.9MB$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none" width="4cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Firmware de respaldo / actualización OTA
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+spiffs
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+data
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+spiffs
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0x3D0000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0x6000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+24 KB
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none" width="4cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Sistema de archivos (logs, JSON, datos)
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Particiones de Esp32 
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:Particiones-de-Esp32"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+El ESP32 tiene memoria flash (por ejemplo 4 MB).
+ Esta tabla le dice al sistema:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+dónde guardar configuraciones
+\end_layout
+
+\begin_layout Itemize
+dónde va el programa
+\end_layout
+
+\begin_layout Itemize
+dónde va el firmware OTA
+\end_layout
+
+\begin_layout Itemize
+dónde guardar archivos (SPIFFS)
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+NVS = Non-Volatile Storage
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Guarda configuraciones persistentes
+\end_layout
+
+\begin_layout Itemize
+Variables que no se borran al apagar
+\end_layout
+
+\begin_layout Itemize
+Ej: WiFi, credenciales, calibraciones, parámetros
+\end_layout
+
+\begin_layout Itemize
+Preferences
+\end_layout
+
+\begin_layout Itemize
+WiFi.begin()
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+otadata
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Aquí el ESP32 guarda cuál firmware OTA está activo
+\end_layout
+
+\begin_layout Itemize
+Indica si está corriendo ota0 u ota1
+\end_layout
+
+\begin_layout Itemize
+Sin esto, OTA no funciona
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+ota0:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Primer espacio para tu programa principal
+\end_layout
+
+\begin_layout Itemize
+Aquí se graba el firmware
+\end_layout
+
+\begin_layout Itemize
+Tamaño ≈ 
+\begin_inset Formula $1.9MB$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Es el firmware activo o uno de respaldo
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+ota1
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Permite actualizar sin borrar el anterior
+\end_layout
+
+\begin_layout Itemize
+Si falla la actualización  vuelve al anterior
+\end_layout
+
+\begin_layout Itemize
+Esto es clave para sistemas industriales / IIoT
+\end_layout
+
+\end_deeper
+\end_deeper
+\end_deeper
+\begin_layout Enumerate
+spiffs:Sistema de archivos SPIFFS
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Guarda archivos
+\end_layout
+
+\begin_layout Itemize
+JSON
+\end_layout
+
+\begin_layout Itemize
+HTML
+\end_layout
+
+\begin_layout Itemize
+CSS
+\end_layout
+
+\begin_layout Itemize
+logs
+\end_layout
+
+\begin_layout Itemize
+modelos pequeños (ej.
+ coeficientes)
+\end_layout
+
+\begin_layout Itemize
+Se mantiene tras reinicios
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Enumerate
+Según la estructura del proeycto(control, IA, IIoT)
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+OTA te permite actualizar controladores sin parar planta
+\end_layout
+
+\begin_layout Itemize
+NVS es ideal para:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+parámetros de control
+\end_layout
+
+\begin_layout Itemize
+ganancias PI
+\end_layout
+
+\begin_layout Itemize
+coeficientes AR/IA
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+SPIFFS sirve para:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+logs
+\end_layout
+
+\begin_layout Standard
+perfiles
+\end_layout
+
+\begin_layout Standard
+datos históricos
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Enumerate
+Versionamiento de firmware ver 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Versionamiento"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+;Determinar Versión de Firmware 
+\end_layout
+
+\begin_layout Plain Layout
+
+; X.Y.Z 
+\end_layout
+
+\begin_layout Plain Layout
+
+; (X) versión mayor 
+\end_layout
+
+\begin_layout Plain Layout
+
+; (Y) versión menor 
+\end_layout
+
+\begin_layout Plain Layout
+
+; (Z) revisión 
+\end_layout
+
+\begin_layout Plain Layout
+
+; Alpha, Beta, 
+\end_layout
+
+\begin_layout Plain Layout
+
+;RC (Alpha es una versión inestable 
+\end_layout
+
+\begin_layout Plain Layout
+
+;Beta una versión mas estable que Alpha
+\end_layout
+
+\begin_layout Plain Layout
+
+; RC (Release Candidate) )
+\end_layout
+
+\begin_layout Plain Layout
+
+; v1.0.Alpha - v1.0.a0 
+\end_layout
+
+\begin_layout Plain Layout
+
+; v2.1.Beta - v1.0.b1
+\end_layout
+
+\begin_layout Plain Layout
+
+; v3.0-RC - v3.0.rc3 
+\end_layout
+
+\begin_layout Plain Layout
+
+; Fecha: Año-mes-día ; v1.0.0a-20260202 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Versionamiento
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Versionamiento"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Section
+Esquema del Proyecto
+\end_layout
+
+\begin_layout Standard
+La figura 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Diagrama-principal-del"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+muestra de manera general la arquitectura del proyecto para el uso de la
+ esp32 en modo Ap o Cliente.
+ 
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename Proyecto.png
+	lyxscale 10
+	width 15cm
+	height 15cm
+	keepAspectRatio
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Diagrama principal del proyecto
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Diagrama-principal-del"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+La Jerarquía de Red y el Broker MQTT En una arquitectura MQTT, el Broker
+ es el nodo central (Hub).
+ Para que un ESP32 funcione como cliente, debe existir una infraestructura
+ de red subyacente que permita el transporte de capas superiores (TCP/IP).
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+En Modo STA: El ESP32 delega la gestión de la red al Router (Gateway).
+ El Router se encarga de la asignación de IPs vía DHCP, la resolución de
+ nombres (DNS) y, lo más importante, el enrutamiento hacia el exterior.
+ Esto permite que el ESP32 alcance brokers en la nube (como AWS IoT, HiveMQ
+ o Adafruit IO) o en servidores locales (como Raspberry Pi con Mosquitto).
+\end_layout
+
+\begin_layout Itemize
+En Modo AP: El ESP32 asume el rol de Gateway.
+ Sin embargo, por defecto, un ESP32 en modo AP no tiene una "salida" a internet
+ a menos que actúe como puente (Bridge), lo cual consume recursos críticos
+ de la CPU y memoria RAM, limitando la estabilidad de la conexión MQTT.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+.
+ El Ciclo de Vida de la Conexión (Stack TCP/IP) Técnicamente, el proceso
+ de reconexión que mencionas (TaskMqttReconnect) opera sobre varias capas
+ del modelo OSI:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Capa 2 (Enlace): El ESP32 negocia la autenticación WPA2 con el Router.
+\end_layout
+
+\begin_layout Itemize
+Capa 3 (Red): El stack LwIP (Lightweight IP) del ESP32 obtiene una dirección
+ IP.
+ Sin una IP válida en la subred del Broker, el socket TCP no puede abrirse.
+\end_layout
+
+\begin_layout Itemize
+Capa 4 (Transporte): Se establece un Handshake TCP en el puerto 1883 (o
+ 8883 para TLS).
+\end_layout
+
+\begin_layout Itemize
+Capa 7 (Aplicación): Se envía el paquete CONNECT de MQTT.
+\end_layout
+
+\begin_layout Standard
+Si el ESP32 estuviera en modo AP, el Broker tendría que "saltar" a la red
+ generada por el ESP32, lo que rompería la escalabilidad: un Broker suele
+ manejar cientos de clientes; no puede estar saltando de red en red.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Gestión de Recursos y Eficiencia El uso de MQTT en modo STA permite aprovechar
+ funciones avanzadas de ahorro de energía:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Modem-Sleep: En modo STA, el ESP32 puede entrar en un estado de bajo consumo
+ entre los intervalos de "Keep Alive" de MQTT, manteniendo la asociación
+ con el Router.
+ En modo AP, la radio debe estar activa constantemente para mantener la
+ baliza (Beacon) de la red visible, lo que drena la batería rápidamente.
+\end_layout
+
+\begin_layout Itemize
+Determinismo en la Tarea: Tu TaskMqttReconnect actúa como una Máquina de
+ Estados.
+ Verifica el bit de evento de WiFi (WIFI_CONNECTED_BIT); si es verdadero,
+ intenta el mqtt_client_connect().
+ Esta separación de intereses (Separation of Concerns) asegura que el stack
+ de red no bloquee la lógica de tu sensor.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+El flujo de información bidireccional se muestra en 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Ciclo-de-Vida-Mqtt"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\align center
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename FlujoInformacion.png
+	lyxscale 10
+	width 10cm
+	height 10cm
+	keepAspectRatio
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Ciclo de Vida de un Mensaje MQTT.
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Ciclo-de-Vida-Mqtt"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Section
+Programación de protocolos de comunicación
+\end_layout
+
+\begin_layout Subsection
+Configuración de variables globales para las conexión wiffi
+\end_layout
+
+\begin_layout Standard
+A continuación se describe mcp_header.hpp, la cual es una lobreria de parámetros
+ globales que permite la configuración de las conexiones de protocolo de
+ comunicación ver 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Configuraciones-globales-del"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "basicstyle={\tiny}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+// -------------------------------------------------------------------
+\end_layout
+
+\begin_layout Plain Layout
+
+// Definiciones 
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+\end_layout
+
+\begin_layout Plain Layout
+
+#define WIFILED 12                             // GPIO12 LED WIFI
+\end_layout
+
+\begin_layout Plain Layout
+
+#define MQTTLED 13                             // GPIO13 LED MQTT 
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+\end_layout
+
+\begin_layout Plain Layout
+
+// CALCULAR LA CAPACIDAD DEL JSON 
+\end_layout
+
+\begin_layout Plain Layout
+
+// Asistente ArduinoJson: https://arduinojson.org/v6/assistant/ 
+\end_layout
+
+\begin_layout Plain Layout
+
+// Documentación: https://arduinojson.org/v6/api/json/deserializejson/ 
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+\end_layout
+
+\begin_layout Plain Layout
+
+const size_t capacitySettings = 1536; 
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+\end_layout
+
+\begin_layout Plain Layout
+
+// Versión de Firmware desde las variables de entorno platformio.ini 
+\end_layout
+
+\begin_layout Plain Layout
+
+// -------------------------------------------------------------------
+\end_layout
+
+\begin_layout Plain Layout
+
+#define TEXTIFY(A) #A 
+\end_layout
+
+\begin_layout Plain Layout
+
+#define ESCAPEQUOTE(A) 
+\end_layout
+
+\begin_layout Plain Layout
+
+TEXTIFY(A) 
+\end_layout
+
+\begin_layout Plain Layout
+
+String device_fw_version = ESCAPEQUOTE(BUILD_TAG); 
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+\end_layout
+
+\begin_layout Plain Layout
+
+//Version de Hardware y Fabricante 
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+\end_layout
+
+\begin_layout Plain Layout
+
+#define device_hw_version   "MCP32 v1 00000000" // Versión del hardware
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+#define device_manufacturer "IOTTSolutions"     // Fabricante 
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+\end_layout
+
+\begin_layout Plain Layout
+
+// Zona configuración Dispositivo 
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+boolean device_config_file;         // Identificador para archivo de configuraci
+ón
+\end_layout
+
+\begin_layout Plain Layout
+
+char    device_config_serial[30];   // Numero de serie de cada Archivo configura
+ción unico
+\end_layout
+
+\begin_layout Plain Layout
+
+char    device_id[30];             // ID del dispositivo   
+\end_layout
+
+\begin_layout Plain Layout
+
+int     device_restart;             // Número de reinicios  
+\end_layout
+
+\begin_layout Plain Layout
+
+char    device_old_user[15];        // Usuario para acceso al servidor Web
+ char    
+\end_layout
+
+\begin_layout Plain Layout
+
+device_old_password[15];    // Contraseña del usuario servidor Web 
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+\end_layout
+
+\begin_layout Plain Layout
+
+// Zona configuración WIFI modo Cliente 
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+\end_layout
+
+\begin_layout Plain Layout
+
+boolean wifi_ip_static;             // Uso de IP Estática DHCP 
+\end_layout
+
+\begin_layout Plain Layout
+
+char    wifi_ssid[30];              // Nombre de la red WiFi           
+       
+\end_layout
+
+\begin_layout Plain Layout
+
+char    wifi_password[30];          // Contraseña de la Red WiFi  
+\end_layout
+
+\begin_layout Plain Layout
+
+char    wifi_ipv4[15];              // Dir IPv4 Estático   
+\end_layout
+
+\begin_layout Plain Layout
+
+char    wifi_gateway[15];           // Dir IPv4 Gateway      
+\end_layout
+
+\begin_layout Plain Layout
+
+char    wifi_subnet[15];            // Dir IPv4 Subred     
+\end_layout
+
+\begin_layout Plain Layout
+
+char    wifi_dns_primary[15];       // Dir IPv4 DNS primario   
+\end_layout
+
+\begin_layout Plain Layout
+
+char    wifi_dns_secondary[15];     // Dir IPv4 DNS secundario  
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+\end_layout
+
+\begin_layout Plain Layout
+
+// Zona configuración WIFI modo AP 
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+\end_layout
+
+\begin_layout Plain Layout
+
+boolean ap_mode;          	  // Uso de Modo AP 
+\end_layout
+
+\begin_layout Plain Layout
+
+char ap_ssid[31];          	 // Nombre del SSID AP       
+\end_layout
+
+\begin_layout Plain Layout
+
+char ap_password[63];           // Contraseña del AP
+\end_layout
+
+\begin_layout Plain Layout
+
+int ap_chanel;                  // Canal AP            
+\end_layout
+
+\begin_layout Plain Layout
+
+int ap_visibility;          // Es visible o no el AP  (0 - Visible  1 -
+ Oculto)
+\end_layout
+
+\begin_layout Plain Layout
+
+int ap_connect;         // Número de conexiones en el AP máx 8 conexiones
+ ESP32 
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+\end_layout
+
+\begin_layout Plain Layout
+
+// Zona configuración MQTT  
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+boolean mqtt_cloud_enable;          // Habilitar MQTT Broker 
+\end_layout
+
+\begin_layout Plain Layout
+
+char    mqtt_cloud_id[30];          // Cliente ID MQTT Broker
+\end_layout
+
+\begin_layout Plain Layout
+
+char    mqtt_user[30];              // Usuario MQTT Broker  
+\end_layout
+
+\begin_layout Plain Layout
+
+char    mqtt_password[39];          // Contraseña del MQTT Broker 
+\end_layout
+
+\begin_layout Plain Layout
+
+char    mqtt_server[39];            // Servidor del MQTT Broker 
+\end_layout
+
+\begin_layout Plain Layout
+
+int     mqtt_port;                  // Puerto servidor MQTT Broker 
+\end_layout
+
+\begin_layout Plain Layout
+
+boolean mqtt_retain;                // Habilitar mensajes retenidos 
+\end_layout
+
+\begin_layout Plain Layout
+
+int     mqtt_qos;                   // Calidad del servicio 
+\end_layout
+
+\begin_layout Plain Layout
+
+boolean mqtt_time_send;             // Habilitar en envio de datos 
+\end_layout
+
+\begin_layout Plain Layout
+
+int     mqtt_time_interval;         // Tiempo de envio por MQTT en segundos
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+boolean mqtt_status_send;       	// Habilitar en envio de estados 
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+\end_layout
+
+\begin_layout Plain Layout
+
+// Zona Firmware Update TODO: Para La API REST 
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+\end_layout
+
+\begin_layout Plain Layout
+
+size_t  content_len; 
+\end_layout
+
+\begin_layout Plain Layout
+
+#define U_PART U_SPIFFS             // Unidad de almacenamiento para Firmware
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+//Update U_PART formatea en firmware U_SPIFFS formatea en el SPIFFS 
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+\end_layout
+
+\begin_layout Plain Layout
+
+// Zona EEPROM para contador de reinicios 
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+\end_layout
+
+\begin_layout Plain Layout
+
+#define Start_Address 0 
+\end_layout
+
+\begin_layout Plain Layout
+
+#define Restart_Address Start_Address + sizeof(int)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Configuraciones globales del dispositivo
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Configuraciones-globales-del"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Configuración de Lectura, Escritura y Reset de parámetros.
+\end_layout
+
+\begin_layout Standard
+La librería ArduinoJson permite de manera eficiente en un entorno industrial
+ o de desarrollo con microcontroladores (como un Raspberry Pi PLC o ESP32),
+ configurar de manera inteligente la gestión de la memoria 
+\begin_inset Flex URL
+status open
+
+\begin_layout Plain Layout
+
+https://arduinojson.org/v7/assistant/#/step1
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+Configuración de Memoria: Static vs Dynamic: La elección del "Document"
+ es el paso más crítico en ArduinoJson 7.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+JsonDocument (Recomendado para V7): En la versión más reciente, ya no necesitas
+ preocuparte por elegir entre Static o Dynamic en la mayoría de los casos;
+ el objeto JsonDocument gestiona el heap de forma automática y eficiente.
+\end_layout
+
+\begin_layout Itemize
+Capacidad: Aunque es dinámico, si conoces el tamaño máximo de tus archivos,
+ es una buena práctica pre-asignar espacio para evitar fragmentación.
+\end_layout
+
+\begin_layout Itemize
+Se debe agregar la primera librería que permita trabajar con archivos Json,
+ se debe configurar el archivo platformio.ini.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+platformio.ini
+\end_layout
+
+\begin_layout Plain Layout
+
+	lib_deps =     
+\end_layout
+
+\begin_layout Plain Layout
+
+		bblanchon/ArduinoJson@^6.21.5
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Standard
+Para la configuración de los parámetros de conexión wifi mediante archvos
+ Json tendremos las siguiente arquitectura.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename Diagrama_Settings.png
+	lyxscale 10
+	width 15cm
+	height 15cm
+	keepAspectRatio
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Arquitectura de configuración Wiffi
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Arquitectura-de-configuración"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+La figura 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Arquitectura-de-configuración"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ muestra las tres funciones asociadas a la configuración del esp32 de la
+ librería mcp_settings.hpp ver 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:mcp_settings.hpp"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+, se muestra las formas de conexión a la red ya sea como usuario o punto
+ de acceso.
+ De la misma manera se establece el protocolo Mqtt Si no llega ninguna configura
+ción toma los parámetros por defecto de fabrica 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "language=C,basicstyle={\tiny},breaklines=true,showstringspaces=false"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+ boolean settingsRead(); 
+\end_layout
+
+\begin_layout Plain Layout
+
+//Leer parámetros 
+\end_layout
+
+\begin_layout Plain Layout
+
+void settingsReset(); 
+\end_layout
+
+\begin_layout Plain Layout
+
+//Reiniciar parámetros 
+\end_layout
+
+\begin_layout Plain Layout
+
+boolean settingsSave();
+\end_layout
+
+\begin_layout Plain Layout
+
+//Guardar parámetros 
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+mcp_settings.hpp
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:mcp_settings.hpp"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+El código asociado a la función boolean settingsRead se muestra en 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:settingsRead"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float algorithm
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "language=C,basicstyle={\tiny},breaklines=true,showstringspaces=false"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+boolean settingsRead(){
+\end_layout
+
+\begin_layout Plain Layout
+
+    DynamicJsonDocument jsonSettings(capacitySettings);
+\end_layout
+
+\begin_layout Plain Layout
+
+         File file = SPIFFS.open("/settings.json", "r");
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+    if(deserializeJson(jsonSettings, file)){
+\end_layout
+
+\begin_layout Plain Layout
+
+        // Tomar los valores de Fábrica         
+\end_layout
+
+\begin_layout Plain Layout
+
+		settingsReset();         
+\end_layout
+
+\begin_layout Plain Layout
+
+		DeserializationError error = deserializeJson(jsonSettings, file);    
+     
+\end_layout
+
+\begin_layout Plain Layout
+
+		log("[ ERROR ] Falló la lectura de las configuraciones, tomando valores
+ por defecto");         
+\end_layout
+
+\begin_layout Plain Layout
+
+			if(error){             
+\end_layout
+
+\begin_layout Plain Layout
+
+			log("[ ERROR ] " + String(error.c_str()));         
+\end_layout
+
+\begin_layout Plain Layout
+
+		}
+\end_layout
+
+\begin_layout Plain Layout
+
+        return false; 
+\end_layout
+
+\begin_layout Plain Layout
+
+   }else{
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+        
+\end_layout
+
+\begin_layout Plain Layout
+
+// Dispositivo settings.json         
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+        
+\end_layout
+
+\begin_layout Plain Layout
+
+device_config_file = jsonSettings["device_config_file"];
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(device_config_serial, jsonSettings["device_config_serial"],sizeof(device
+_config_serial));
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(device_id, jsonSettings["device_id"], sizeof(device_id));
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(device_old_user, jsonSettings["device_old_user"], sizeof(device_old_user
+));          
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(device_old_password, jsonSettings["device_old_password"], sizeof(device_
+old_password));          
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+        
+\end_layout
+
+\begin_layout Plain Layout
+
+// WIFI Cliente settings.json         
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+        
+\end_layout
+
+\begin_layout Plain Layout
+
+wifi_ip_static = jsonSettings["wifi_ip_static"];         
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(wifi_ssid, jsonSettings["wifi_ssid"], sizeof(wifi_ssid));      
+   
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(wifi_password, jsonSettings["wifi_password"], sizeof(wifi_password));
+                 
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(wifi_ipv4, jsonSettings["wifi_ipv4"], sizeof(wifi_ipv4));      
+   
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(wifi_subnet, jsonSettings["wifi_subnet"], sizeof(wifi_subnet));
+         
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(wifi_gateway, jsonSettings["wifi_gateway"], sizeof(wifi_gateway));
+         
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(wifi_dns_primary, jsonSettings["wifi_dns_primary"], sizeof(wifi_dns_prim
+ary));         
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(wifi_dns_secondary, jsonSettings["wifi_dns_secondary"], sizeof(wifi_dns_
+secondary));         
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+        
+\end_layout
+
+\begin_layout Plain Layout
+
+// WIFI AP settings.json         
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+        
+\end_layout
+
+\begin_layout Plain Layout
+
+ap_mode = jsonSettings["ap_mode"];         
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(ap_ssid, jsonSettings["ap_ssid"], sizeof(ap_ssid));         
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(ap_password, jsonSettings["ap_password"], sizeof(ap_password));
+         
+\end_layout
+
+\begin_layout Plain Layout
+
+ap_visibility = jsonSettings["ap_visibility"];         
+\end_layout
+
+\begin_layout Plain Layout
+
+ap_chanel = jsonSettings["ap_chanel"];         
+\end_layout
+
+\begin_layout Plain Layout
+
+ap_connect = jsonSettings["ap_connect"];         
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+        
+\end_layout
+
+\begin_layout Plain Layout
+
+// Cloud settings.json         
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+        
+\end_layout
+
+\begin_layout Plain Layout
+
+mqtt_cloud_enable = jsonSettings["mqtt_cloud_enable"];         
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(mqtt_user, jsonSettings["mqtt_user"], sizeof(mqtt_user));      
+   
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(mqtt_password, jsonSettings["mqtt_password"], sizeof(mqtt_password));
+         
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(mqtt_server, jsonSettings["mqtt_server"], sizeof(mqtt_server));
+         
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(mqtt_cloud_id, jsonSettings["mqtt_cloud_id"], sizeof(mqtt_cloud_id));
+         
+\end_layout
+
+\begin_layout Plain Layout
+
+mqtt_port = jsonSettings["mqtt_port"];         
+\end_layout
+
+\begin_layout Plain Layout
+
+mqtt_retain = jsonSettings["mqtt_retain"];        
+\end_layout
+
+\begin_layout Plain Layout
+
+mqtt_qos = jsonSettings["mqtt_qos"];         
+\end_layout
+
+\begin_layout Plain Layout
+
+mqtt_time_send = jsonSettings["mqtt_time_send"];         
+\end_layout
+
+\begin_layout Plain Layout
+
+mqtt_time_interval = jsonSettings["mqtt_time_interval"];         
+\end_layout
+
+\begin_layout Plain Layout
+
+mqtt_status_send = jsonSettings["mqtt_status_send"];
+\end_layout
+
+\begin_layout Plain Layout
+
+file.close();         
+\end_layout
+
+\begin_layout Plain Layout
+
+log("[ INFO ] Lectura de las configuraciones correcta");         
+\end_layout
+
+\begin_layout Plain Layout
+
+return true;     
+\end_layout
+
+\begin_layout Plain Layout
+
+} 
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+settingsRead
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:settingsRead"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+El código asociado a la función void settingsReset se muestra en 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:settingsReset"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "language=C,basicstyle={\tiny},breaklines=true,showstringspaces=false"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+void settingsReset(); 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+void settingsReset() {
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+// Dispositivo settings.json   
+\end_layout
+
+\begin_layout Plain Layout
+
+//-------------------------------------------------------------------  
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+device_config_file = true; 
+\end_layout
+
+\begin_layout Plain Layout
+
+// Habilita el archivo de configuración   
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(device_config_serial, deviceID().c_str(),           
+\end_layout
+
+\begin_layout Plain Layout
+
+sizeof(device_config_serial));
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(device_id, "adminmcp", sizeof(device_id)); 
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(device_old_user, "admin", sizeof(device_old_user)); 
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(device_old_password, "admin",sizeof(device_old_password)); 
+\end_layout
+
+\begin_layout Plain Layout
+
+// -------------------------------------------------------------------
+\end_layout
+
+\begin_layout Plain Layout
+
+// WIFI Cliente settings.json     
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+   
+\end_layout
+
+\begin_layout Plain Layout
+
+wifi_ip_static = jsonSettings["wifi_ip_static"]; 	
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(wifi_ssid, jsonSettings["wifi_ssid"],             
+\end_layout
+
+\begin_layout Plain Layout
+
+		 	sizeof(wifi_ssid)); 					     
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(wifi_password, jsonSettings["wifi_password"],
+\end_layout
+
+\begin_layout Plain Layout
+
+            sizeof(wifi_password)); 				 
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(wifi_ipv4, jsonSettings["wifi_ipv4"],
+\end_layout
+
+\begin_layout Plain Layout
+
+            sizeof(wifi_ipv4)); 					 
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(wifi_subnet, jsonSettings["wifi_subnet"],
+\end_layout
+
+\begin_layout Plain Layout
+
+            sizeof(wifi_subnet)); 				   
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(wifi_gateway, jsonSettings["wifi_gateway"],
+\end_layout
+
+\begin_layout Plain Layout
+
+            sizeof(wifi_gateway)); 				  
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(wifi_dns_primary, jsonSettings["wifi_dns_primary"],
+\end_layout
+
+\begin_layout Plain Layout
+
+            sizeof(wifi_dns_primary)); 			  
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(wifi_dns_secondary, jsonSettings["wifi_dns_secondary"],
+\end_layout
+
+\begin_layout Plain Layout
+
+            sizeof(wifi_dns_secondary)); 		    
+\end_layout
+
+\begin_layout Plain Layout
+
+// -------------------------------------------------------------------
+\end_layout
+
+\begin_layout Plain Layout
+
+// WIFI AP settings.json     
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+ap_mode = jsonSettings["ap_mode"];                   
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(ap_ssid, jsonSettings["ap_ssid"], sizeof(ap_ssid)); 
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(ap_password, jsonSettings["ap_password"],
+\end_layout
+
+\begin_layout Plain Layout
+
+            sizeof(ap_password));                  		 
+\end_layout
+
+\begin_layout Plain Layout
+
+ap_visibility = jsonSettings["ap_visibility"]; 			 
+\end_layout
+
+\begin_layout Plain Layout
+
+ap_chanel = jsonSettings["ap_chanel"];         			 
+\end_layout
+
+\begin_layout Plain Layout
+
+ap_connect = jsonSettings["ap_connect"];       			 
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+// Cloud settings.json     
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+mqtt_cloud_enable = jsonSettings["mqtt_cloud_enable"]; 
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(mqtt_user, jsonSettings["mqtt_user"],
+\end_layout
+
+\begin_layout Plain Layout
+
+            sizeof(mqtt_user)); 					   
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(mqtt_password, jsonSettings["mqtt_password"],
+\end_layout
+
+\begin_layout Plain Layout
+
+            sizeof(mqtt_password)); 				   
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(mqtt_server, jsonSettings["mqtt_server"],
+\end_layout
+
+\begin_layout Plain Layout
+
+            sizeof(mqtt_server)); 					 
+\end_layout
+
+\begin_layout Plain Layout
+
+strlcpy(mqtt_cloud_id, jsonSettings["mqtt_cloud_id"],
+\end_layout
+
+\begin_layout Plain Layout
+
+            sizeof(mqtt_cloud_id)); 				   
+\end_layout
+
+\begin_layout Plain Layout
+
+mqtt_port = jsonSettings["mqtt_port"];     			
+\end_layout
+
+\begin_layout Plain Layout
+
+mqtt_retain = jsonSettings["mqtt_retain"]; 			
+\end_layout
+
+\begin_layout Plain Layout
+
+mqtt_qos = jsonSettings["mqtt_qos"];       			
+\end_layout
+
+\begin_layout Plain Layout
+
+mqtt_time_send = jsonSettings["mqtt_time_send"];     
+\end_layout
+
+\begin_layout Plain Layout
+
+mqtt_time_interval = jsonSettings["mqtt_time_interval"];     
+\end_layout
+
+\begin_layout Plain Layout
+
+mqtt_status_send = jsonSettings["mqtt_status_send"];
+\end_layout
+
+\begin_layout Plain Layout
+
+    file.close();     
+\end_layout
+
+\begin_layout Plain Layout
+
+	log("[ INFO ] Lectura de las configuraciones correcta");     
+\end_layout
+
+\begin_layout Plain Layout
+
+	return true;  
+\end_layout
+
+\begin_layout Plain Layout
+
+	} 
+\end_layout
+
+\begin_layout Plain Layout
+
+} 
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+settingsReset
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:settingsReset"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+El código asociado a la función void settingsSave se meustra 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:settingsSave"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "language=C,basicstyle={\tiny},breaklines=true,showstringspaces=false"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+//Reiniciar parámetros 
+\end_layout
+
+\begin_layout Plain Layout
+
+boolean settingsSave() {   
+\end_layout
+
+\begin_layout Plain Layout
+
+	// StaticJsonDocument<capacitySettings> jsonSettings;   
+\end_layout
+
+\begin_layout Plain Layout
+
+DynamicJsonDocument jsonSettings(capacitySettings); 
+\end_layout
+
+\begin_layout Plain Layout
+
+  File file =
+\end_layout
+
+\begin_layout Plain Layout
+
+      SPIFFS.open("/settings.json", "w+"); 
+\end_layout
+
+\begin_layout Plain Layout
+
+  if (file) { // Si el archivo se abrió correctamente     
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+// Dispositivo settings.json     
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["device_config_file"] = 
+\end_layout
+
+\begin_layout Plain Layout
+
+       device_config_file; // Guardar config file     
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["device_config_serial"] =         
+\end_layout
+
+\begin_layout Plain Layout
+
+	   device_config_serial;                            
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["device_id"] = device_id;                
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["device_old_user"] = device_old_user;    
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["device_old_password"] =
+\end_layout
+
+\begin_layout Plain Layout
+
+        device_old_password; // Guardar old password     
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+// WIFI Cliente settings.json     
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["wifi_ip_static"] = wifi_ip_static;        
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["wifi_ssid"] = wifi_ssid;                   
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["wifi_password"] = wifi_password;          
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["wifi_ipv4"] = wifi_ipv4;                 
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["wifi_subnet"] = wifi_subnet;               
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["wifi_gateway"] = wifi_gateway;            
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["wifi_dns_primary"] = wifi_dns_primary;    
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["wifi_dns_secondary"] =
+\end_layout
+
+\begin_layout Plain Layout
+
+        wifi_dns_secondary; // Guardar DNS secundario     
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+// WIFI AP settings.json     
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["ap_mode"] = ap_mode;                
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["ap_ssid"] = ap_ssid;              
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["ap_password"] = ap_password;         
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["ap_visibility"] = ap_visibility;     
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["ap_chanel"] = ap_chanel;             
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["ap_connect"] = ap_connect;          
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+// Cloud settings.json     
+\end_layout
+
+\begin_layout Plain Layout
+
+// ------------------------------------------------------------------- 
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["mqtt_cloud_enable"] =
+\end_layout
+
+\begin_layout Plain Layout
+
+        mqtt_cloud_enable;                              
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["mqtt_user"] = mqtt_user;              
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["mqtt_password"] = mqtt_password;      
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["mqtt_server"] = mqtt_server;          
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["mqtt_cloud_id"] = mqtt_cloud_id;       
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["mqtt_port"] = mqtt_port;              
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["mqtt_retain"] = mqtt_retain;           
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["mqtt_qos"] = mqtt_qos;                
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["mqtt_time_send"] = mqtt_time_send;      
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["mqtt_time_interval"] =
+\end_layout
+
+\begin_layout Plain Layout
+
+        mqtt_time_interval;                                  
+\end_layout
+
+\begin_layout Plain Layout
+
+jsonSettings["mqtt_status_send"] = mqtt_status_send; 
+\end_layout
+
+\begin_layout Plain Layout
+
+    serializeJsonPretty(jsonSettings, file);     
+\end_layout
+
+\begin_layout Plain Layout
+
+file.close();                           
+\end_layout
+
+\begin_layout Plain Layout
+
+log("[ INFO ] Configuración Guardada correctamente");     
+\end_layout
+
+\begin_layout Plain Layout
+
+serializeJsonPretty(jsonSettings, Serial);     
+\end_layout
+
+\begin_layout Plain Layout
+
+return true;   
+\end_layout
+
+\begin_layout Plain Layout
+
+} else {     
+\end_layout
+
+\begin_layout Plain Layout
+
+log("[ ERROR ] Falló el guardado de la configuración");     
+\end_layout
+
+\begin_layout Plain Layout
+
+return false;  
+\end_layout
+
+\begin_layout Plain Layout
+
+} 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+settingsSave
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:settingsSave"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Ciclo de Vida del MQtt
+\end_layout
+
+\begin_layout Standard
+La grafica 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Ciclo-de-vida"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+muestra el ciclo de vida del mensaje tanto de la transmisión y recepción
+ de los mensaje mediante el protoclo de comunicación Mqtt
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename CicloMqtt.png
+	lyxscale 10
+	width 15cm
+	height 15cm
+	keepAspectRatio
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Ciclo de vida de Mqtt
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Ciclo-de-vida"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+Ciclo infinito (FreeRtos)
+\end_layout
+
+\begin_layout Enumerate
+Empieza con una función de FreeRTOS para crear una "Tarea" (un hilo de ejecución
+), 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+texttt{xTaskCreate(TaskMqttReconnect, "TaskMqttReconnect", 1024 * 6, NULL,
+ 2, NULL)}
+\end_layout
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+\begin_inset Argument item:1
+status open
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+
+TaskMqttReconnect : 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+¿Qué es?: La función que contiene el código de la tarea.
+ 
+\end_layout
+
+\begin_layout Itemize
+En resumen: "Oye ESP32, quiero que ejecutes ESTA función en paralelo".
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+\begin_inset Argument item:1
+status open
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+
+"TaskMqttReconnect": 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+¿Qué es?: Un nombre en texto simple para la tarea.
+ 
+\end_layout
+
+\begin_layout Itemize
+Para qué sirve: Solo para depuración (debug).
+ Si el sistema falla, te dirá "Falló en la tarea llamada 'TaskMqttReconnect'".
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+\begin_inset Argument item:1
+status open
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+
+1024 * 6 (6144): 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+¿Qué es?: El tamaño de la Memoria Stack (pila) asignada a esta tarea en
+ Bytes.
+ 
+\end_layout
+
+\begin_layout Itemize
+Importante: Como tu tarea usa JSON (DynamicJsonDocument), strings y WiFi,
+ necesita bastante memoria.
+ 6KB (6144) es un valor seguro para evitar que se desborde (Stack Overflow)
+ y el ESP32 se reinicie.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+\begin_inset Argument item:1
+status open
+
+\begin_layout Plain Layout
+4
+\end_layout
+
+\end_inset
+
+NULL: 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+¿Qué es?: Parámetros que le podrías pasar a la función.
+ 
+\end_layout
+
+\begin_layout Itemize
+En este caso: No necesitas pasarle ninguna variable extra al iniciar, así
+ que se deja vacío (NULL).
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+\begin_inset Argument item:1
+status open
+
+\begin_layout Plain Layout
+5
+\end_layout
+
+\end_inset
+
+2:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+¿Qué es?: La Prioridad de la tarea.
+ 
+\end_layout
+
+\begin_layout Itemize
+Escala: Números más altos = Mayor urgencia.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+La tarea WiFi tiene prioridad 3 (Más importante).
+ 
+\end_layout
+
+\begin_layout Itemize
+Esta tarea MQTT tiene prioridad 2.
+ 
+\end_layout
+
+\begin_layout Itemize
+La tarea del LED tiene prioridad 1 (Menos importante).
+ 
+\end_layout
+
+\begin_layout Itemize
+Significado: Si la CPU está muy ocupada, atenderá primero al WiFi, luego
+ al MQTT y por último al LED.
+ 
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Enumerate
+\begin_inset Argument item:1
+status open
+
+\begin_layout Plain Layout
+6
+\end_layout
+
+\end_inset
+
+NULL: 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+¿Qué es?: El "Manejador" (Handle) de la tarea.
+ 
+\end_layout
+
+\begin_layout Itemize
+Para qué sirve: Si quisieras pausar, reanudar o eliminar esta tarea desde
+ otra parte del código, necesitarías guardar su referencia aquí.
+ Como no planeas manipularla externamente, se deja en NULL.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+// mcp_tasks.hpp 
+\end_layout
+
+\begin_layout Plain Layout
+
+void TaskMqttReconnect(void *pvParamenters) {
+\end_layout
+
+\begin_layout Plain Layout
+
+  (void)pvParamenters;
+\end_layout
+
+\begin_layout Plain Layout
+
+  while (1) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    if ((WiFi.status() == WL_CONNECTED)) {     
+\end_layout
+
+\begin_layout Plain Layout
+
+	if (mqtt_server != 0) {         
+\end_layout
+
+\begin_layout Plain Layout
+
+		mqttloop();                       
+\end_layout
+
+\begin_layout Plain Layout
+
+	if (mqttClient.connected()) {
+\end_layout
+
+\begin_layout Plain Layout
+
+          if (millis() - lasMsg > mqtt_time_interval) { 
+\end_layout
+
+\begin_layout Plain Layout
+
+            lasMsg = millis();             
+\end_layout
+
+\begin_layout Plain Layout
+
+			mqtt_publish(); 
+\end_layout
+
+\begin_layout Plain Layout
+
+            log("INFO: Mansaje enviado por MQTT...");
+\end_layout
+
+\begin_layout Plain Layout
+
+          }
+\end_layout
+
+\begin_layout Plain Layout
+
+        }
+\end_layout
+
+\begin_layout Plain Layout
+
+      }
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Función TaskMqttReconnect.
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Función-TaskMqttReconnect."
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Esta tarea de FreeRTOS actúa como un monitor persistente que gestiona la
+ comunicación con el exterior.
+ Primero, valida la Capa de Enlace verificando que el WiFi esté conectado;
+ si es así, y existe una dirección de servidor válida, ejecuta mqttloop()
+ para procesar los paquetes de red pendientes y mantener latente la sesión
+ con el Broker.
+ Una vez confirmada la conexión activa en la Capa de Aplicación, utiliza
+ un mecanismo de conteo de tiempo no bloqueante (millis()) para enviar datos
+ a través de mqtt_publish() solo cuando se cumple el intervalo definido,
+ evitando saturar la red y permitiendo que el sistema siga respondiendo
+ a otros procesos sin detenerse.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+La función 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Función-TaskMqttReconnect."
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ llama internamente a 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+texttt{mqttloop}
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+\begin_inset Argument item:1
+status open
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+texttt{mqttloop}
+\end_layout
+
+\end_inset
+
+ la función 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Función-mqttloop."
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ hace parte de la librería de configuración 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+texttt{mcp
+\backslash
+_mqtt.hpp}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "language=C,breaklines=true"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+void mqttloop() {
+\end_layout
+
+\begin_layout Plain Layout
+
+  if (mqtt_cloud_enable) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    if (!mqttClient.connected()) {
+\end_layout
+
+\begin_layout Plain Layout
+
+      long now = millis();
+\end_layout
+
+\begin_layout Plain Layout
+
+      if ((now < 60000) || ((now - lastMqttReconnectAttempt) > 120000))
+ {
+\end_layout
+
+\begin_layout Plain Layout
+
+        lastMqttReconnectAttempt = now;
+\end_layout
+
+\begin_layout Plain Layout
+
+        if (mqtt_connect()) {
+\end_layout
+
+\begin_layout Plain Layout
+
+          lastMqttReconnectAttempt = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+        }
+\end_layout
+
+\begin_layout Plain Layout
+
+        // setOnSingle(MQTTLED);
+\end_layout
+
+\begin_layout Plain Layout
+
+      }
+\end_layout
+
+\begin_layout Plain Layout
+
+    }else {
+\end_layout
+
+\begin_layout Plain Layout
+
+      mqttClient.loop();
+\end_layout
+
+\begin_layout Plain Layout
+
+      // setOffSingle(MQTTLED);
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Función mqttloop().
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Función-mqttloop."
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Esta función actúa como el motor de gestión de conectividad del cliente
+ MQTT, operando bajo una lógica de reconexión inteligente y no bloqueante.
+ Su flujo principal valida primero si el servicio está habilitado y verifica
+ el estado de la sesión; si la conexión se ha perdido, emplea un algoritmo
+ de temporización basado en millis() que limita los intentos de reconexión
+ (una vez cada 120minutos tras el primer minuto de arranque), evitando así
+ que el procesador sature el stack de red con peticiones fallidas constantes.
+ Cuando la sesión es exitosa, la función delega el control a mqttClient.loop(),
+ que es el método encargado de mantener vivo el "Keep Alive" con el servidor,
+ procesar los mensajes entrantes y gestionar los buffers de salida, asegurando
+ una comunicación fluida y estable con el broker.
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Argument item:1
+status open
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+
+Se llama entonces a la función 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+texttt{mqtt
+\backslash
+_connect
+\backslash
+{()}
+\end_layout
+
+\end_inset
+
+ la cual se describe en 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Función-mqtt_connect"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "language=C,basicstyle={\scriptsize},breaklines=true,showstringspaces=false"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+boolean mqtt_connect() {
+\end_layout
+
+\begin_layout Plain Layout
+
+  mqttClient.setServer(mqtt_server, mqtt_port);
+\end_layout
+
+\begin_layout Plain Layout
+
+  mqttClient.setCallback(callback);
+\end_layout
+
+\begin_layout Plain Layout
+
+  log("MQTT: Intentando conexión al Broker MQTT...");
+\end_layout
+
+\begin_layout Plain Layout
+
+  if (mqttClient.connect(mqtt_cloud_id, mqtt_user, mqtt_password,
+\end_layout
+
+\begin_layout Plain Layout
+
+     mqtt_willTopic.c_str(), mqtt_willQoS, mqtt_willRetain,
+\end_layout
+
+\begin_layout Plain Layout
+
+	 mqtt_willMessage.c_str())) {     
+\end_layout
+
+\begin_layout Plain Layout
+
+	 log("INFO: Conectado al Broker MQTT -> " + String(mqtt_server));
+\end_layout
+
+\begin_layout Plain Layout
+
+     mqttClient.setBufferSize(1024 * 5);     
+\end_layout
+
+\begin_layout Plain Layout
+
+ 	log("INFO: Buffer MQTT Size: " + String(mqttClient.getBufferSize()) +
+\end_layout
+
+\begin_layout Plain Layout
+
+        " Bytes");
+\end_layout
+
+\begin_layout Plain Layout
+
+    String topic_subscribe = String(mqtt_topic);     
+\end_layout
+
+\begin_layout Plain Layout
+
+	topic_subscribe.toCharArray(topic,150);
+\end_layout
+
+\begin_layout Plain Layout
+
+    if (mqttClient.subscribe(topic)) {
+\end_layout
+
+\begin_layout Plain Layout
+
+		log("INFO: Suscrito al tópico: " + String(topic));     
+\end_layout
+
+\begin_layout Plain Layout
+
+	} else {       
+\end_layout
+
+\begin_layout Plain Layout
+
+	  log("ERROR: MQTT - Falló la suscripción");
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+    String mqtt_willMessageCon = 
+\end_layout
+
+\begin_layout Plain Layout
+
+		"{
+\backslash
+"connected
+\backslash
+": true, 
+\backslash
+"username
+\backslash
+": 
+\backslash
+"" + String(mqtt_user) + "
+\backslash
+" }";
+\end_layout
+
+\begin_layout Plain Layout
+
+    mqttClient.publish(mqtt_willTopic.c_str(), mqtt_willMessageCon.c_str());
+   
+\end_layout
+
+\begin_layout Plain Layout
+
+	} else {     
+\end_layout
+
+\begin_layout Plain Layout
+
+	log("ERROR: MQTT - Falló, código de error = " + String(mqttClient.state()));
+     
+\end_layout
+
+\begin_layout Plain Layout
+
+	return (0);
+\end_layout
+
+\begin_layout Plain Layout
+
+   }
+\end_layout
+
+\begin_layout Plain Layout
+
+  return (1); 
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Función mqtt_connect().
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Función-mqtt_connect"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Esta función gestiona el proceso de autenticación y establecimiento de sesión
+ entre el ESP32 y el servidor Mosquitto.
+ Primero, configura el punto de enlace y el puerto, definiendo además una
+ función de callback para procesar los mensajes entrantes.
+ Al intentar la conexión, el código envía no solo las credenciales de usuario,
+ sino también la configuración del Last Will and Testament (LWT), un mecanismo
+ de seguridad que permite al Broker notificar a otros dispositivos si el
+ ESP32 se desconecta inesperadamente.
+ Una vez establecida la sesión, se amplía el buffer de red a 5 KB para permitir
+ el manejo de paquetes de datos de gran tamaño (ideales para telemetría
+ compleja), se suscribe automáticamente al tópico de control Plc/Esp32 y
+ publica un mensaje de estado en formato JSON para confirmar que el sistema
+ está operativo y correctamente identificado.
+ La función 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+texttt{mqttClient.setCallback(callback)}
+\end_layout
+
+\end_inset
+
+ es fundamental ya que es la encargada de procesar el mensaje de entrada
+ sin esta línea, puedes recibir mensajes, pero tu código no sabría qué función
+ debe procesarlos y los ignoraría.
+\end_layout
+
+\begin_layout Itemize
+Registra la función: Le dice a la librería PubSubClient que la función llamada
+ callback (que definiste mas abajo) es la "Elegida".
+\end_layout
+
+\begin_layout Itemize
+Automatización: A partir de ese momento, cada vez que el ESP32 reciba un
+ mensaje MQTT de un tópico al que esté suscrito, la librería interrumpe
+ lo que esté haciendo y ejecuta automáticamente la función callback pasándole
+ el mensaje.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "language=C,basicstyle={\tiny},breaklines=true,showstringspaces=false"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+void callback(char *topic, byte *payload, unsigned int length) {
+\end_layout
+
+\begin_layout Plain Layout
+
+  String command = "";   String str_topic(topic);
+\end_layout
+
+\begin_layout Plain Layout
+
+  for (int16_t i = 0; i < length; i++) {     
+\end_layout
+
+\begin_layout Plain Layout
+
+	command += (char)payload[i];   
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+  command.trim();   
+\end_layout
+
+\begin_layout Plain Layout
+
+  log("INFO: MQTT Tópico  --> " + str_topic);   
+\end_layout
+
+\begin_layout Plain Layout
+
+  log("INFO: MQTT Mensaje --> " + command);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  DynamicJsonDocument JsonCommand(1024);   
+\end_layout
+
+\begin_layout Plain Layout
+
+  DeserializationError error = deserializeJson(JsonCommand, command);
+\end_layout
+
+\begin_layout Plain Layout
+
+  if (error) {     
+\end_layout
+
+\begin_layout Plain Layout
+
+	mqtt_response("Desconocido", "Desconocido", "",
+\end_layout
+
+\begin_layout Plain Layout
+
+                  "{
+\backslash
+"msg
+\backslash
+": 
+\backslash
+"¡Error, no es un formato JSON!
+\backslash
+"}");
+\end_layout
+
+\begin_layout Plain Layout
+
+    return;
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+  // Ignorar mensajes propios (evitar bucle infinito)   
+\end_layout
+
+\begin_layout Plain Layout
+
+  if (JsonCommand.containsKey("deviceMqttId")) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    return;   
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+  if (!JsonCommand.containsKey("method") || !JsonCommand.containsKey("type"))
+ {
+\end_layout
+
+\begin_layout Plain Layout
+
+    mqtt_response("Desconocido", "Desconocido", "",
+\end_layout
+
+\begin_layout Plain Layout
+
+                  "{
+\backslash
+"msg
+\backslash
+": 
+\backslash
+"¡Error, formato JSON no soportado!
+\backslash
+" }");
+\end_layout
+
+\begin_layout Plain Layout
+
+    return;
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+  // Manejo de Comandos
+\end_layout
+
+\begin_layout Plain Layout
+
+  if (strcmp(JsonCommand["method"], "POST") == 0 &&
+\end_layout
+
+\begin_layout Plain Layout
+
+      strcmp(JsonCommand["type"], "RELAYS") == 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+      // {"method": "POST", "type": "RELAYS", "data":{"protocol": "MQTT",
+\end_layout
+
+\begin_layout Plain Layout
+
+      //"output": "RELAY1", "value": false }}
+\end_layout
+
+\begin_layout Plain Layout
+
+    if (apiPostOnOffRelays(JsonCommand["data"])) {
+\end_layout
+
+\begin_layout Plain Layout
+
+      if (settingsSave()) {
+\end_layout
+
+\begin_layout Plain Layout
+
+        mqtt_response(JsonCommand["method"], JsonCommand["type"],
+\end_layout
+
+\begin_layout Plain Layout
+
+                      JsonCommand["data"]["output"], "{
+\backslash
+"value
+\backslash
+": true}");
+\end_layout
+
+\begin_layout Plain Layout
+
+        mqtt_publish();
+\end_layout
+
+\begin_layout Plain Layout
+
+      }
+\end_layout
+
+\begin_layout Plain Layout
+
+    } else {
+\end_layout
+
+\begin_layout Plain Layout
+
+      if (settingsSave()) {
+\end_layout
+
+\begin_layout Plain Layout
+
+        mqtt_response(JsonCommand["method"], JsonCommand["type"],
+\end_layout
+
+\begin_layout Plain Layout
+
+                      JsonCommand["data"]["output"], "{
+\backslash
+"value
+\backslash
+": false}");
+\end_layout
+
+\begin_layout Plain Layout
+
+        mqtt_publish();
+\end_layout
+
+\begin_layout Plain Layout
+
+      }
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+  } else if (strcmp(JsonCommand["method"], "POST") == 0 &&
+\end_layout
+
+\begin_layout Plain Layout
+
+             strcmp(JsonCommand["type"], "DIMMER") == 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    // {"method": "POST", "type": "DIMMER", "data":{"protocol": "MQTT",
+\end_layout
+
+\begin_layout Plain Layout
+
+    // "output": "Dimmer", "value": 50 }}
+\end_layout
+
+\begin_layout Plain Layout
+
+    apiPostDimmer(JsonCommand["data"]);
+\end_layout
+
+\begin_layout Plain Layout
+
+    // respuesta al cliente MQTT
+\end_layout
+
+\begin_layout Plain Layout
+
+    mqtt_response(JsonCommand["method"], JsonCommand["type"],
+\end_layout
+
+\begin_layout Plain Layout
+
+                  JsonCommand["data"]["output"],
+\end_layout
+
+\begin_layout Plain Layout
+
+                  "{ 
+\backslash
+"value
+\backslash
+":" + String(dim) + "}");
+\end_layout
+
+\begin_layout Plain Layout
+
+    mqtt_publish();
+\end_layout
+
+\begin_layout Plain Layout
+
+  } else if (strcmp(JsonCommand["method"], "POST") == 0 &&
+\end_layout
+
+\begin_layout Plain Layout
+
+             strcmp(JsonCommand["type"], "RESTART") == 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    // CONFIGURAR EL MQTT MEDIANTE POST
+\end_layout
+
+\begin_layout Plain Layout
+
+    // {"method": "POST", "type": "RESTART", "origin": "MQTT"}
+\end_layout
+
+\begin_layout Plain Layout
+
+    // llamar la funcion con los datos
+\end_layout
+
+\begin_layout Plain Layout
+
+    mqtt_response(JsonCommand["method"], JsonCommand["type"], "",
+\end_layout
+
+\begin_layout Plain Layout
+
+                  F("{
+\backslash
+"restart
+\backslash
+": true}"));
+\end_layout
+
+\begin_layout Plain Layout
+
+    delay(100);
+\end_layout
+
+\begin_layout Plain Layout
+
+    apiPostRestart(JsonCommand["origin"]);
+\end_layout
+
+\begin_layout Plain Layout
+
+  } else if (strcmp(JsonCommand["method"], "POST") == 0 &&
+\end_layout
+
+\begin_layout Plain Layout
+
+             strcmp(JsonCommand["type"], "RESTORE") == 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    // CONFIGURAR EL MQTT MEDIANTE POST
+\end_layout
+
+\begin_layout Plain Layout
+
+    // {"method": "POST", "type": "RESTORE", "origin": "MQTT"}
+\end_layout
+
+\begin_layout Plain Layout
+
+    // llamar la funcion con los datos
+\end_layout
+
+\begin_layout Plain Layout
+
+    mqtt_response(JsonCommand["method"], JsonCommand["type"], "",
+\end_layout
+
+\begin_layout Plain Layout
+
+                  F("{
+\backslash
+"restore
+\backslash
+": true}"));
+\end_layout
+
+\begin_layout Plain Layout
+
+    delay(100);
+\end_layout
+
+\begin_layout Plain Layout
+
+    apiPostRestore(JsonCommand["origin"]);
+\end_layout
+
+\begin_layout Plain Layout
+
+  } else {
+\end_layout
+
+\begin_layout Plain Layout
+
+    mqtt_response("Desconocido", "Desconocido", "",
+\end_layout
+
+\begin_layout Plain Layout
+
+                  "{ 
+\backslash
+"msg
+\backslash
+": 
+\backslash
+"¡Error, no es un comando soportado!
+\backslash
+" }");
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Función callback()
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Función-callback"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Esta función actúa como el centro de control y despacho de comandos del
+ sistema, encargándose de procesar de manera asíncrona todos los mensajes
+ entrantes desde el Broker MQTT.
+ El código transforma el flujo de bytes recibido en un objeto estructurado
+ mediante la librería ArduinoJson, implementando primero filtros de seguridad
+ para validar el formato, descartar mensajes mal formados y prevenir bucles
+ infinitos al ignorar ecos del propio dispositivo.
+ Una vez validada la estructura, el callback opera como un intérprete de
+ protocolos API sobre MQTT, discriminando entre diferentes métodos (como
+ POST) y tipos de carga (RELAYS, DIMMER, RESTART o RESTORE); esto permite
+ ejecutar acciones de control físico, actualizar el estado de actuadores,
+ guardar configuraciones en la memoria no volátil y emitir respuestas de
+ confirmación en tiempo real hacia la base de datos o el cliente, garantizando
+ una arquitectura de control bidireccional robusta y escalable.
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Argument item:1
+status open
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+
+dentro de 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Función-callback"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ hay dos funciones 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+texttt{mqtt
+\backslash
+_response}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Función-mqtt_response"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+y 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+texttt{mqtt
+\backslash
+_publish}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Función-mqtt_publish"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "language=C"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+void mqtt_response(String method, String type, String msg, String value)
+ {
+\end_layout
+
+\begin_layout Plain Layout
+
+  String data = "";
+\end_layout
+
+\begin_layout Plain Layout
+
+  DynamicJsonDocument jsonDoc(10240);
+\end_layout
+
+\begin_layout Plain Layout
+
+  DynamicJsonDocument jsonData(10240);
+\end_layout
+
+\begin_layout Plain Layout
+
+  deserializeJson(jsonData, value);
+\end_layout
+
+\begin_layout Plain Layout
+
+  jsonDoc["method"] = method;
+\end_layout
+
+\begin_layout Plain Layout
+
+  jsonDoc["type"] = type;
+\end_layout
+
+\begin_layout Plain Layout
+
+  JsonObject dataObj = jsonDoc.createNestedObject("data");
+\end_layout
+
+\begin_layout Plain Layout
+
+  dataObj["msg"] = msg;
+\end_layout
+
+\begin_layout Plain Layout
+
+  dataObj["value"] = jsonData;
+\end_layout
+
+\begin_layout Plain Layout
+
+  serializeJson(jsonDoc, data);
+\end_layout
+
+\begin_layout Plain Layout
+
+  String topic = "Plc/Esp32"; // Simulando PathMqttTopic("response")
+\end_layout
+
+\begin_layout Plain Layout
+
+  mqttClient.publish(topic.c_str(), data.c_str()); }
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Función mqtt_response()
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Función-mqtt_response"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Esta función mqtt_response se encarga de construir y enviar una respuesta
+ estructurada en formato JSON a través de MQTT, normalmente como reacción
+ a un comando o solicitud recibida por el ESP32.
+ Primero crea dos documentos JSON dinámicos: uno para el mensaje final (jsonDoc)
+ y otro para interpretar el contenido recibido en el parámetro value.
+ Luego deserializa value para convertirlo en un objeto JSON válido, lo inserta
+ dentro del campo data.value y añade metadatos como el método (method), el
+ tipo de mensaje (type) y un mensaje descriptivo (msg).
+ Finalmente, el objeto completo se serializa a una cadena y se publica en
+ el tópico MQTT Plc/Esp32, permitiendo que otros sistemas (backend, dashboards
+ o servicios de control) reciban una respuesta clara, estructurada y consistente
+ sobre el estado o resultado de la operación ejecutada por el dispositivo.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "language=C"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+void mqtt_publish() {
+\end_layout
+
+\begin_layout Plain Layout
+
+  String topic = String(mqtt_topic);
+\end_layout
+
+\begin_layout Plain Layout
+
+  mqtt_data = Json();
+\end_layout
+
+\begin_layout Plain Layout
+
+  mqttClient.publish(topic.c_str(), mqtt_data.c_str());
+\end_layout
+
+\begin_layout Plain Layout
+
+  mqtt_data = "";
+\end_layout
+
+\begin_layout Plain Layout
+
+} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Función mqtt_publish()
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Función-mqtt_publish"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Esta función mqtt_publish se encarga de publicar periódicamente el estado
+ o los datos actuales del ESP32 en el broker MQTT.
+ Primero construye el tópico de publicación a partir de la variable mqtt_topic,
+ asegurando que el mensaje se envíe al canal correcto.
+ Luego genera el contenido del mensaje llamando a la función Json(), que
+ encapsula la información del dispositivo (como lecturas de sensores, estados
+ de relés o indicadores del sistema) en formato JSON.
+ Ese mensaje se publica usando el cliente MQTT y, una vez enviado, la variable
+ mqtt_data se limpia para liberar memoria y evitar reutilizar datos antiguos.
+ De esta forma, la función mantiene una comunicación ordenada y consistente
+ entre el ESP32 y los sistemas suscriptores, como el backend o el panel
+ de monitoreo.
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Argument item:1
+status open
+
+\begin_layout Plain Layout
+4
+\end_layout
+
+\end_inset
+
+ La función 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+texttt{Json}
+\end_layout
+
+\end_inset
+
+ es creada con el propósito de enviar la información asociada al dispositivos
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Json"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "language=C"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+String Json() {
+\end_layout
+
+\begin_layout Plain Layout
+
+  String response;
+\end_layout
+
+\begin_layout Plain Layout
+
+  DynamicJsonDocument jsonDoc(3000);
+\end_layout
+
+\begin_layout Plain Layout
+
+  readSensor();
+\end_layout
+
+\begin_layout Plain Layout
+
+  jsonDoc["deviceMqttId"] = mqtt_cloud_id;
+\end_layout
+
+\begin_layout Plain Layout
+
+  jsonDoc["deviceSerial"] = deviceID();
+\end_layout
+
+\begin_layout Plain Layout
+
+  jsonDoc["deviceManufacturer"] = device_manufacturer;
+\end_layout
+
+\begin_layout Plain Layout
+
+  jsonDoc["deviceFwVersion"] = device_fw_version;
+\end_layout
+
+\begin_layout Plain Layout
+
+  jsonDoc["deviceHwVersion"] = device_hw_version;
+\end_layout
+
+\begin_layout Plain Layout
+
+  jsonDoc["deviceSdk"] = ESP.getSdkVersion();
+\end_layout
+
+\begin_layout Plain Layout
+
+  JsonObject dataObj = jsonDoc.createNestedObject("data");
+\end_layout
+
+\begin_layout Plain Layout
+
+  dataObj["deviceRamSizeKB"] = ESP.getHeapSize() / 1024;
+\end_layout
+
+\begin_layout Plain Layout
+
+  dataObj["deviceRamAvailableKB"] = ESP.getFreeHeap() / 1024;
+\end_layout
+
+\begin_layout Plain Layout
+
+  dataObj["deviceSpiffsSizeKB"] = SPIFFS.totalBytes() / 1024;
+\end_layout
+
+\begin_layout Plain Layout
+
+  dataObj["deviceSpiffsUsedKB"] = SPIFFS.usedBytes() / 1024;
+\end_layout
+
+\begin_layout Plain Layout
+
+  dataObj["deviceActiveTimeSeconds"] = longTimeStr(millis() / 1000);
+\end_layout
+
+\begin_layout Plain Layout
+
+  dataObj["deviceCpuClockMhz"] = getCpuFrequencyMhz();
+\end_layout
+
+\begin_layout Plain Layout
+
+  dataObj["deviceFlashSizeMB"] = ESP.getFlashChipSize() / (1024.0 * 1024);
+\end_layout
+
+\begin_layout Plain Layout
+
+  // Valores Hardware Reales   
+\end_layout
+
+\begin_layout Plain Layout
+
+  dataObj["deviceRelay1Status"] = RELAY1_STATUS ? true : false;
+\end_layout
+
+\begin_layout Plain Layout
+
+  dataObj["deviceRelay2Status"] = RELAY2_STATUS ? true : false;
+\end_layout
+
+\begin_layout Plain Layout
+
+  dataObj["deviceDimmer"] = dim;   dataObj["deviceCpuTempC"] = TempCPUValue();
+\end_layout
+
+\begin_layout Plain Layout
+
+  dataObj["deviceADCValue"] = adcValue;
+\end_layout
+
+\begin_layout Plain Layout
+
+  dataObj["deviceRestarts"] = device_restart;
+\end_layout
+
+\begin_layout Plain Layout
+
+  dataObj["wifiRssiStatus"] = WiFi.RSSI();
+\end_layout
+
+\begin_layout Plain Layout
+
+  dataObj["wifiQuality"] = getRSSIasQuality(WiFi.RSSI());
+\end_layout
+
+\begin_layout Plain Layout
+
+  dataObj["wifiIPv4"] = ipStr(WiFi.localIP());
+\end_layout
+
+\begin_layout Plain Layout
+
+  jsonDoc["jsonVersion"] = "1.0.0";
+\end_layout
+
+\begin_layout Plain Layout
+
+  serializeJson(jsonDoc, response);   return response; }
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Json()
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Json"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Esta función Json se encarga de recopilar el estado completo del ESP32 y
+ serializarlo en un mensaje JSON listo para ser enviado, normalmente vía
+ MQTT.
+ Al inicio ejecuta readSensor() para actualizar los valores físicos más
+ recientes, como el ADC.
+ Luego construye un objeto JSON que incluye información de identificación
+ del dispositivo (ID MQTT, número de serie, fabricante y versiones de firmware,
+ hardware y SDK), junto con métricas del sistema como uso de memoria RAM,
+ almacenamiento SPIFFS, tiempo activo, frecuencia de CPU y tamaño de la
+ flash.
+ Dentro del bloque data también se agregan los valores reales de hardware,
+ como el estado de los relés, el dimmer, la temperatura del CPU, la lectura
+ ADC y estadísticas de red WiFi (RSSI, calidad de señal e IP).
+ Finalmente, se añade una versión del esquema JSON, se serializa todo a
+ una cadena y se retorna, proporcionando una instantánea completa y estructurada
+ del estado del dispositivo para monitoreo, diagnóstico o análisis remoto.
+\end_layout
+
+\end_deeper
+\end_body
+\end_document

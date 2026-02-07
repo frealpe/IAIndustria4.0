@@ -1,0 +1,74 @@
+const chatService = require("../services/MultiAgentService");
+
+/**
+ * Controlador para gestionar las interacciones del Chatbot.
+ * Recibe mensajes del frontend, inyecta contexto de UI y delega al MultiAgentService.
+ */
+class ChatController {
+    
+    /**
+     * Maneja la petición POST /chat
+     * @param {Object} req - Objeto de solicitud Express
+     * @param {Object} res - Objeto de respuesta Express
+     */
+    async chat(req, res) {
+        console.log("📨 ChatController received request:", req.body); // Log de depuración para ver cuerpo de la petición
+        
+        // Extraemos 'message' del cuerpo. Puede ser string simple o un objeto complejo desde el frontend.
+        const { message } = req.body;
+
+        // Validación básica: Si no hay mensaje, devolvemos error 400.
+        if (!message) {
+            return res.status(400).json({ error: "Message is required" });
+        }
+
+        // Variable para construir el prompt final que irá al LLM
+        let queryText = "";
+        
+        // Caso 1: Mensaje es texto simple (legacy o pruebas postman)
+        if (typeof message === 'string') {
+            queryText = message;
+        
+        // Caso 2: Mensaje es objeto (Estructura estándar del Frontend 'AsistenteBlock')
+        // { text: "...", file: "...", selectedTests: [...], selectedTable: "..." }
+        } else if (typeof message === 'object') {
+            queryText = message.text || ""; // Texto principal del usuario
+            
+            // 🔹 INYECCIÓN DE CONTEXTO UI: PRUEBAS SELECCIONADAS
+            // Verificamos si el usuario seleccionó filas en la tabla (checkboxes)
+            if (message.selectedTests && Array.isArray(message.selectedTests) && message.selectedTests.length > 0) {
+                 // Identificamos de qué tabla vienen (caracterizacion, comparacion, etc.)
+                 const tableContext = message.selectedTable ? ` de la tabla '${message.selectedTable}'` : "";
+                 
+                 // Inyectamos una instrucción de sistema explícita al final del prompt.
+                 // Esto le dice al Agente QUÉ IDs analizar y EN QUÉ TABLA buscar.
+                 queryText += `\n\n[SISTEMA - CONTEXTO UI]: El usuario ha seleccionado explícitamente las siguientes pruebas${tableContext} para análisis: ${JSON.stringify(message.selectedTests)}. ÚSALAS para filtrar tus consultas SQL (WHERE id IN ...). La tabla objetivo es '${message.selectedTable || "desconocida"}'.`;
+            } else {
+                 // Si NO hay selección, advertimos al Agente para que sepa rechazar análisis que requieran contexto específico.
+                 queryText += `\n\n[SISTEMA - CONTEXTO UI]: El usuario NO ha seleccionado ninguna prueba. Si solicita un análisis, INDÍCALE que debe seleccionar al menos una prueba en la tabla.`;
+            }
+
+            // 🔹 INYECCIÓN DE CONTEXTO DE ARCHIVOS
+            // Si el usuario adjuntó un archivo (JSON/CSV leído en frontend), lo adjuntamos como texto.
+            if (message.file) {
+                 queryText += "\n\n[CONTEXTO DEL ARCHIVO ADJUNTO]:\n" + (typeof message.file === 'string' ? message.file : JSON.stringify(message.file, null, 2));
+            }
+        }
+
+        console.log("📝 Query enviada a ChatService:", queryText); // Log para verificar qué se envía exactamente al LLM
+
+        try {
+            // Llamamos al servicio principal (Agente LangChain) con el prompt enriquecido
+            const { text, data } = await chatService.processQuery(queryText);
+            
+            // Devolvemos la respuesta generada por el agente
+            res.json({ response: text, data });
+        } catch (error) {
+            // Manejo de errores del servidor
+            console.error("Chat Error:", error);
+            res.status(500).json({ error: "Internal Server Error", details: error.message });
+        }
+    }
+}
+
+module.exports = new ChatController();

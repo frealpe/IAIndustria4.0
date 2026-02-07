@@ -1,0 +1,318 @@
+---
+config:
+  layout: elk
+---
+graph TD
+    subgraph Core1 ["Core 1\nMain Loop y FreeRTOS"]
+        Main["main.cpp"] --> Setup["setup()"]
+        
+        Setup --> Settings["mcp_settings.hpp\nCargar Config"]
+        Setup --> InitPins["mcp_functions.hpp\nsettingPines()"]
+        Setup --> WiFiSetup["wifi_setup()\nAP o STA"]
+        Setup --> CreateTasks["xTaskCreate\nCrear Tareas"]
+    end
+    subgraph Hardware_ESP32 ["Hardware ESP32"]
+        direction TB
+        GPIO34["GPIO34\nEntrada ADC"]
+        GPIO02["GPIO02\nLED MQTT"]
+        GPIO32["GPIO32\nRelay 1"]
+        GPIO33["GPIO33\nRelay 2"]
+        Flash["Memoria Flash\nSPIFFS y EEPROM"]
+    end
+    subgraph Tareas ["Tareas FreeRTOS"]
+        T_WiFi["Task WiFi Reconnect"]
+        T_MQTT["Task MQTT Reconnect"]
+        T_LED["Task MQTT LED"]
+        WiFi_Logic["mcp_wifi.hpp\nwifiLoop()"]
+    end
+    subgraph Logica ["Logica de Control MQTT"]
+        CheckWiFi{"WiFi OK"}
+        MQTT_Loop["mcp_mqtt.hpp\nmqttLoop()"]
+        CheckConn{"Conectado Broker"}
+        Reconn["mqtt_connect()"]
+        Publish["mqtt_publish()"]
+        ReadADC["readSensor()\nanalogRead"]
+        SendJSON["Enviar JSON Estado"]
+        Callback["callback()\nRecibir Mensajes"]
+        ParseJSON["Deserializar JSON"]
+        RelaySwitch["apiPostOnOffRelays"]
+        Reboot["apiPostRestart"]
+    end
+    subgraph Status_LED ["Indicador Visual"]
+        CheckMQTT{"MQTT OK"}
+        Blink["Parpadeo LED"]
+    end
+    Settings <-->|Lee Guarda JSON| Flash
+    InitPins -->|Configura GPIO| Hardware_ESP32
+    CreateTasks --> T_WiFi
+    CreateTasks --> T_MQTT
+    CreateTasks --> T_LED
+    T_WiFi -.-> WiFi_Logic
+    T_MQTT --> CheckWiFi
+    CheckWiFi -->|Si| MQTT_Loop
+    MQTT_Loop --> CheckConn
+    CheckConn -->|No| Reconn
+    CheckConn -->|Si| Publish
+    Publish --> ReadADC
+    ReadADC --> GPIO34
+    Publish --> SendJSON
+    MQTT_Loop --> Callback
+    Callback --> ParseJSON
+    ParseJSON -->|Relay 1 y 2| RelaySwitch
+    RelaySwitch --> GPIO32
+    RelaySwitch --> GPIO33
+    ParseJSON -->|Restart| Reboot
+    T_LED --> CheckMQTT
+    CheckMQTT -->|Si| Blink
+    Blink --> GPIO02
+    Reconn -.-> Settings
+    RelaySwitch -.-> Flash
+    classDef hardware fill:#FFF3CD,stroke:#856404,stroke-width:2px,color:#533F03;
+    class GPIO34,GPIO02,GPIO32,GPIO33,Flash hardware;
+
+    classDef core fill:#E7F1FF,stroke:#0D6EFD,stroke-width:2px,color:#084298;
+    class Main,Setup,Settings,InitPins,WiFiSetup,CreateTasks core;
+
+    classDef task fill:#E2E3E5,stroke:#41464B,stroke-width:2px,color:#212529;
+    class T_WiFi,T_MQTT,T_LED,WiFi_Logic task;
+
+    classDef logic fill:#D1E7DD,stroke:#0F5132,stroke-width:2px,color:#0A3622;
+    class MQTT_Loop,CheckWiFi,CheckConn,Publish,ReadADC,SendJSON,Callback,ParseJSON,RelaySwitch,Reconn,Reboot logic;
+
+    classDef status fill:#F8D7DA,stroke:#842029,stroke-width:2px,color:#58151C;
+    class CheckMQTT,Blink status;
+----------------------main.cpp-------------------------------
+---
+config:
+  layout: elk
+---
+graph TD
+    Start([Inicio]) --> Setup[Setup Core 1]
+    
+    subgraph Inicialización
+        Setup --> Serial[Iniciar Serial 115200]
+        Serial --> CPU[Set CPU 240MHz]
+        CPU --> EEPROM[EEPROM: Leer y actualizar contador de reinicios]
+        EEPROM --> SPIFFS[Iniciar SPIFFS]
+        SPIFFS --> Settings{Leer settings.json}
+        Settings -- Error --> SaveDefault[Guardar valores por defecto]
+        Settings -- Ok --> Pines[Configurar Pines relay/dimmer]
+        SaveDefault --> Pines
+        Pines --> WiFiSetup[Configurar WiFi STA/AP]
+    end
+
+    subgraph FreeRTOS_Tareas
+        WiFiSetup --> CreateTasks[Crear Tareas FreeRTOS]
+        CreateTasks --> T1[xTaskCreate: TaskWifiReconnect]
+        CreateTasks --> T2[xTaskCreate: TaskMqttReconnect]
+        CreateTasks --> T3[xTaskCreate: TaskMQTTLed]
+    end
+
+    subgraph Loops_Paralelos
+        T1 -.-> WifiLoop(Gestión de Conexión WiFi)
+        T2 -.-> MqttLoop(Gestión MQTT y Callbacks)
+        T3 -.-> LedLoop(Control LED Indicador)
+    end
+
+    Setup --> Loop[Void Loop: Vacío]
+
+---------------------------------Flujo
+sequenceDiagram
+    participant User as Usuario/Dashboard
+    participant Broker as MQTT Broker
+    participant ESP as ESP32 (TaskMqttReconnect)
+    participant Parser as Callback (JSON)
+    participant Logic as Lógica (Functions)
+    participant HW as Hardware (Relays/Dimmer)
+    participant SPIFFS as Memoria (Settings)
+
+    Note over User, HW: Ejemplo: Encender Relay 1
+    
+    User->>Broker: Publica JSON {"type":"RELAYS", ...} en "Plc/Esp32"
+    Broker->>ESP: Notifica nuevo mensaje (subscribe)
+    ESP->>Parser: callback(topic, payload)
+    
+    activate Parser
+    Parser->>Parser: Deserializar JSON
+    
+    alt JSON Inválido o Propio
+        Parser-->>ESP: Retorna Error / Ignora
+    else Comando POST Correcto
+        Parser->>Logic: apiPostOnOffRelays(data)
+        
+        activate Logic
+        Logic->>HW: digitalWrite(RELAY1, HIGH)
+        Logic->>Logic: Actualizar variable estado
+        Logic-->>Parser: Retorna true (Éxito)
+        deactivate Logic
+        
+        Parser->>SPIFFS: settingsSave() (Persistir estado)
+        SPIFFS-->>Parser: OK
+        
+        Parser->>Broker: Publica Respuesta {"value": true} en "Plc/Esp32/response"
+        Parser->>Broker: Publica Estado General actualizado en "Plc/Esp32"
+    end
+    deactivate Parser
+
+    Note over ESP, Broker: El ciclo se repite para Dimmer, Restart, etc.
+
+-----------------------------------Diagrama MQTT
+---
+config:
+  layout: elk
+---
+graph TD
+    Start([1. Inicio: main.cpp]) -->|xTaskCreate| Task[2. Tarea: TaskMqttReconnect]
+    
+    subgraph "Ciclo Infinito (FreeRTOS)"
+        Task -->|Verificar WiFi| WifiCheck{¿WiFi OK?}
+        WifiCheck -- No --> Esperar[Esperar]
+        WifiCheck -- Si --> Function[3. Llamada: mqttloop]
+        WifiCheck -- Si --> Timer{¿Intervalo Cumplido?}
+    end
+
+    subgraph "Lógica MQTT (mcp_mqtt.hpp)"
+        Function --> Connected{¿Conectado al Broker?}
+        
+        Connected -- No --> Connect[mqtt_connect]
+        Connect -->|Usuario/Pass| Broker((MQTT Broker))
+        Connect -->|Subscribe| Topic[Suscripción: 'Plc/Esp32']
+        
+        Connected -- Si --> Loop[client.loop]
+        Loop -->|Escuchar Red| Broker
+    end
+
+    subgraph "Lectura de Sensores (Periódico)"
+        Timer -- Si --> Pub[4. Función: mqtt_publish]
+        Pub --> JsonFn[Función: Json]
+        JsonFn --> Read[5. Función: readSensor]
+        
+        Read -->|analogRead| ADC(GPIO: ADC_PIN)
+        JsonFn --> Send[Publicar Estado JSON]
+        Send --> Broker
+    end
+
+    subgraph "Procesamiento de Mensaje (Entrada)"
+        Broker -->|Nuevo Mensaje JSON| Callback[6. Evento: callback]
+        Callback -->|deserializeJson| Parser{¿Tipo de Comando?}
+        
+        Parser -- 'RELAYS' --> FuncRelay[7. Función: apiPostOnOffRelays]
+        Parser -- 'DIMMER' --> FuncDim[Función: apiPostDimmer]
+        Parser -- 'RESTART' --> FuncRest[Función: apiPostRestart]
+    end
+
+    subgraph "Acción Física (Hardware)"
+        FuncRelay -->|digitalWrite| PinRelay(GPIO 32/33: Relay ON/OFF)
+        FuncDim -->|ledcWrite| PinPWM(GPIO 25: Dimmer PWM)
+    end
+    
+    FuncRelay --> Save[Guardar Estado en SPIFFS]
+    FuncRelay --> Reply[Responder al Broker 'Hecho']
+    classDef main fill:#225588,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef logic fill:#4488cc,stroke:#fff,stroke-width:1px,color:#fff;
+    classDef decision fill:#ffaa00,stroke:#333,stroke-width:1px,color:#fff;
+    classDef broker fill:#22aa44,stroke:#333,stroke-width:2px,color:#fff;
+    classDef hardware fill:#cc3333,stroke:#333,stroke-width:2px,color:#fff;
+    classDef function fill:#00cccc,stroke:#333,stroke-width:1px,color:#000;
+
+    class Start,Task main;
+    class Function,Connect,Loop,Pub,Callback,Save,Reply logic;
+    class WifiCheck,Connected,Timer,Parser decision;
+    class Broker broker;
+    class ADC,PinRelay,PinPWM hardware;
+    class Read,JsonFn,FuncRelay,FuncDim,FuncRest,Send function;
+--------------------------------------------------------------------------
+
+
+---
+config:
+  layout: elk
+---
+graph TD
+    subgraph settingsRead ["settingsRead()"]
+        StartRead([Inicio Lectura]) --> CreateJSONRead["Crear JSON Document"]
+        CreateJSONRead --> OpenFileRead["Abrir /settings.json (Lectura)"]
+        OpenFileRead --> CheckDeserialize{"¿Error al Deserializar?"}
+        
+        CheckDeserialize -- Sí --> CallReset["Llamar settingsReset()"]
+        CallReset --> ReadError["Leer Error de Deserialización"]
+        ReadError --> LogReadError["Log: Error lectura, valores por defecto"]
+        LogReadError --> CheckErrorDetails{"¿Detalles del Error?"}
+        CheckErrorDetails -- Sí --> LogDetails["Log: Detalle del error"]
+        CheckErrorDetails -- No --> ReturnFalseRead([Retornar false])
+        LogDetails --> ReturnFalseRead
+        
+        CheckDeserialize -- No --> ReadDevice["Leer Configuración Dispositivo"]
+        ReadDevice --> ReadWifiClient["Leer Configuración WiFi Cliente"]
+        ReadWifiClient --> ReadWifiAP["Leer Configuración WiFi AP"]
+        ReadWifiAP --> ReadCloud["Leer Configuración Cloud MQTT"]
+        ReadCloud --> CloseFileRead["Cerrar Archivo"]
+        CloseFileRead --> LogSuccessRead["Log: Lectura correcta"]
+        LogSuccessRead --> ReturnTrueRead([Retornar true])
+    end
+
+    subgraph settingsReset ["settingsReset()"]
+        StartReset([Inicio Reset]) --> SetDeviceDefaults["Asignar valores por defecto Dispositivo"]
+        SetDeviceDefaults --> SetWifiClientDefaults["Asignar valores por defecto WiFi Cliente"]
+        SetWifiClientDefaults --> SetWifiAPDefaults["Asignar valores por defecto WiFi AP"]
+        SetWifiAPDefaults --> SetCloudDefaults["Asignar valores por defecto Cloud MQTT"]
+        SetCloudDefaults --> LogReset["Log: Valores por defecto reiniciados"]
+    end
+
+    subgraph settingsSave ["settingsSave()"]
+        StartSave([Inicio Guardado]) --> CreateJSONSave["Crear JSON Document"]
+        CreateJSONSave --> OpenFileWrite["Abrir /settings.json (Escritura)"]
+        
+        OpenFileWrite --> CheckFileWrite{"¿Archivo Abierto?"}
+        
+        CheckFileWrite -- Sí --> SaveDevice["Guardar Configuración Dispositivo en JSON"]
+        SaveDevice --> SaveWifiClient["Guardar Configuración WiFi Cliente en JSON"]
+        SaveWifiClient --> SaveWifiAP["Guardar Configuración WiFi AP en JSON"]
+        SaveWifiAP --> SaveCloud["Guardar Configuración Cloud MQTT en JSON"]
+        SaveCloud --> SerializeFile["Serializar JSON a Archivo"]
+        SerializeFile --> CloseFileWrite["Cerrar Archivo"]
+        CloseFileWrite --> LogSuccessSave["Log: Guardado correcto"]
+        LogSuccessSave --> SerializeSerial["Serializar JSON al Serial"]
+        SerializeSerial --> ReturnTrueSave([Retornar true])
+        
+        CheckFileWrite -- No --> LogSaveError["Log: Falló guardado"]
+        LogSaveError --> ReturnFalseSave([Retornar false])
+    end
+
+---
+config:
+  layout: elk
+---
+graph TD
+    A[Inicio: wifi_setup] --> B{¿Está habilitado<br>el Modo AP Fijo?}
+    
+    B -- Sí (ap_mode=true) --> C[startAP: Iniciar Punto de Acceso]
+    B -- No (ap_mode=false) --> D[startClient: Iniciar Modo Estación]
+    
+    C --> C1[Configurar IP/Subnet AP]
+    C1 --> C2[Levantar WiFi SoftAP]
+    C2 --> C3[Iniciar Servidor DNS]
+    C3 --> E[Bucle: Modo AP Activo]
+
+    D --> D1{¿Usar IP Estática?}
+    D1 -- Sí --> D2[Configurar IP/Gateway/DNS fijos]
+    D1 -- No --> D3[Usar DHCP]
+    D3 --> D4[Intentar Conexión al Router]
+    D2 --> D4
+    
+    D4 --> F{¿Conectado?}
+    F -- Sí --> G[Bucle: Modo Estación Activo]
+    F -- No --> C[startAP: Fallo -> Modo Emergencia]
+
+    G --> G1{¿Se perdió<br>la conexión?}
+    G1 -- No --> G
+    G1 -- Sí --> G2[Intentar Reconexión]
+    G2 --> G3{¿Falló 2 veces?}
+    G3 -- No --> G
+    G3 -- Sí --> C[startAP: Modo Emergencia]
+
+    E --> E1{"¿Es AP de Emergencia?<br>(wifi_change=true)"}
+    E1 -- No --> E
+    E1 -- Sí --> E2{¿Pasaron 10 min?}
+    E2 -- No --> E
+    E2 -- Sí --> D[startClient: Reintentar Router]

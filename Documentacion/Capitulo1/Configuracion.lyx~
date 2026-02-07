@@ -1,0 +1,2265 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass book
+\begin_preamble
+
+\end_preamble
+\use_default_options true
+\maintain_unincluded_children false
+\language spanish
+\language_package default
+\inputencoding iso8859-15
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures false
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style french
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle empty
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+Herramientas de IA en la Industria 4.0
+\end_layout
+
+\begin_layout Section
+Unidad temática: Arquitecturas de Orquestación Agéntica para la Industria
+ 4.0
+\end_layout
+
+\begin_layout Standard
+Esta propuesta académica redefine la integración de la Inteligencia Artificial
+ en entornos productivos, estableciendo una distinción crítica entre el
+ consumo pasivo de modelos y el diseño de sistemas autónomos.
+ A continuación, se explican los conceptos fundamentales de esta arquitectura
+ bajo una visión de ingeniería agéntica:
+\end_layout
+
+\begin_layout Standard
+La Superación del Modelo "Wrapper" El enfoque tradicional, conocido como
+ "ChatGPT wrapper", se limita a actuar como una interfaz superficial que
+ reenvía consultas a un modelo lingüístico sin poseer una lógica interna
+ o conexión real con el entorno.
+ En contraste, un sistema agéntico industrial se concibe como un operador
+ proactivo.
+ Mientras que el primero es un espejo estático de las capacidades del modelo,
+ el sistema agéntico utiliza la IA para razonar, integrando el flujo de
+ trabajo con la realidad física de la planta.
+\end_layout
+
+\begin_layout Subsection
+La Capa de Orquestación: El Sistema Nervioso Central 
+\end_layout
+
+\begin_layout Standard
+El núcleo de esta arquitectura es la Orquestación, implementada mediante
+ LangGraph.
+ Esta herramienta funciona como el cerebro del sistema, gestionando el estado
+ y permitiendo flujos de decisión cíclicos.
+ A diferencia de un chat convencional, esta capa dota a la IA de memoria
+ y razonamiento lógico sobre procesos industriales, permitiendo que el sistema
+ no solo responda, sino que mantenga la continuidad y coherencia en tareas
+ de larga duración o procesos repetitivos de control.
+\end_layout
+
+\begin_layout Subsection
+MCP y el Vínculo con el Hardware 
+\end_layout
+
+\begin_layout Standard
+Para que la inteligencia lógica (LLM) pueda interactuar con la acción física
+ (Hardware), se utiliza el Model Context Protocol (MCP).
+ Este protocolo actúa como la capa de herramientas, permitiendo que los
+ agentes de IA se conecten de manera segura y estandarizada con sensores
+ IoT como sensores y bases de datos industriales.
+ El MCP permite que la IA "sienta" el hardware, convirtiendo señales físicas
+ en datos procesables para el razonamiento del agente.
+\end_layout
+
+\begin_layout Standard
+MCP (Model Context Protocol) es un estándar abierto desarrollado recientemente
+ por Anthropic que está cambiando la forma en que los asistentes de IA interactú
+an con los datos y las herramientas ver
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:Cliente-Servidor-MCP"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+Introducción En el panorama actual del desarrollo con Inteligencia Artificial,
+ la integración de modelos de lenguaje (LLMs) con fuentes de datos externas
+ (bases de datos, archivos locales, APIs) es fragmentada.
+ Cada integración requiere una implementación personalizada, lo que genera
+ silos de información y deuda técnica.
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Model Context Protocol (MCP) surge como un estándar abierto diseñado para
+ reemplazar estas integraciones punto a punto con un protocolo universal
+ y seguro.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+El Problema: El "Impuesto de Integración" Hasta ahora, conectar un Agente
+ de IA a un entorno de trabajo implicaba:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Mantenimiento constante: APIs que cambian y requieren actualizaciones manuales.
+\end_layout
+
+\begin_layout Standard
+Riesgos de seguridad: Métodos de acceso a datos no estandarizados.
+\end_layout
+
+\begin_layout Standard
+Falta de portabilidad: Una herramienta diseñada para un modelo no funcionaba
+ fácilmente en otro.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+La Solución: Arquitectura MCP MCP funciona bajo un modelo de arquitectura
+ Cliente-Servidor simplificado:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\begin_inset Float table
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Componente
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Función
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MCP Host
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none" width="10cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+La aplicación de IA (ej.
+ Claude Desktop, IDEs, aplicaciones personalizadas en Node.js).
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MCP Client
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Mantiene la conexión bidireccional con los servidores dentro del Host.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MCP Server
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none" width="10cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Microservicios ligeros que exponen datos o herramientas específicas (Filesystem,
+ GitHub, SQL, sensores) mediante el estándar MCP.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Cliente-Servidor MCP.
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:Cliente-Servidor-MCP"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Beneficios Clave Interoperabilidad: 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Una vez que escribes un servidor MCP (por ejemplo, para leer datos de sensores
+ o estados de un PLC), cualquier aplicación compatible con MCP puede usarlo.
+\end_layout
+
+\begin_layout Itemize
+Control de Contexto: El modelo solo accede a la información necesaria en
+ el momento preciso, optimizando el uso de la ventana de contexto.
+\end_layout
+
+\begin_layout Itemize
+Seguridad Local: Los servidores pueden ejecutarse localmente, permitiendo
+ que la IA interactúe con datos sensibles sin que estos salgan de la infraestruc
+tura privada del usuario o empresa.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Casos de Uso en Desarrollo
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Ingeniería de Software: Acceso directo a repositorios para refactorización
+ de código en tiempo real.
+\end_layout
+
+\begin_layout Itemize
+Sistemas Industriales / IoT: Un servidor MCP que actúe como puente entre
+ protocolos industriales (Modbus/OPC-UA) y el modelo de IA para diagnóstico
+ de fallas.
+\end_layout
+
+\begin_layout Itemize
+Gestión de Datos: Consultas a bases de datos en lenguaje natural mediante
+ la exposición de esquemas SQL seguros a través de MCP.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Conclusión y Próximos Pasos
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+MCP no es solo una herramienta, es el puerto estándar que permitirá que
+ los agentes de IA dejen de ser simples generadores de texto para convertirse
+ en asistentes operativos reales con acceso a herramientas del mundo físico
+ y digital.
+\end_layout
+
+\end_deeper
+\begin_layout Subsection
+Interfaz de Usuario como Reflejo del Razonamiento
+\end_layout
+
+\begin_layout Standard
+Finalmente, la capa de UI, desarrollada en React o React Native, deja de
+ ser una simple ventana de chat para convertirse en un tablero de control
+ del proceso de pensamiento del agente.
+ En esta arquitectura, la interfaz es un reflejo fiel de un proceso de razonamie
+nto autónomo, donde el usuario puede observar cómo el agente decide y actúa
+ sobre los activos físicos en tiempo real.
+\end_layout
+
+\begin_layout Standard
+La figura muestra el esquema funcional del sistema ver 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Arquitectura-de-Tres"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename Arquitectura.png
+	lyxscale 10
+	width 10cm
+	height 20cm
+	keepAspectRatio
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Arquitectura de Tres Capas para el Control Autónomo de Procesos 
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Arquitectura-de-Tres"
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Capa de Interfaz (UI): El Espejo Reactivo En esta capa superior, el usuario
+ interactúa con el sistema a través de una aplicación desarrollada en React
+ Native.
+ A diferencia de una aplicación convencional, esta interfaz no es solo un
+ chat, sino un panel de control que refleja el razonamiento de la IA en
+ tiempo real.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+WebSockets / Socket.io: Actúan como el puente de baja latencia que permite
+ que el agente de IA envíe alertas o actualizaciones de sensores de forma
+ instantánea a la pantalla del operador sin necesidad de recargar.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Capa de Orquestación: El Cerebro (LangGraph) Esta es la capa que trasciende
+ el concepto de "wrapper".
+ Aquí, LangGraph funciona como el sistema nervioso central que define la
+ lógica de control.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Estado y Memoria: El sistema mantiene un registro de lo que ha sucedido
+ en la planta, permitiendo que la IA tome decisiones basadas en el historial
+ y no solo en el último mensaje recibido.
+\end_layout
+
+\begin_layout Itemize
+Flujos Cíclicos: Permite que el agente realice bucles de razonamiento: "Leo
+ el sensor 
+\begin_inset Formula $->$
+\end_inset
+
+ Analizo
+\begin_inset Formula $->$
+\end_inset
+
+ Si el valor es incorrecto, intento ajustar 
+\begin_inset Formula $->$
+\end_inset
+
+ Vuelvo a leer".
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Capa de Models & Tools: El Vínculo con la Realidad Aquí es donde la inteligencia
+ abstracta se encuentra con la ejecución física mediante el Model Context
+ Protocol (MCP).
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Servidor MCP: Es el estándar que permite al agente de IA "ver" y "tocar"
+ el hardware.
+ Expone las capacidades de la planta como herramientas que el modelo puede
+ usar.
+\end_layout
+
+\begin_layout Standard
+Protocolos Industriales:
+\end_layout
+
+\begin_layout Itemize
+MQTT: Utilizado para la telemetría masiva de sensores IoT (como el sensor
+ NPK de suelo), permitiendo que el agente reciba datos de forma eficiente.
+\end_layout
+
+\begin_layout Itemize
+OPC-UA: Garantiza la interoperabilidad con maquinaria industrial pesada
+ y servidores de planta estándar.
+\end_layout
+
+\begin_layout Itemize
+Modbus: Permite el control directo sobre PLCs y dispositivos que manejan
+ la acción física (actuadores, motores).
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Inteligencia y Datos LLM 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+(Llama3 / Ollama): Es el motor de inferencia que procesa el lenguaje natural
+ y los datos de los sensores para generar planes de acción.
+\end_layout
+
+\begin_layout Itemize
+Bases de Datos (InfluxDB / Postgres): Almacenan el histórico de telemetría
+ y los metadatos de la operación para que el agente pueda realizar análisis
+ de tendencias o mantenimiento predictivo.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+Conclusión del Flujo: Cuando un sensor reporta una anomalía vía MQTT, el
+ Servidor MCP lo comunica al Grafo de Orquestación.
+ El LLM analiza la situación, decide una acción correctiva (ej.
+ ajustar una válvula vía Modbus) y actualiza simultáneamente la UI del operador
+ mediante Sockets, transformando la planta mediante un ciclo cerrado de
+ percepción y acción.
+\end_layout
+
+\begin_layout Standard
+Para que el sistema sea eficiente, es vital distinguir cómo se procesa la
+ información dentro de la orquestación:
+\end_layout
+
+\begin_layout Enumerate
+Chain (Cadena): Sigue pasos fijos y predeterminados sin tomar decisiones
+ propias.
+ Se recomienda usarlas primero para tareas simples y lineales.
+\end_layout
+
+\begin_layout Enumerate
+Agent (Agente): Tiene la capacidad de elegir el siguiente paso basándose
+ en el contexto.
+ Decide "qué hacer a continuación" para resolver problemas complejos, siempre
+ bajo el control del desarrollador.
+\end_layout
+
+\begin_layout Section
+Que es un agente?
+\end_layout
+
+\begin_layout Standard
+En esencia, un Agente de IA se define como la combinación de un LLM + Memoria
+ + Herramientas + Reglas.
+ Mientras que un wrapper es un espejo estático que solo refleja lo que la
+ IA dice, un sistema agéntico industrial es un operador dinámico que utiliza
+ estos componentes para transformar la planta:
+\end_layout
+
+\begin_layout Standard
+Memoria e Integración: Gracias a la orquestación, el agente puede "pensar
+ antes de actuar".
+ Por ejemplo, si una regla de negocio dicta que no se debe aumentar la velocidad
+ de una banda transportadora si la temperatura del motor supera un umbral
+ crítico, el agente verifica el sensor mediante sus herramientas, razona
+ la restricción usando su memoria y decide cancelar la acción, informando
+ al operador el porqué de su decisión a través de la UI.
+\end_layout
+
+\begin_layout Subsection
+Memoria de Corto Plazo (Contexto Operativo): 
+\end_layout
+
+\begin_layout Standard
+El agente retiene los datos inmediatos del flujo de trabajo, como el estado
+ actual de una línea de producción o la última lectura de un protocolo OPC-UA.
+ Esto le permite "pensar" si la acción solicitada es coherente con el estado
+ presente de la máquina
+\end_layout
+
+\begin_layout Subsection
+Memoria de Largo Plazo (Historial y Patrones):
+\end_layout
+
+\begin_layout Standard
+Mediante la conexión con bases de datos como InfluxDB o PostgreSQL, el agente
+ accede al histórico de fallos o métricas de rendimiento pasadas.
+ Por ejemplo, si el agente detecta una vibración inusual, consulta su memoria
+ para verificar si ese patrón precedió a una avería el mes anterior, activando
+ un diagnóstico preventivo en lugar de una simple alerta.
+\end_layout
+
+\begin_layout Standard
+En un sistema robusto, la memoria de largo plazo no vive dentro del modelo
+ (LLM), sino que es una herramienta externa que el agente consulta a través
+ de la capa de orquestación.
+ 
+\end_layout
+
+\begin_layout Standard
+Su funcionamiento se divide en tres ejes:
+\end_layout
+
+\begin_layout Enumerate
+Persistencia de Experiencias (Historial de Operación): A través de bases
+ de datos como PostgreSQL o InfluxDB, el agente guarda cada evento crítico
+ que ocurre en la planta.
+ Si un motor presenta una vibración inusual, el agente consulta su memoria
+ de largo plazo para verificar: “¿Este patrón de vibración ha ocurrido antes?
+ ¿Terminó en una falla crítica la última vez?”.
+ Esto permite que el agente razone basándose en la experiencia acumulada.
+\end_layout
+
+\begin_layout Enumerate
+RAG (Generación Aumentada por Recuperación) - El "Manual Técnico": La memoria
+ de largo plazo también contiene el conocimiento estático: manuales de maquinari
+a, protocolos de seguridad y normativas industriales.
+ Mediante técnicas de RAG, el agente busca en milisegundos la solución técnica
+ a un problema detectado por los sensores, integrando ese conocimiento en
+ su proceso de decisión.
+\end_layout
+
+\begin_layout Enumerate
+Memoria Semántica vs.
+ Memoria de Episodios:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Episódica: Recuerda interacciones pasadas con el operador o estados específicos
+ de la planta.
+\end_layout
+
+\begin_layout Standard
+Semántica: Comprende los conceptos técnicos y las relaciones entre los component
+es de la industria 4.0.
+\end_layout
+
+\end_deeper
+\begin_layout Subsection
+Razonamiento mediante Reglas de Negocio: 
+\end_layout
+
+\begin_layout Standard
+La orquestación (vía LangGraph) permite al agente aplicar lógica de control
+ compleja antes de actuar.
+ Si una regla dicta que no se debe aumentar la velocidad de una banda transporta
+dora si la temperatura del motor supera un umbral crítico, el agente verifica
+ el sensor, razona la restricción y decide cancelar la operación, informando
+ al operador el motivo técnico a través de la UI en React Native.
+\end_layout
+
+\begin_layout Subsection
+Diferenciación Técnica: El Agente como Operador Dinámico 
+\end_layout
+
+\begin_layout Standard
+Mientras que un wrapper es un espejo estático que solo refleja lo que la
+ IA dice sin comprender el entorno, un sistema agéntico industrial se define
+ como la combinación de LLM + Memoria + Herramientas + Reglas.
+ Este sistema utiliza:
+\end_layout
+
+\begin_layout Enumerate
+La IA para Razonar: Procesa datos complejos y lenguaje natural para entender
+ objetivos de alto nivel.
+\end_layout
+
+\begin_layout Enumerate
+La Orquestación para Decidir: Determina el "siguiente paso" lógico basándose
+ en el estado y la memoria.
+\end_layout
+
+\begin_layout Enumerate
+Las Herramientas (MCP) para Transformar: Actúa directamente sobre el entorno
+ físico mediante protocolos como MQTT o Modbus, cerrando el ciclo entre
+ el pensamiento digital y la acción mecánica.
+\end_layout
+
+\begin_layout Standard
+En conclusión, la integración total de la memoria permite que el agente
+ pase de ser un consultor pasivo a un operador dinámico capaz de gestionar
+ la complejidad de la Industria 4.0, asegurando que cada acción física sea
+ el resultado de un análisis histórico y situacional profundo.
+\end_layout
+
+\begin_layout Section
+LangChain
+\end_layout
+
+\begin_layout Standard
+Dentro de la arquitectura de tres capas, LangChain se posiciona como el
+ conjunto de herramientas (toolkit) fundamental para construir flujos de
+ trabajo avanzados con modelos de lenguaje, operando específicamente como
+ el motor interno de la capa de orquestación.
+ Su función principal es servir como el "cableado" lógico que permite integrar
+ y gestionar componentes críticos como prompts, modelos, herramientas y
+ técnicas de RAG (Generación Aumentada por Recuperación).
+\end_layout
+
+\begin_layout Standard
+Al utilizar el lenguaje de expresión de LangChain (LCEL), el sistema trasciende
+ las aplicaciones lineales para convertirse en una estructura capaz de decidir
+ "qué hacer a continuación" basándose en el contexto y las reglas de negocio
+ establecidas.
+ En el ámbito de la Industria 4.0, LangChain permite "cablear" la inteligencia
+ lógica con la acción física, facilitando que el agente utilice su memoria
+ para analizar datos históricos y razonar antes de ejecutar cualquier operación
+ sobre el hardware.
+ Así, LangChain transforma a la IA en un operador dinámico que no solo genera
+ texto, sino que orquestra acciones precisas que transforman el entorno
+ productivo de la planta.
+\end_layout
+
+\begin_layout Section
+LangGraph
+\end_layout
+
+\begin_layout Standard
+LangGraph es una librería construida sobre los bloques de LangChain que
+ permite definir flujos de trabajo mediante grafos.
+ Se sitúa jerárquicamente por encima de LangChain, utilizando sus componentes
+ (como modelos y herramientas) para orquestar comportamientos más sofisticados.
+\end_layout
+
+\begin_layout Subsection*
+Conceptos Clave de Operación 
+\end_layout
+
+\begin_layout Standard
+Para implementar una orquestación robusta, debe dominar los siguientes pilares
+ de LangGraph:
+\end_layout
+
+\begin_layout Enumerate
+Nodos y Aristas (Nodes & Edges): El flujo se define como un grafo donde
+ los nodos representan funciones de procesamiento y las aristas dictan el
+ camino hacia el siguiente paso.
+\end_layout
+
+\begin_layout Enumerate
+Estado (State): LangGraph mantiene un objeto de estado compartido que persiste
+ a través de los nodos.
+ En la industria, esto permite que el agente "recuerde" lecturas de sensores
+ previas durante un ciclo de decisión.
+\end_layout
+
+\begin_layout Enumerate
+Ciclos y Reintentos (Retries): A diferencia de las cadenas simples, permite
+ bucles de retroalimentación.
+ Si un sensor reporta un error de lectura, el grafo puede reintentar la
+ conexión o ejecutar una rutina de limpieza automáticamente.
+\end_layout
+
+\begin_layout Enumerate
+Human-in-the-loop (HITL): Es la capacidad de pausar la ejecución del agente
+ para esperar la aprobación o corrección de un operador humano antes de
+ ejecutar una acción física crítica en la planta.
+\end_layout
+
+\begin_layout Subsection
+LangGraph como el "Cerebro" de la Industria 4.0 
+\end_layout
+
+\begin_layout Standard
+En el contexto, LangGraph es lo que permite que el sistema deje de ser un
+ "ChatGPT wrapper" (un espejo estático de texto) y se convierta en un operador
+ dinámico.
+\end_layout
+
+\begin_layout Enumerate
+En el nivel superior de la lógica se encuentra LangGraph, que actúa como
+ el "sistema nervioso central" de la aplicación.
+ Su función es definir el grafo de control, el estado y el flujo de trabajo
+ del agente.
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Gestión de Estados: A diferencia de un chat convencional, LangGraph mantiene
+ la memoria y el estado del proceso, permitiendo ciclos de reintento y persisten
+cia de datos industriales.
+\end_layout
+
+\begin_layout Standard
+Toma de Decisiones: Es aquí donde el sistema decide "qué hacer a continuación"
+ basándose en el contexto operativo y las reglas de negocio predefinidas.
+\end_layout
+
+\begin_layout Standard
+Intervención Humana: Permite integrar bucles de "Human-in-the-loop" (HITL),
+ pausando acciones críticas en la planta para esperar la aprobación de un
+ operador.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Capa de Ejecución (LangChain) LangGraph se apoya en los bloques de construcción
+ de LangChain para ejecutar tareas específicas dentro de la orquestación.
+ LangChain funciona como un "toolkit" que gestiona:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Componentes: Manejo de prompts, modelos de lenguaje (LLMs) y técnicas de
+ RAG (Generación Aumentada por Recuperación) para consultar manuales técnicos
+ o históricos.
+\end_layout
+
+\begin_layout Standard
+LCEL: Utiliza el lenguaje de expresión de LangChain para "cablear" de forma
+ eficiente la lógica con las herramientas de hardware.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Capa de Percepción y Acción (Models & Tools) En la base de la pirámide se
+ encuentran los Modelos, Bases de Datos y herramientas de Hardware.
+ Esta capa permite que la IA deje de ser un "wrapper" estático y se convierta
+ en un operador dinámico:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Percepción: A través de protocolos como MCP, MQTT u OPC-UA, el agente recibe
+ telemetría en tiempo real desde los sensores de la planta.
+\end_layout
+
+\begin_layout Standard
+Acción: El agente utiliza herramientas para transformar el entorno físico,
+ ejecutando comandos sobre PLCs o actuadores.
+\end_layout
+
+\begin_layout Standard
+Memoria e Inteligencia: Combina el razonamiento del LLM con la memoria de
+ largo plazo almacenada en bases de datos para realizar mantenimiento predictivo.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+En conclusión, el sistema funciona como un ciclo cerrado donde la UI (paneles
+ o chats) es solo el reflejo de un proceso de razonamiento autónomo orquestado
+ por LangGraph, ejecutado por LangChain y materializado a través de herramientas
+ industriales conectadas.
+\end_layout
+
+\begin_layout Subsection
+Ingeniería de Prompts: Del Texto a la Estructura de Datos 
+\end_layout
+
+\begin_layout Standard
+Tratar la salida del LLM como datos, no como párrafos Cuando usas ChatGPT
+ como usuario, esperas una conversación.
+ Pero cuando eres desarrollador, los párrafos son un problema porque contienen
+ "ruido" (palabras de relleno, cortesía, explicaciones innecesarias).
+\end_layout
+
+\begin_layout Enumerate
+"Trata la salida del LLM como datos, no como párrafos" 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Normalmente, usamos modelos de lenguaje (LLMs) para escribir correos o ensayos.
+ Sin embargo, en el desarrollo de software moderno, queremos que la IA sea
+ un componente de nuestra aplicación.
+\end_layout
+
+\begin_layout Itemize
+El problema: El texto libre (párrafos) es difícil de procesar para un programa.
+\end_layout
+
+\begin_layout Itemize
+La solución: Pedirle a la IA que responda estrictamente en formato JSON.
+ Esto permite que el sistema "entienda" la respuesta automáticamente sin
+ necesidad de que un humano la lea.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+"JSON = predecible, testeable e integrable" ¿Por qué JSON? Porque es el
+ lenguaje universal de la web.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Predecible:: Sabes exactamente dónde estará cada dato (ej.
+ el precio estará siempre en la clave "precio").
+\end_layout
+
+\begin_layout Itemize
+Testeable: Puedes escribir pruebas automáticas para verificar si la IA está
+ respondiendo correctamente.
+\end_layout
+
+\begin_layout Itemize
+Integrable: Los datos pueden pasar directamente a una base de datos o a
+ una interfaz de usuario sin pasos intermedios complicados.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Aplicar estandar Zod 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Este es el punto más técnico y crítico para la estabilidad del sistema.
+ Zod es una librería de validación de esquemas que actúa como un contrato.
+\end_layout
+
+\begin_layout Itemize
+El Riesgo: Las IAs a veces "alucinan" o fallan en el formato (por ejemplo,
+ ponen un texto donde debería ir un número).
+\end_layout
+
+\begin_layout Itemize
+La Solución (Zod): Defines un contrato estricto.
+ Si la IA devuelve algo que no encaja exactamente con la "forma" definida
+ (por ejemplo, falta un campo obligatorio), Zod lanza un error inmediatamente.
+\end_layout
+
+\begin_layout Itemize
+Resultado: Tu aplicación nunca procesará datos corruptos o malformados,
+ lo que evita errores inesperados en producción.
+\end_layout
+
+\end_deeper
+\begin_layout Section
+Tokens
+\end_layout
+
+\begin_layout Standard
+Dado que no siempre se puede contar tokens exactos a ojo, se utiliza una
+ aproximación estadística para el lenguaje humano ver 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:tokens"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+Tokens\approx\frac{Palabras}{0.75}\label{eq:tokens}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Aplicación: Si tienes un documento de 1,500 palabras, puedes estimar que
+ consumirá unos 2,000 tokens.
+\end_layout
+
+\begin_layout Enumerate
+Nota técnica: Para código de programación (como el que usas en Node.js o
+ React), la relación cambia porque los espacios y símbolos cuentan más;
+ ahí la relación suele ser casi 
+\begin_inset Formula $1:1$
+\end_inset
+
+.
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Para presupuestar una aplicación, se calcula el costo por cada mil tokens
+ (MTok) ver 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:Mtok"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+
+\size footnotesize
+\begin_inset Formula 
+\begin{equation}
+Costo_{total}=(Tokens_{entrada}\times Tarifa{}_{input})+(Tokens_{salida}\times Tarifa{}_{output})\label{eq:Mtok}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Dato clave: Casi todos los modelos (como GPT-4 o Claude) cobran más caro
+ por los tokens que la IA genera (output) que por los que tú le envías (input).
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Límite de la Ventana de Contexto
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+La ventana de contexto es un recurso finito.
+ El cálculo que debes hacer para que tu aplicación no "falle" es ver
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:Tokentruncamiento"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Standard
+
+\size footnotesize
+\begin_inset Formula 
+\begin{equation}
+Contexto_{libre}=Ventana_{máxima}-(Tokens_{instrucciones}+Tokens_{datos}+Tokens_{hisotorial})\label{eq:Tokentruncamiento}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Truncamiento: Si el resultado es negativo, el modelo truncará la información
+ y perderá coherencia.
+\end_layout
+
+\begin_layout Standard
+Optimización: Aquí es donde entran tus proyectos de agentes de IA; un buen
+ agente debe decidir qué información "olvidar" o resumir para no saturar
+ este cálculo.
+\end_layout
+
+\end_deeper
+\begin_layout Subsection*
+El término Temperature (Temperatura)
+\end_layout
+
+\begin_layout Standard
+Es un hiperparámetro crucial que controla el grado de aleatoriedad o "creativida
+d" de las respuestas de un modelo de lenguaje.
+ En términos técnicos, la temperatura ajusta las probabilidades de las palabras
+ (tokens) que el modelo considera para su siguiente respuesta.
+ No cambia el conocimiento de la IA, sino qué tan "arriesgada" es al elegir
+ la siguiente palabra.
+\end_layout
+
+\begin_layout Itemize
+Valores bajos (0.1 - 0.3): El modelo se vuelve determinista.
+ Elige siempre la palabra más probable.
+ Es ideal para tareas que requieren precisión, como escribir código, resolver
+ problemas matemáticos o extraer datos en formato JSON.
+\end_layout
+
+\begin_layout Itemize
+Valores altos (0.7 - 1.2+): El modelo se vuelve creativo y diverso.
+ Empieza a elegir palabras menos obvias, lo que genera respuestas más variadas,
+ poéticas o sorprendentes.
+ Es ideal para lluvia de ideas o escritura creativa.
+\end_layout
+
+\begin_layout Subsection*
+El Cálculo Matemático Detrás
+\end_layout
+
+\begin_layout Standard
+Para entender cómo soporta esto la información de tus diapositivas anteriores,
+ la temperatura actúa sobre una función llamada Softmax.Si el modelo tiene
+ varias opciones para la siguiente palabra con sus respectivas "puntuaciones"
+ (
+\begin_inset Formula $z_{i}$
+\end_inset
+
+), la fórmula de probabilidad 
+\begin_inset Formula $P_{i}$
+\end_inset
+
+ ajustada por la temperatura (
+\begin_inset Formula $T$
+\end_inset
+
+) es ver
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:Temperature"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+P_{i}=\frac{exp(z_{i}/T)}{\sum(z_{j}/T)}\label{eq:Temperature}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Si 
+\begin_inset Formula $T$
+\end_inset
+
+ es alta: Las diferencias entre las probabilidades se "aplanan", haciendo
+ que palabras menos probables tengan una oportunidad real de ser elegidas.
+\end_layout
+
+\begin_layout Itemize
+Si 
+\begin_inset Formula $T$
+\end_inset
+
+ es baja: Las diferencias se exageran, haciendo que la opción más probable
+ domine por completo.
+\end_layout
+
+\begin_layout Standard
+Dado que se está trabajando en agentes industriales y sistemas agénticos
+ que deben usar herramientas y razonar, la configuración de la temperatura
+ es vital:
+\end_layout
+
+\begin_layout Enumerate
+Para el Agente de Mantenimiento o PLCs: Deberías usar una temperatura cercana
+ a 
+\begin_inset Formula $0$
+\end_inset
+
+.
+ No quieres que la IA "sea creativa" al decidir si una máquina tiene un
+ fallo en Factory I/O; necesitas una respuesta lógica y predecible basada
+ en datos.
+\end_layout
+
+\begin_layout Enumerate
+Para el Agente con o un agente de respuesta conversacional: Podrías usar
+ una temperatura media (
+\begin_inset Formula $0.7$
+\end_inset
+
+) para que la conversación se sienta natural, fluida y no siempre responda
+ lo mismo, dándole "personalidad" al agente.
+\end_layout
+
+\begin_layout Standard
+La eficiencia de un sistema de IA no solo depende de los datos, sino de
+ la gestión inteligente del contexto.
+ Cada interacción suma información proveniente de diversas fuentes: las
+ instrucciones del sistema, la entrada del usuario, el historial de la conversac
+ión y las respuestas de las herramientas externas.
+ Mantener este flujo corto y conciso es fundamental, ya que el aumento de
+ tokens no solo incrementa el costo financiero, sino que eleva la latencia,
+ haciendo que el agente sea más lento al procesar y generar respuestas.
+\end_layout
+
+\begin_layout Subsection*
+Anatomía del Contexto (Lo que el modelo "lee")
+\end_layout
+
+\begin_layout Standard
+Para los proyectos de agentes industriales y aplicaciones móviles, debes
+ considerar que la "ventana de contexto" se llena con:
+\end_layout
+
+\begin_layout Itemize
+System Instructions: Las reglas base que definen el comportamiento del agente.
+\end_layout
+
+\begin_layout Itemize
+User Input: Lo que el usuario escribe o solicita en el momento.
+\end_layout
+
+\begin_layout Itemize
+Chat History: Los mensajes anteriores que permiten que la IA tenga memoria
+ de la conversación.
+\end_layout
+
+\begin_layout Itemize
+Tools Responses: Los datos crudos que regresan tus herramientas (por ejemplo,
+ el estado de un sensor o el log de un PLC).
+\end_layout
+
+\begin_layout Itemize
+Its own output: La respuesta que la IA acaba de generar también ocupa espacio
+ para la siguiente interacción.
+\end_layout
+
+\begin_layout Subsection*
+Impacto en el Rendimiento y Costo 
+\end_layout
+
+\begin_layout Standard
+Hay una relación directa entre volumen y velocidad:
+\end_layout
+
+\begin_layout Enumerate
+Más tokens = Más que leer: Aumenta el tiempo que el modelo tarda en "entender"
+ el contexto antes de empezar a responder.
+\end_layout
+
+\begin_layout Enumerate
+Más tokens de salida = Más que generar: La generación de texto es la parte
+ más lenta del proceso.
+ A mayor longitud, mayor será la latencia (el tiempo de espera del usuario).
+\end_layout
+
+\begin_layout Enumerate
+Latencia y Costo: Son los dos grandes enemigos.
+ Un contexto saturado hace que tu aplicación se sienta pesada y que el consumo
+ de la API se dispare innecesariamente.
+\end_layout
+
+\begin_layout Subsection*
+Regla de Oro para el Desarrollador
+\end_layout
+
+\begin_layout Standard
+"Short and concise > long, random dumping" (Corto y conciso es mejor que
+ volcar información larga y aleatoria).
+ En lugar de enviarle a la IA todos los datos históricos de un sensor, es
+ mejor enviarle solo un resumen o los últimos 5 minutos de lectura.
+ Esto garantiza que el agente sea rápido, preciso y económico.
+\end_layout
+
+\begin_layout Subsubsection*
+Ajuste de Precisión: Temperatura y Parámetros 
+\end_layout
+
+\begin_layout Standard
+Aquí es donde configuras "la personalidad" de tu agente:
+\end_layout
+
+\begin_layout Itemize
+Temperature (Estabilidad vs.
+ Creatividad):
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Baja (0.1 - 0.2): Respuestas lógicas y consistentes.
+ Ideal para tus PLCs y agentes industriales.
+\end_layout
+
+\begin_layout Standard
+Alta (0.8+): Respuestas variadas.
+ Ideal para el Tamagotchi o conversaciones fluidas.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Top_P: Controla qué tan amplio es el abanico de palabras que la IA considera.
+ Ayuda a filtrar opciones irrelevantes.
+\end_layout
+
+\begin_layout Itemize
+Max_Tokens: Pone un límite estricto al largo de la respuesta para ahorrar
+ dinero y evitar que la IA hable de más.
+\end_layout
+
+\begin_layout Itemize
+Penalties (Penalizaciones): Evitan que la IA se vuelva repetitiva y use
+ las mismas palabras una y otra vez
+\end_layout
+
+\begin_layout Section
+Modelos de Chat vs.
+ Herramientas (Tool/JSON) 
+\end_layout
+
+\begin_layout Standard
+No todos los modelos de IA deben usarse de la misma manera.
+ La elección depende de si necesitas una conversación humana o una ejecución
+ técnica precisa ver 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:Modelos-Agenticose"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+Chat models: free-form answers 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Los modelos de chat están optimizados para la fluidez y la naturalidad.
+\end_layout
+
+\begin_layout Standard
+Uso: Respuestas en formato de texto libre (párrafos).
+\end_layout
+
+\begin_layout Standard
+Ideal para: Tu proyecto de asesoramiento, donde lo importante es la personalidad
+ y la variación en el lenguaje.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Modelos de Herramientas (Tools/JSON)
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Estos modelos están entrenados específicamente para seguir reglas estructurales
+ estrictas.
+\end_layout
+
+\begin_layout Standard
+Uso: Generan código, llaman a funciones (functions calling) o devuelven
+ datos en JSON.
+\end_layout
+
+\begin_layout Standard
+Ideal para: Tus proyectos de PLCs, sensores y agentes de mantenimiento.
+ Aquí no necesitas que la IA sea "simpática", sino que te entregue un dato
+ exacto que tu aplicación pueda procesar sin errores.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Elige según la tarea, no por la moda: Es una advertencia sobre la ingeniería
+ eficiente.
+ No siempre el modelo más grande o más famoso es el mejor para tu tarea
+ específica.
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Eficiencia: Para leer un sensor o detectar un fallo, un modelo pequeño y
+ especializado en JSON (como Gemini Flash) será mucho más rápido y económico
+ que un modelo gigante de chat generalista.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+Los modelos mostrado en la tabla son ideales para tus sistemas agénticos
+ industriales, donde la IA debe razonar, decidir el siguiente paso y usar
+ herramientas.
+\end_layout
+
+\begin_layout Standard
+Estos modelos son ideales para tus sistemas agénticos industriales, donde
+ la IA debe razonar, decidir el siguiente paso y usar herramientas.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float table
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="6" columns="5">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+Categoría
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none" width="2cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+Modelo Recomendado
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+Ejecución
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+Fortaleza
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none" width="4cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+Tarea Ideal
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" usebox="none" width="2cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Agéntico / Potencia
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Gemini 2.5 Pro
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Nube
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" usebox="none" width="4cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Ventana de contexto masiva para leer manuales extensos de PLCs
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none" width="4cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Orquestación de toda la planta y toma de decisiones complejas.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" usebox="none" width="2cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Costo-Eficiente
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" usebox="none" width="2cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+GPT-5 mini / Gemini 2.5 Flash
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Nube
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" usebox="none" width="4cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Alta velocidad y costo extremadamente bajo por token
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none" width="4cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Procesamiento de formularios de entrada y reportes rápidos de sensores.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Edge (Local)
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" usebox="none" width="2cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Phi-4 / Llama 3.2 (3B)
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" usebox="none" width="2cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Local (Raspberry Pi)
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" usebox="none" width="4cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Muy ligero; corre sin internet en tus dispositivos maestros/esclavos
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none" width="4cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Control en tiempo real de sensores y lógica de PLC Industrial Shields
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Visión
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Qwen2.5-VL
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Nube/Híbrido
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" usebox="none" width="4cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Capacidad avanzada para entender mapas y coordenadas satelitales.
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none" width="4cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Conteo de plántulas y localización de árboles mediante imágenes.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none" width="2cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Razonamiento Técnico
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+DeepSeek V3
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Nube
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none" width="4cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Excelente en matemáticas y lógica de programación estructurada.
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none" width="3cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size scriptsize
+Generación de scripts de automatización y depuración de errores en Factory
+ I/O.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Modelos Agénticos (Para toma de decisiones y orquestación).
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:Modelos-Agenticose"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Zod?
+\end_layout
+
+\begin_layout Standard
+Zod es una librería de declaración y validación de esquemas para TypeScript
+ y Node.js.
+ En el contexto de los LLMs, se utiliza para definir un "contrato" de datos.
+ Si la IA es el motor que genera información, Zod es el inspector de calidad
+ que asegura que esa información tenga la forma exacta que tu código espera.
+\end_layout
+
+\begin_layout Enumerate
+¿Cómo funciona en tu modelo de Agente? Cuando trabajas con agentes que controlan
+ hardware (como tus PLCs o sensores NPK), no puedes permitir que la IA responda
+ con un párrafo amistoso.
+ Necesitas datos.
+ El flujo funciona así:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Definición del Esquema: Tú defines qué datos necesitas (ej.
+ un número para el pH, un booleano para una válvula).
+\end_layout
+
+\begin_layout Enumerate
+Prompting Estructurado: Le pasas ese esquema a la IA (usualmente convertido
+ a JSON Schema) diciéndole: "Solo puedes responder siguiendo esta estructura".
+\end_layout
+
+\begin_layout Enumerate
+Validación en Tiempo Real: Cuando el modelo responde, Zod toma esa respuesta
+ y la analiza.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Si es correcta: Los datos pasan a tus funciones de control.
+\end_layout
+
+\begin_layout Itemize
+Si es incorrecta: Zod detiene el proceso y te da un error detallado (o le
+ pide a la IA que corrija el error)
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Enumerate
+Para la Industria 4.0, la integración de esquemas de validación como Zod
+ no es solo una buena práctica de programación, sino una necesidad de ingeniería
+ para garantizar que la Inteligencia Artificial sea operativa en entornos
+ reales.
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Concepto de "contrato de datos" es fundamental de manera general:
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Garantía de Seguridad Operativa 
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+En un entorno industrial, las palabras de un modelo de lenguaje deben transforma
+rse en señales para el mundo físico.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Prevención de comandos erróneos: Evita que una respuesta ambigua de la IA
+ se convierta en una instrucción peligrosa para una máquina o un actuador.
+\end_layout
+
+\begin_layout Itemize
+Integridad del sistema: Al imponer una estructura rígida, aseguras que los
+ motores, sensores y controladores lógicos solo reciban parámetros que estén
+ dentro de los rangos seguros definidos previamente.
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Enumerate
+Robustez Técnica y Tipado 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Independientemente del lenguaje o framework que utilices, la validación
+ de esquemas aporta una capa de certeza técnica:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Seguridad de tipos: El sistema conoce exactamente qué tipo de dato debe
+ recibir (número, booleano, cadena), permitiendo que el compilador detecte
+ errores antes de que el código se ejecute.
+\end_layout
+
+\begin_layout Enumerate
+Mantenimiento simplificado: Si el esquema del proceso industrial cambia,
+ solo necesitas actualizar la definición en un lugar; el sistema te alertará
+ automáticamente en todos los puntos donde esa estructura se vea afectada.
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Enumerate
+Mitigación de "Alucinaciones" en Datos 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Los modelos de IA pueden generar información falsa o campos inexistentes
+ por su naturaleza probabilística.
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Filtro de precisión: Actúa como una aduana que bloquea cualquier dato que
+ no cumpla con el formato exigido.
+\end_layout
+
+\begin_layout Enumerate
+Consistencia de datos: Garantiza que, si pides el estado de un sensor, recibas
+ un dato procesable y no una explicación textual innecesaria.
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Enumerate
+El Esquema como Fuente Única de Verdad Un contrato de tiempo de ejecución
+ unifica la intención del programador con el comportamiento de la IA:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Sin duplicidad de lógica: No hace falta programar validaciones manuales
+ complejas; el esquema define las reglas y las aplica en el momento en que
+ llega la información.
+\end_layout
+
+\begin_layout Itemize
+Confiabilidad: Transforma una salida de IA "creativa" en un componente de
+ software predecible, permitiendo que cualquier aplicación consuma estos
+ datos con total confianza en su formato y contenido.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+Aplicación para tu agente de mantenimiento industrial, esta estructura significa
+ que:
+\end_layout
+
+\begin_layout Itemize
+Defines un contrato con Zod para los fallos del PLC.
+\end_layout
+
+\begin_layout Itemize
+Usas un Tool Model para que la IA elija qué herramienta de reparación usar.
+\end_layout
+
+\begin_layout Itemize
+Controlas los Tokens para que el historial no sature la memoria del proceso.
+\end_layout
+
+\begin_layout Section
+Estructura de salida
+\end_layout
+
+\begin_layout Standard
+Es la técnica para obligar a un modelo de IA a responder con un formato
+ de datos estricto en lugar de texto libre.
+\end_layout
+
+\begin_layout Enumerate
+Pedir al modelo que complete un esquema, no que adivine el formato: En lugar
+ de darle libertad creativa, le entregas un molde o "esquema" predefinido
+ (como los esquemas de Zod vistos anteriormente) para que la IA solo rellene
+ los huecos con la información correspondiente.
+\end_layout
+
+\begin_layout Enumerate
+Uso de funciones nativas del proveedor: Para lograr esta precisión, se utilizan
+ herramientas integradas de los modelos como el Modo JSON o el Tool Calling
+ (llamada a funciones).
+ Estas funciones internas aseguran que la respuesta cumpla con las reglas
+ sintácticas del formato de datos elegido.
+\end_layout
+
+\begin_layout Enumerate
+Mayor fiabilidad que un simple "por favor, responde en JSON": Esta es la
+ mejora técnica más importante.
+ Simplemente pedirle a una IA que use JSON en un mensaje de chat suele fallar
+ (la IA puede añadir texto extra o cometer errores de formato).
+ Al usar Salidas Estructuradas, el sistema garantiza que el resultado sea
+ siempre un objeto de datos válido que tu aplicación puede procesar de inmediato
+ sin romperse.
+\end_layout
+
+\begin_layout Standard
+El Esquema (El "Molde") 
+\end_layout
+
+\begin_layout Enumerate
+Primero, se define la estructura que necesitas usando un contrato como Zod
+ ver 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Esquema-de-validación"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\align center
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+TypeScript
+\end_layout
+
+\begin_layout Plain Layout
+
+const InformeMotorSchema = z.object({
+\end_layout
+
+\begin_layout Plain Layout
+
+  id_motor: z.string(),
+\end_layout
+
+\begin_layout Plain Layout
+
+  temperatura_celsius: z.number(),
+\end_layout
+
+\begin_layout Plain Layout
+
+  estado: z.enum(["operativo", "mantenimiento_requerido", "critico"]),
+\end_layout
+
+\begin_layout Plain Layout
+
+  piezas_a_revisar: z.array(z.string()),
+\end_layout
+
+\begin_layout Plain Layout
+
+  confianza_diagnostico: z.number().min(0).max(1) });
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Esquema de validación Zod.
+ 
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Esquema-de-validación"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+La Entrada (Input) Se envía a la IA generalmente un texto desordenado o
+ un log de sensores:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+"El motor MTR-204 está operando a 85 grados.
+ Se nota una vibración inusual en los rodamientos y la banda de distribución
+ parece gastada.
+ El técnico sugiere revisión inmediata."
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+La Salida Estructurada (Output) debido a la configuración 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Esquema-de-validación"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ el modelo en Modo JSON o Tool Calling, la IA ignora las reglas de cortesía
+ y devuelve estrictamente esto ver 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Respuesta-del-modelo"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+Json
+\end_layout
+
+\begin_layout Plain Layout
+
+{
+\end_layout
+
+\begin_layout Plain Layout
+
+  "id_motor": "MTR-204",
+\end_layout
+
+\begin_layout Plain Layout
+
+  "temperatura_celsius": 85,
+\end_layout
+
+\begin_layout Plain Layout
+
+  "estado": "mantenimiento_requerido",
+\end_layout
+
+\begin_layout Plain Layout
+
+  "piezas_a_revisar": ["rodamientos", "banda de distribución"],
+\end_layout
+
+\begin_layout Plain Layout
+
+  "confianza_diagnostico": 0.95
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Respuesta del modelo.
+ 
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Respuesta-del-modelo"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+¿Por qué esto es mejor que el chat normal? Sin "adivinanzas": El modelo
+ no intenta adivinar el formato; rellena el esquema que tú le diste.
+\end_layout
+
+\begin_layout Itemize
+Integración inmediata: Tu aplicación en Node.js o React puede leer ese objeto
+ JSON y encender una alerta roja automáticamente sin que un humano intervenga.
+\end_layout
+
+\begin_layout Itemize
+Fiabilidad total: Si la IA intenta enviar algo que no sea un número en temperatu
+ra_celsius, el sistema (vía Zod) lo rechaza antes de que cause un error
+ en tus bases de datos.
+\end_layout
+
+\begin_layout Section
+Servidor MCP
+\end_layout
+
+\end_body
+\end_document

@@ -1,0 +1,23 @@
+
+@media (min-width: 992px) {
+  .custom-sidebar {
+    position: fixed !important;
+  }
+}
+
+
+.custom-sidebar {
+  z-index: 1050 !important;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+  max-height: 50vh;
+  height: auto !important;              /* <-- Clave: altura automática */
+  margin-top: 10px; /* Opcional: separarlo del borde superior */
+  border-radius: 8px; /* Opcional: bordes más suaves si quieres */
+}
+
+/* Asegura que no se estire más que el mapa (suponiendo que el mapa tiene altura limitada) */
+.main-layout-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start; /* Sidebar se ajusta a altura del contenido más alto */
+}
