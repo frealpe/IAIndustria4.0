@@ -1,16 +1,44 @@
 import CIcon from '@coreui/icons-react'
-import { cilPuzzle, cilSpeedometer, cibAudible,cibCoursera,cibCodeship,cibElectron,cibBlackberry } from '@coreui/icons'
-import { CNavGroup, CNavItem } from '@coreui/react-pro'
+import { cilSpeedometer, cilChartPie, cilHistory, cilPuzzle, cilCalculator, cilSettings } from '@coreui/icons'
+import { CNavItem } from '@coreui/react-pro'
 
 const _nav = [
   {
     component: CNavItem,
-    name: 'Mediciones',
-    to: '/mediciones',
+    name: 'Monitor',
+    to: '/dashboard',
     icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
-
   },
-
+  {
+    component: CNavItem,
+    name: 'Análisis',
+    to: '/analitica',
+    icon: <CIcon icon={cilChartPie} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Historial',
+    to: '/historial',
+    icon: <CIcon icon={cilHistory} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'IA Training',
+    to: '/training',
+    icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Dispositivos',
+    to: '/dispositivos',
+    icon: <CIcon icon={cilCalculator} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Ajustes',
+    to: '/ajustes',
+    icon: <CIcon icon={cilSettings} customClassName="nav-icon" />,
+  },
 ]
 
 export default _nav

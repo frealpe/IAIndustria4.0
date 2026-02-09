@@ -4,7 +4,7 @@ import { VegaLite } from 'react-vega';
 import DeviceChartsService from '../../service/charts/DeviceChartsService';
 import AdcRealtimeChartVega from './AdcRealtimeChartVega';
 
-const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null }) => {
+const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null, selectedAnomalyIds = [] }) => {
     // Transform data for Vega
     const chartData = useMemo(() => {
         if (!data || data.length === 0) return { table: [] };
@@ -15,10 +15,11 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null 
                 timestamp: new Date(d.timestamp), // Ensure Date objects
                 voltage: +d.voltaje || +d.voltage,
                 deviceUid: d.deviceUid || d.deviceId || 'Unknown',
-                anomalyLabel: d.isAnomaly ? 'Anomalía' : 'Normal'
+                anomalyLabel: d.isAnomaly ? 'Anomalía' : 'Normal',
+                isSelected: selectedAnomalyIds.includes(d.id || d.prueba)
             }))
         };
-    }, [data]);
+    }, [data, selectedAnomalyIds]);
 
     // calculate stats for display
     const stats = useMemo(() => {
@@ -59,6 +60,7 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null 
     // Vega-Lite Spec for Time Series (Composite replacement)
     const timeSeriesSpec = useMemo(() => {
         const layers = [
+            // Base line layer
             {
                 width: chartWidth > 0 ? chartWidth - 40 : 'container',
                 height: 250,
@@ -67,7 +69,7 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null 
                     x: {
                         field: 'timestamp',
                         type: 'temporal',
-                        scale: { domain: { selection: 'brush' } },
+                        scale: { domain: { param: 'brush' } }, // Bind to brush parameter
                         axis: { title: '', format: '%H:%M:%S' }
                     },
                     y: {
@@ -76,7 +78,30 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null 
                         scale: { zero: false },
                         title: 'Voltaje'
                     },
-                    color: { value: '#0d6efd' },
+                    color: { value: '#0d6efd' }
+                }
+            },
+            // points layer
+            {
+                mark: { type: 'point', filled: true, opacity: 0.8, clip: true },
+                encoding: {
+                    x: {
+                        field: 'timestamp',
+                        type: 'temporal',
+                        scale: { domain: { param: 'brush' } } // Bind to brush parameter
+                    },
+                    y: { field: 'voltage', type: 'quantitative' },
+                    color: {
+                        condition: [
+                            { test: 'datum.isSelected', value: '#ffc107' }, // Selected highlight (yellow)
+                            { test: 'datum.isAnomaly', value: '#dc3545' } // Normal anomaly (red)
+                        ],
+                        value: '#0d6efd' // Normal point (blue)
+                    },
+                    size: {
+                        condition: { test: 'datum.isSelected', value: 100 },
+                        value: 30
+                    },
                     tooltip: [
                         { field: 'timestamp', type: 'temporal', title: 'Tiempo', format: '%H:%M:%S' },
                         { field: 'voltage', type: 'quantitative', title: 'Voltaje' },
@@ -93,7 +118,8 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null 
                 encoding: {
                     x: {
                         datum: new Date(highlightedTimestamp).getTime(),
-                        type: 'temporal'
+                        type: 'temporal',
+                        scale: { domain: { param: 'brush' } } // Bind rule to brush parameter
                     }
                 }
             });
@@ -124,15 +150,18 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null 
                             axis: null
                         }
                     },
-                    selection: {
-                        brush: { type: 'interval', encodings: ['x'] }
-                    }
+                    params: [
+                        {
+                            name: 'brush',
+                            select: { type: 'interval', encodings: ['x'] }
+                        }
+                    ]
                 }
             ]
         };
-    }, [chartWidth, highlightedTimestamp]);
+    }, [chartWidth, highlightedTimestamp, selectedAnomalyIds]);
 
-    // Vega-Lite Spec for Distribution (Gaussian/Density replacement)
+    // Vega-Lite Spec for Distribution (Gaussian/Density refined)
     const distributionSpec = useMemo(() => {
         if (!stats) return {};
 
@@ -144,10 +173,10 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null 
             height: 160,
             autosize: { type: 'fit', contains: 'padding' },
             layer: [
-                // 1. DATA HISTOGRAM
+                // 1. DATA HISTOGRAM (Frequency Axis - Left)
                 {
                     data: { name: 'table' },
-                    mark: { type: 'bar', opacity: 0.2, color: '#6c757d' },
+                    mark: { type: 'bar', opacity: 0.4, color: '#6c757d', stroke: '#495057' },
                     encoding: {
                         x: {
                             field: 'voltage',
@@ -158,11 +187,12 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null 
                         y: {
                             aggregate: 'count',
                             type: 'quantitative',
-                            axis: null // Hide frequency axis to avoid confusion with density
+                            title: 'Frecuencia (Histo)',
+                            axis: { titleColor: '#6c757d' }
                         }
                     }
                 },
-                // 2. KDE DENSITY AREA
+                // 2. KDE DENSITY AREA (Density Axis - Right)
                 {
                     data: { name: 'table' },
                     transform: [
@@ -171,7 +201,7 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null 
                             steps: 100
                         }
                     ],
-                    mark: { type: 'area', color: '#0d6efd', opacity: 0.3 },
+                    mark: { type: 'area', color: '#0d6efd', opacity: 0.25 },
                     encoding: {
                         x: {
                             field: 'value',
@@ -180,12 +210,12 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null 
                         y: {
                             field: 'density',
                             type: 'quantitative',
-                            title: 'Densidad',
-                            axis: { title: 'Probabilidad' }
+                            title: 'Densidad (Prob)',
+                            axis: { orient: 'right', titleColor: '#0d6efd' }
                         }
                     }
                 },
-                // 3. THEORETICAL GAUSSIAN CURVE
+                // 3. THEORETICAL GAUSSIAN CURVE (Density Axis - Right)
                 {
                     data: {
                         sequence: {
@@ -204,10 +234,17 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null 
                     mark: { type: 'line', color: '#dc3545', strokeWidth: 2, strokeDash: [4, 4] },
                     encoding: {
                         x: { field: 'v', type: 'quantitative' },
-                        y: { field: 'prob', type: 'quantitative' }
+                        y: {
+                            field: 'prob',
+                            type: 'quantitative',
+                            axis: { orient: 'right' } // Shared with KDE
+                        }
                     }
                 }
             ],
+            resolve: {
+                scale: { y: 'independent' }
+            },
             view: { stroke: null }
         };
     }, [stats]);

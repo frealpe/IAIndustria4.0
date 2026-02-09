@@ -14,7 +14,7 @@ import {
 import CIcon from '@coreui/icons-react';
 import { cilChartLine, cilChevronRight, cilChevronBottom } from '@coreui/icons';
 
-const TableHOC = ({ data, onRowClick, selectedIds = [], onSelectionChange, renderExpandable }) => {
+const TableHOC = ({ data, onRowClick, selectedIds = [], onSelectionChange, renderExpandable, hideActions = false }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [expandedRows, setExpandedRows] = useState([]); // Estado para filas expandidas
     const itemsPerPage = 5;
@@ -53,18 +53,10 @@ const TableHOC = ({ data, onRowClick, selectedIds = [], onSelectionChange, rende
     // ... (Mismo código de handleInternalRowClick, handleSelect, isSelected, getDate) ...
     const handleInternalRowClick = (item) => {
         console.log("Fila clickeada:", item);
-        if (item && item.resultado) {
-            let dataToGraph = item.resultado;
-            if (typeof dataToGraph === 'string') {
-                try {
-                    dataToGraph = JSON.parse(dataToGraph);
-                } catch (e) {
-                    console.error("Error parseando resultado:", e);
-                }
-            }
-            if (onRowClick) {
-                onRowClick(dataToGraph);
-            }
+        // Pass the complete item, not just resultado
+        // The receiving component can extract resultado if needed
+        if (onRowClick) {
+            onRowClick(item); // Pass complete record
         }
     };
 
@@ -110,7 +102,7 @@ const TableHOC = ({ data, onRowClick, selectedIds = [], onSelectionChange, rende
                             <CTableHeaderCell scope="col">Dispositivo</CTableHeaderCell> {/* Nueva Columna */}
                             <CTableHeaderCell scope="col">ID</CTableHeaderCell>
                             <CTableHeaderCell scope="col">Fecha</CTableHeaderCell>
-                            <CTableHeaderCell scope="col" className="text-end">Acciones</CTableHeaderCell>
+                            {!hideActions && <CTableHeaderCell scope="col" className="text-end">Acciones</CTableHeaderCell>}
                         </CTableRow>
                     </CTableHead>
                     <CTableBody>
@@ -142,21 +134,25 @@ const TableHOC = ({ data, onRowClick, selectedIds = [], onSelectionChange, rende
                                                 {item.device_uid ? item.device_uid.slice(-4) : (item.id && typeof item.id === 'string' && item.id.length > 5 ? item.id.slice(-4) : 'N/A')}
                                             </small>
                                         </CTableDataCell>
-                                        <CTableDataCell>{item.id}</CTableDataCell>
+                                        <CTableDataCell style={{ wordBreak: 'break-all', maxWidth: '120px', fontSize: '0.75rem', lineHeight: '1.2' }}>
+                                            {item.id}
+                                        </CTableDataCell>
                                         <CTableDataCell onClick={() => handleInternalRowClick(item)} style={{ cursor: 'pointer' }}>
                                             {getDate(item)}
                                         </CTableDataCell>
-                                        <CTableDataCell className="text-end">
-                                            <CButton
-                                                color="info"
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => handleInternalRowClick(item)}
-                                                title="Ver Gráfica"
-                                            >
-                                                <CIcon icon={cilChartLine} />
-                                            </CButton>
-                                        </CTableDataCell>
+                                        {!hideActions && (
+                                            <CTableDataCell className="text-end">
+                                                <CButton
+                                                    color="info"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleInternalRowClick(item)}
+                                                    title="Ver Gráfica"
+                                                >
+                                                    <CIcon icon={cilChartLine} />
+                                                </CButton>
+                                            </CTableDataCell>
+                                        )}
                                     </CTableRow>
                                     {expanded && (
                                         <CTableRow>

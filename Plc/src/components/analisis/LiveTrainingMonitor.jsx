@@ -124,21 +124,10 @@ const LiveTrainingMonitor = () => {
                     />
                 </div>
 
-                {trainingData.history.length > 0 && (
-                    <>
-                        <h6>📈 Evolución del Loss</h6>
-                        <VegaLite
-                            spec={spec}
-                            data={{ training: trainingData.history }}
-                            actions={false}
-                        />
-
-                        {trainingData.final_loss !== null && (
-                            <div className="mt-2 text-center">
-                                <strong>Loss Final: {trainingData.final_loss.toFixed(6)}</strong>
-                            </div>
-                        )}
-                    </>
+                {trainingData.final_loss !== null && (
+                    <div className="mt-2 text-center">
+                        <strong>Loss Final: {trainingData.final_loss.toFixed(6)}</strong>
+                    </div>
                 )}
             </CCardBody>
         </CCard>

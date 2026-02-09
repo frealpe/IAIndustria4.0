@@ -4,6 +4,7 @@ const { response } = require('express');
 // Helper para ejecutar queries, ya que dbConnection devuelve el pool directamente
 // OJO: en config.js vimos que exporta { dbConnection: () => pool }
 const getPool = require('../database/config').dbConnection;
+const DeviceModel = require('../models/DeviceModel');
 
 const getCaracterizacion = async (req, res = response) => {
     const pool = getPool();
@@ -34,12 +35,44 @@ const getComparacion = async (req, res = response) => {
 const getDatalogger = async (req, res = response) => {
     const pool = getPool();
     try {
-        const { rows } = await pool.query('SELECT * FROM datalogger ORDER BY id DESC LIMIT 100');
+        // Obtener los últimos 20 registros del primer dispositivo
+        const query = `SELECT * FROM Esp32_Log ORDER BY created_at DESC LIMIT 20`;
+        const { rows } = await pool.query(query);
         res.json(rows);
     } catch (error) {
         console.error('Error al obtener datalogger:', error);
         res.status(500).json({
-            msg: 'Error interno al obtener datos de datalogger'
+            msg: 'Error interno al obtener datos del datalogger'
+        });
+    }
+}
+
+// Get recent logs for real-time chart (last N records)
+const getRecentLogs = async (req, res = response) => {
+    const { limit = 500, device_uid } = req.query;
+    const pool = getPool();
+    try {
+        let query = `SELECT * FROM Esp32_Log `;
+        const params = [];
+        
+        if (device_uid) {
+            query += `WHERE device_uid = $1 `;
+            params.push(device_uid);
+        }
+        
+        query += `ORDER BY created_at DESC LIMIT $${params.length + 1}`;
+        params.push(parseInt(limit));
+        
+        const { rows } = await pool.query(query, params);
+        // Reverse to get chronological order (oldest to newest)
+        const chronologicalRows = rows.reverse();
+        
+        console.log(`📊 [Backend] getRecentLogs: Returning ${chronologicalRows.length} logs`);
+        res.json(chronologicalRows);
+    } catch (error) {
+        console.error('Error al obtener logs recientes:', error);
+        res.status(500).json({
+            msg: 'Error interno al obtener logs recientes'
         });
     }
 }
@@ -55,6 +88,16 @@ const getAnomalias = async (req, res = response) => {
             LIMIT 100
         `;
         const { rows } = await pool.query(query);
+        console.log(`📊 [Backend] getAnomalias: Found ${rows.length} anomalies`);
+        if (rows.length > 0) {
+            console.log('📊 [Backend] First anomaly sample:', {
+                id: rows[0].id,
+                device_uid: rows[0].device_uid,
+                created_at: rows[0].created_at,
+                mean: rows[0].mean,
+                has_resultado: !!rows[0].resultado
+            });
+        }
         res.json(rows);
     } catch (error) {
         console.error('Error al obtener anomalias:', error);
@@ -64,10 +107,33 @@ const getAnomalias = async (req, res = response) => {
     }
 }
 
+// Get ALL logs for a specific device (both normal and anomalies)
+const getDeviceLogs = async (req, res = response) => {
+    const { device_uid } = req.params;
+    const pool = getPool();
+    try {
+        const query = `
+            SELECT * FROM Esp32_Log 
+            WHERE device_uid = $1
+            ORDER BY created_at DESC 
+            LIMIT 500
+        `;
+        const { rows } = await pool.query(query, [device_uid]);
+        console.log(`📊 [Backend] getDeviceLogs for ${device_uid}: Found ${rows.length} logs`);
+        res.json(rows);
+    } catch (error) {
+        console.error('Error al obtener logs del dispositivo:', error);
+        res.status(500).json({
+            msg: 'Error interno al obtener logs del dispositivo'
+        });
+    }
+}
+
 const getDevices = async (req, res = response) => {
     const pool = getPool();
     try {
-        const query = `SELECT DISTINCT device_uid FROM Esp32_Log ORDER BY device_uid ASC`;
+        // Get devices from Devices table
+        const query = `SELECT DISTINCT device_uid FROM Devices WHERE is_active = TRUE ORDER BY device_uid ASC`;
         const { rows } = await pool.query(query);
         // Retornamos un array simple de strings
         res.json(rows.map(r => r.device_uid));
@@ -111,44 +177,30 @@ const getLogsByDevices = async (req, res = response) => {
 };
 
 /**
- * Get trained models history from filesystem
+ * Get trained models history from Database
  */
 const getTrainedModels = async (req, res = response) => {
-    const fs = require('fs');
-    const path = require('path');
+    const TrainedModelModel = require('../models/TrainedModelModel');
     
     try {
         const { device_uid } = req.query;
-        const modelsDir = path.join(__dirname, '..', 'trained_models');
         
-        if (!fs.existsSync(modelsDir)) {
-            return res.json([]);
+        // If device_uid is provided, get history for that device
+        // If not, we might need a new method in model or just return empty for safety
+        // For now, let's assume filtering by device is preferred
+        
+        if (device_uid) {
+            const models = await TrainedModelModel.getModelHistory(device_uid);
+            res.json(models);
+        } else {
+             // If no device specified, maybe return all? Or just empty.
+             // Current FS logic returned everything. 
+             // Let's implement a 'getAll' if needed, but for now let's query raw if model method missing
+             // Or better, let's just stick to device filtering which is what frontend uses.
+             const pool = getPool();
+             const { rows } = await pool.query('SELECT * FROM Esp32_Trained_Models ORDER BY trained_at DESC LIMIT 100');
+             res.json(rows);
         }
-        
-        const folders = fs.readdirSync(modelsDir);
-        const models = [];
-        
-        for (const folder of folders) {
-            const metadataPath = path.join(modelsDir, folder, 'metadata.json');
-            
-            if (fs.existsSync(metadataPath)) {
-                const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
-                
-                // Filter by device if requested
-                if (!device_uid || metadata.device_uid === device_uid) {
-                    models.push({
-                        id: folder, // Use folder name as ID
-                        model_path: path.join(modelsDir, folder),
-                        ...metadata
-                    });
-                }
-            }
-        }
-        
-        // Sort by trained_at descending
-        models.sort((a, b) => new Date(b.trained_at) - new Date(a.trained_at));
-        
-        res.json(models);
     } catch (error) {
         console.error('Error al obtener modelos entrenados:', error);
         res.status(500).json({
@@ -158,46 +210,15 @@ const getTrainedModels = async (req, res = response) => {
 };
 
 /**
- * Activate a specific model (filesystem-based)
+ * Activate a specific model (Database-based)
  */
 const activateModel = async (req, res = response) => {
-    const fs = require('fs');
-    const path = require('path');
-    const { model_id } = req.params; // This is the folder name
+    const TrainedModelModel = require('../models/TrainedModelModel');
+    const { model_id } = req.params; 
     
     try {
-        const modelsDir = path.join(__dirname, '..', 'trained_models');
-        const targetMetadataPath = path.join(modelsDir, model_id, 'metadata.json');
-        
-        if (!fs.existsSync(targetMetadataPath)) {
-            return res.status(404).json({ msg: 'Model not found' });
-        }
-        
-        // Read target model metadata
-        const targetMetadata = JSON.parse(fs.readFileSync(targetMetadataPath, 'utf8'));
-        const deviceUid = targetMetadata.device_uid;
-        
-        // Deactivate all models for this device
-        const folders = fs.readdirSync(modelsDir);
-        for (const folder of folders) {
-            const metadataPath = path.join(modelsDir, folder, 'metadata.json');
-            
-            if (fs.existsSync(metadataPath)) {
-                const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
-                
-                if (metadata.device_uid === deviceUid) {
-                    metadata.is_active = false;
-                    fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
-                }
-            }
-        }
-        
-        // Activate target model
-        targetMetadata.is_active = true;
-        fs.writeFileSync(targetMetadataPath, JSON.stringify(targetMetadata, null, 2));
-        
-        console.log(`✅ Modelo ${model_id} activado para dispositivo ${deviceUid}`);
-        res.json({ ok: true, model: targetMetadata });
+        const result = await TrainedModelModel.setActiveModel(model_id);
+        res.json({ ok: true, model: result });
     } catch (error) {
         console.error('Error al activar modelo:', error);
         res.status(500).json({
@@ -206,16 +227,53 @@ const activateModel = async (req, res = response) => {
     }
 };
 
-module.exports = {
-    getCaracterizacion,
-    getComparacion,
-    getDatalogger,
-    getAnomalias,
-    getDevices,
-    getLogsByDevices,
-    getTrainedModels,
-    activateModel
-};
+
+
+/**
+ * Delete a specific model (Database + Filesystem)
+ */
+async function deleteModel(req, res = response) {
+    const TrainedModelModel = require('../models/TrainedModelModel');
+    const fs = require('fs');
+    const path = require('path');
+    const { model_id } = req.params;
+
+    try {
+        // 1. Get model info first to find the path
+        const model = await TrainedModelModel.getById(model_id);
+        
+        if (!model) {
+            return res.status(404).json({ msg: 'Model not found in DB' });
+        }
+
+        const modelPath = model.model_path;
+
+        // 2. Delete from Database
+        await TrainedModelModel.delete(model_id);
+
+        // 3. Delete from Filesystem
+        console.log(`🗑️ Eliminando archivos en: ${modelPath}`);
+        if (modelPath && fs.existsSync(modelPath)) {
+            // Using recursive delete for directory
+            try {
+                fs.rmSync(modelPath, { recursive: true, force: true });
+                console.log(`✅ Archivos eliminados exitosamente: ${modelPath}`);
+            } catch (err) {
+                console.error(`❌ Error en fs.rmSync: ${err.message}`);
+            }
+        } else {
+            console.warn(`⚠️ Path no encontrado o inaccesible (fs.existsSync=false): ${modelPath}`);
+        }
+
+        res.json({ ok: true, msg: 'Modelo eliminado correctamente' });
+    } catch (error) {
+        console.error('Error al eliminar modelo:', error);
+        res.status(500).json({
+            msg: 'Error interno al eliminar modelo',
+            error: error.message
+        });
+    }
+}
 
 /**
  * Start manual training with custom parameters
@@ -248,14 +306,122 @@ const manualTrain = async (req, res = response) => {
     }
 };
 
+/**
+ * Get all registered devices with full information
+ */
+const getAllDevices = async (req, res = response) => {
+    try {
+        const devices = await DeviceModel.getAll();
+        res.json(devices);
+    } catch (error) {
+        console.error('Error al obtener todos los dispositivos:', error);
+        res.status(500).json({
+            msg: 'Error interno al obtener dispositivos'
+        });
+    }
+};
+
+/**
+ * Create new device
+ */
+const createDevice = async (req, res = response) => {
+    const { device_uid, mac_address, name, description } = req.body;
+    
+    try {
+        if (!device_uid || !mac_address) {
+            return res.status(400).json({
+                msg: 'Faltan parámetros: device_uid y mac_address son requeridos'
+            });
+        }
+
+        const device = await DeviceModel.create(device_uid, mac_address, name, description);
+        res.json({ ok: true, device });
+    } catch (error) {
+        console.error('Error al crear dispositivo:', error);
+        
+        // Handle unique constraint violations
+        if (error.code === '23505') {
+            return res.status(409).json({
+                msg: 'El dispositivo o MAC ya existe'
+            });
+        }
+        
+        res.status(500).json({
+            msg: 'Error interno al crear dispositivo',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Update device
+ */
+const updateDevice = async (req, res = response) => {
+    const { id } = req.params;
+    const data = req.body;
+    
+    try {
+        const device = await DeviceModel.update(id, data);
+        res.json({ ok: true, device });
+    } catch (error) {
+        console.error('Error al actualizar dispositivo:', error);
+        
+        if (error.message === 'Dispositivo no encontrado') {
+            return res.status(404).json({ msg: error.message });
+        }
+        
+        // Handle unique constraint violations
+        if (error.code === '23505') {
+            return res.status(409).json({
+                msg: 'El UID o MAC ya existe en otro dispositivo'
+            });
+        }
+        
+        res.status(500).json({
+            msg: 'Error interno al actualizar dispositivo',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Delete device
+ */
+const deleteDevice = async (req, res = response) => {
+    const { id } = req.params;
+    
+    try {
+        const device = await DeviceModel.delete(id);
+        res.json({ ok: true, device });
+    } catch (error) {
+        console.error('Error al eliminar dispositivo:', error);
+        
+        if (error.message === 'Dispositivo no encontrado') {
+            return res.status(404).json({ msg: error.message });
+        }
+        
+        res.status(500).json({
+            msg: 'Error interno al eliminar dispositivo',
+            error: error.message
+        });
+    }
+}
+
 module.exports = {
     getCaracterizacion,
     getComparacion,
     getDatalogger,
+    getRecentLogs,
     getAnomalias,
+    getDeviceLogs,
     getDevices,
     getLogsByDevices,
     getTrainedModels,
     activateModel,
+    getAllDevices,
+    createDevice,
+    updateDevice,
+    deleteDevice,
+    deleteModel,
     manualTrain
 };

@@ -58,10 +58,12 @@ export const useAnalysis = (selectedDevices = []) => {
     /**
      * Fetch all trained models
      */
-    const fetchTrainedModels = useCallback(async () => {
+    const fetchTrainedModels = useCallback(async (deviceUid = null) => {
         setLoadingModels(true);
         try {
-            const resp = await ControlService.getTrainedModels();
+            // Priority: Argument > First Selected Device > null (All)
+            const targetDevice = deviceUid || (selectedDevices.length > 0 ? selectedDevices[0] : null);
+            const resp = await ControlService.getTrainedModels(targetDevice);
             if (resp.ok) {
                 setTrainedModels(resp.data);
             }
@@ -70,7 +72,7 @@ export const useAnalysis = (selectedDevices = []) => {
         } finally {
             setLoadingModels(false);
         }
-    }, []);
+    }, [selectedDevices]);
 
     /**
      * Activate a specific model
@@ -86,6 +88,22 @@ export const useAnalysis = (selectedDevices = []) => {
         } catch (error) {
             console.error("useAnalysis: Error activating model:", error);
             return { ok: false, error: error.message };
+        }
+    }, [fetchTrainedModels]);
+
+    /**
+     * Delete a model
+     */
+    const deleteModel = useCallback(async (modelId) => {
+        try {
+            const resp = await ControlService.deleteModel(modelId);
+            if (resp.ok) {
+                await fetchTrainedModels(); // Refresh list
+                return { ok: true };
+            }
+            return { ok: false, error: resp.error };
+        } catch (error) {
+             return { ok: false, error: error.message };
         }
     }, [fetchTrainedModels]);
 
@@ -127,6 +145,8 @@ export const useAnalysis = (selectedDevices = []) => {
         // Actions
         fetchLogs,
         fetchTrainedModels,
+        fetchTrainedModels,
         activateModel,
+        deleteModel,
     };
 };

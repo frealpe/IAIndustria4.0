@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const Esp32Model = require('../models/Esp32Model');
 const TrainedModelModel = require('../models/TrainedModelModel');
+const DeviceModel = require('../models/DeviceModel');
 const socketService = require('../services/SocketService');
 
 const MAX_ADC_VALUE = 4095;
@@ -11,7 +12,7 @@ const ANOMALY_THRESHOLD = 0.05;       // Umbral de error (MSE) para detectar ano
 
 // Dynamic training parameters (can be overridden by manual training)
 let MAX_SAMPLES = 10;
-let TRAINING_BATCHES_REQUIRED = 10;
+let TRAINING_BATCHES_REQUIRED = 10
 
 let sampleBuffer = [];
 let rawBuffer = [];
@@ -29,8 +30,20 @@ const MODELS_DIR = path.join(__dirname, '..', 'trained_models');
 // Initialize table and try to load existing model
 (async () => {
     try {
+        console.log("🔍 [AI] Diagnostics: Checking DB Connection...");
+        const pool = await require('../database/config').dbConnection();
+        const res = await pool.query('SELECT NOW()');
+        console.log("✅ [AI] DB Connection OK:", res.rows[0].now);
+
         await TrainedModelModel.initTable();
+        await DeviceModel.init();
         console.log("💾 [AI] Model persistence system initialized");
+
+        // Hardcode check for user device
+        const testDev = 'ESP32DDEF49C0F4A8';
+        const active = await TrainedModelModel.getActiveModel(testDev);
+        console.log(`🔍 [AI] Active model for ${testDev}:`, active ? `FOUND (${active.model_path})` : "NOT FOUND");
+
     } catch (error) {
         console.error("❌ Error initializing model persistence:", error);
     }
@@ -128,8 +141,14 @@ async function trainModel() {
  * Saves the trained model to disk and registers it in the database
  */
 async function saveModel() {
-    if (!model || !currentDeviceUid) {
-        console.warn("⚠️ Cannot save model: model or device UID is missing");
+    console.log("💾 [AI DEBUG] saveModel() called");
+    
+    if (!model) {
+        console.warn("⚠️ [AI DEBUG] Cannot save model: model is null");
+        return;
+    }
+    if (!currentDeviceUid) {
+        console.warn("⚠️ [AI DEBUG] Cannot save model: currentDeviceUid is missing");
         return;
     }
 
@@ -139,8 +158,11 @@ async function saveModel() {
         const modelPath = path.join(MODELS_DIR, modelName);
         const fileUrl = `file://${modelPath}`;
 
+        console.log(`📂 [AI DEBUG] Target model path: ${modelPath}`);
+
         // Ensure directory exists
         if (!fs.existsSync(MODELS_DIR)) {
+            console.log("📂 [AI DEBUG] Creating models directory...");
             fs.mkdirSync(MODELS_DIR, { recursive: true });
         }
 
@@ -152,25 +174,30 @@ async function saveModel() {
                 const metadataPath = path.join(MODELS_DIR, folder, 'metadata.json');
                 
                 if (fs.existsSync(metadataPath)) {
-                    const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
-                    
-                    if (metadata.device_uid === currentDeviceUid && metadata.is_active) {
-                        metadata.is_active = false;
-                        fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
-                        console.log(`  ⚪ Desactivado: ${folder}`);
+                    try {
+                        const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
+                        
+                        if (metadata.device_uid === currentDeviceUid && metadata.is_active) {
+                            metadata.is_active = false;
+                            fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
+                            console.log(`  ⚪ Desactivado: ${folder}`);
+                        }
+                    } catch (e) {
+                        console.warn(`⚠️ Error reading metadata for ${folder}:`, e.message);
                     }
                 }
             }
         }
 
         // Save TensorFlow model
+        console.log("💾 [AI DEBUG] Saving TF model to disk...");
         await model.save(fileUrl);
-        console.log(`💾 [AI] Modelo guardado en: ${modelPath}`);
+        console.log(`✅ [AI] Modelo guardado en: ${modelPath}`);
 
         // Calculate final loss
         const finalLoss = trainingHistory.length > 0 
             ? trainingHistory[trainingHistory.length - 1].loss 
-            : null;
+            : 0; // Default to 0 if NaN or undefined
 
         // Save metadata as JSON file with is_active: true
         const metadata = {
@@ -187,8 +214,50 @@ async function saveModel() {
         const metadataPath = path.join(modelPath, 'metadata.json');
         fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
         console.log(`✅ [AI] Nuevo modelo activo guardado con ${trainingHistory.length} épocas`);
+
+        // --- Save to Database ---
+        console.log("� [AI→DB] Iniciando persistencia en base de datos...");
+        
+        try {
+            const samplesCount = trainingData.length * MAX_SAMPLES;
+            const batchesCount = trainingData.length;
+            
+            console.log(`📝 [AI→DB] Parámetros del modelo:
+                ├─ Device UID: ${currentDeviceUid}
+                ├─ Model Path: ${modelPath}
+                ├─ Samples Count: ${samplesCount}
+                ├─ Batches Count: ${batchesCount}
+                ├─ Threshold: ${ANOMALY_THRESHOLD}
+                ├─ Final Loss: ${finalLoss}
+                └─ Training History: ${trainingHistory.length} épocas
+            `);
+
+            const result = await TrainedModelModel.create(
+                currentDeviceUid,
+                modelPath, // Absolute path to model directory
+                samplesCount,
+                batchesCount,
+                ANOMALY_THRESHOLD,
+                trainingHistory, // Pass array directly, PostgreSQL handles JSONB
+                finalLoss
+            );
+            
+            if (result && result.id) {
+                console.log(`✅ [AI→DB] ¡Modelo registrado exitosamente!`);
+                console.log(`✅ [AI→DB] ID: ${result.id} | is_active: ${result.is_active}`);
+            } else {
+                console.warn("⚠️ [AI→DB] Modelo guardado pero sin confirmación de ID");
+            }
+        } catch (dbError) {
+            console.error("❌ [AI→DB] CRITICAL ERROR: No se pudo guardar en base de datos");
+            console.error("❌ [AI→DB] Error:", dbError.message);
+            console.error("❌ [AI→DB] Stack:", dbError.stack);
+            console.error("❌ [AI→DB] Esto significa que el modelo NO se cargará automáticamente");
+        }
+
     } catch (error) {
-        console.error("❌ Error guardando modelo:", error);
+        console.error("❌ Error guardando modelo (general):", error);
+        console.error(error.stack);
     }
 }
 
@@ -197,30 +266,18 @@ async function saveModel() {
  */
 async function loadModel(deviceUid) {
     try {
-        if (!fs.existsSync(MODELS_DIR)) {
+        // Query Database for active model
+        const activeModelRecord = await TrainedModelModel.getActiveModel(deviceUid);
+
+        if (!activeModelRecord) {
+            console.log(`📭 [AI] loadModel: No active model record in DB for ${deviceUid}`);
             return false;
         }
 
-        // Scan all model folders
-        const folders = fs.readdirSync(MODELS_DIR);
-        let activeModelPath = null;
-
-        for (const folder of folders) {
-            const metadataPath = path.join(MODELS_DIR, folder, 'metadata.json');
-            
-            if (fs.existsSync(metadataPath)) {
-                const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
-                
-                // Check if this is the active model for the device
-                if (metadata.device_uid === deviceUid && metadata.is_active) {
-                    activeModelPath = path.join(MODELS_DIR, folder);
-                    break;
-                }
-            }
-        }
+        const activeModelPath = activeModelRecord.model_path;
 
         if (!activeModelPath) {
-            console.log(`📭 [AI] No hay modelo activo para dispositivo ${deviceUid}`);
+            console.log(`📭 [AI] loadModel: Record found but model_path is empty for ${deviceUid}`);
             return false;
         }
 
@@ -228,18 +285,48 @@ async function loadModel(deviceUid) {
 
         // Check if model files exist
         if (!fs.existsSync(modelJsonPath)) {
-            console.warn(`⚠️ [AI] Archivos del modelo no encontrados en ${activeModelPath}`);
+            console.warn(`⚠️ [AI] loadModel: DB says active, but FILE MISSING at ${modelJsonPath}`);
+             // Optional: Deactivate in DB if file missing?
             return false;
         }
 
         // Load model
-        model = await tf.loadLayersModel(`file://${modelJsonPath}`);
+        const loadedModel = await tf.loadLayersModel(`file://${modelJsonPath}`);
+        
+        // SHAPE VALIDATION: Verify the model's input shape matches current MAX_SAMPLES
+        const inputShape = loadedModel.inputs[0].shape;
+        const expectedInputSize = MAX_SAMPLES;
+        const modelInputSize = inputShape[1]; // Get the second dimension [null, MAX_SAMPLES]
+        
+        if (modelInputSize !== expectedInputSize) {
+            console.warn(`⚠️ [AI] SHAPE MISMATCH DETECTED!`);
+            console.warn(`   ├─ Modelo esperado: [null, ${modelInputSize}]`);
+            console.warn(`   ├─ Configuración actual: [null, ${expectedInputSize}]`);
+            console.warn(`   └─ El modelo será descartado. Se requiere reentrenamiento.`);
+            
+            // Dispose the incompatible model
+            loadedModel.dispose();
+            
+            // Mark model as NOT ready to trigger retraining
+            isModelReady = false;
+            
+            return false;
+        }
+        
+        // Shape is compatible - proceed
+        model = loadedModel;
         model.compile({ optimizer: 'adam', loss: 'meanSquaredError' });
         
         currentDeviceUid = deviceUid;
         isModelReady = true;
         
-        console.log(`✅ [AI] Modelo activo cargado desde ${activeModelPath}`);
+        // CRITICAL: Ensure we reset training data if we successfully loaded a model
+        // This prevents the system from thinking it still needs to collect data
+        trainingData = []; 
+        isTraining = false;
+        
+        console.log(`✅ [AI] Modelo activo cargado exitosamente desde ${activeModelPath}`);
+        console.log(`✅ [AI] Input shape verificado: [null, ${modelInputSize}] ✓`);
         
         return true;
     } catch (error) {
@@ -276,6 +363,12 @@ function detectAnomaly(dataBatch) {
 async function addSample(rawValue, deviceUid) {
     // 0. Protección de datos
     const safeRawValue = rawValue || 0;
+
+    // 0.0. Protection during Manual Training
+    if (isManualTraining && currentDeviceUid && deviceUid !== currentDeviceUid) {
+        console.warn(`⚠️ [AI] Ignorando datos de ${deviceUid} porque estamos en entrenamiento manual para ${currentDeviceUid}`);
+        return; 
+    }
 
     // 0.1. Track device and attempt to load existing model
     if (deviceUid && currentDeviceUid !== deviceUid) {

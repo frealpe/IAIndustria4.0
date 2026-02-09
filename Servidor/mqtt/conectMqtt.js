@@ -46,6 +46,7 @@ function connect() {
     // Procesamiento SVM
     try {
       const data = JSON.parse(msgString);
+      console.log("🔍 [MQTT Payload]", JSON.stringify(data, null, 2));
       
       // Verificamos si tiene la estructura esperada: data.data.deviceADCValue
       if (data && data.data && data.data.deviceADCValue !== undefined) {
@@ -86,7 +87,7 @@ function connect() {
           id: Date.now(), // ID único (timestamp)
           voltaje: adcValue,
           timestamp: Date.now(),
-          deviceId: deviceId
+          device_uid: deviceId
         };
 
         // Agregar al buffer local (opcional, por si alguien pide histórico)

@@ -58,7 +58,7 @@ export const Control = () => {
           }
 
           return {
-            id: index,
+            id: log.id,
             voltaje: log.mean || 0,
             deviceId: log.device_uid,
             timestamp: log.created_at,
@@ -103,7 +103,7 @@ export const Control = () => {
 
         // Format new data point
         const newPoint = {
-          id: Date.now(), // Temporary ID
+          id: incomingData.id || Date.now(), // Use server ID if available
           voltaje: incomingData.voltaje,
           deviceId: incomingData.device_uid || 'Unknown',
           timestamp: new Date(), // Use current time for real-time
@@ -218,6 +218,7 @@ export const Control = () => {
               data={historialChartData}
               autoLoad={false}
               highlightedTimestamp={highlightedPoint?.timestamp}
+              selectedAnomalyIds={selectedRows}
             />
           </CCardBody>
         </CCard>
@@ -345,7 +346,7 @@ export const Control = () => {
               <AsistenteBlock
                 onNewData={(d, s) => { setChartData(d); setAgentStats(s); }}
                 selectedRows={selectedRows}
-                selectedTable={activeTab === 'realtime' ? 'realtime' : activeTab === 'historical' ? 'historical' : 'anomalies'}
+                selectedTable="anomalies"
               />
             </div>
           </div>

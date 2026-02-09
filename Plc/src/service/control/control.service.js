@@ -41,6 +41,29 @@ class ControlService {
         }
     };
 
+    static getDeviceLogs = async (device_uid) => {
+        try {
+            const resp = await iotApi.get(`/data/device-logs/${device_uid}`);
+            return { ok: true, data: resp.data };
+        } catch (error) {
+            console.error("Error fetching device logs:", error);
+            return { ok: false, error: error.message };
+        }
+    };
+
+    static getRecentLogs = async (limit = 500, device_uid = null) => {
+        try {
+            const params = { limit };
+            if (device_uid) params.device_uid = device_uid;
+            
+            const resp = await iotApi.get('/data/recent-logs', { params });
+            return { ok: true, data: resp.data };
+        } catch (error) {
+            console.error("Error fetching recent logs:", error);
+            return { ok: false, error: error.message };
+        }
+    };
+
     static getDevices = async () => {
         try {
             const resp = await iotApi.get('/data/devices');
@@ -82,6 +105,16 @@ class ControlService {
         }
     };
 
+    static deleteModel = async (modelId) => {
+        try {
+            const resp = await iotApi.delete(`/data/trained-models/${modelId}`);
+            return { ok: true, data: resp.data };
+        } catch (error) {
+            console.error("Error deleting model:", error);
+            return { ok: false, error: error.message };
+        }
+    };
+
     static startManualTraining = async ({ device_uid, max_samples, batches_required }) => {
         try {
             const resp = await iotApi.post('/data/train-model', {
@@ -93,6 +126,46 @@ class ControlService {
         } catch (error) {
             console.error("Error starting manual training:", error);
             throw error;
+        }
+    };
+
+    static getAllDevices = async () => {
+        try {
+            const resp = await iotApi.get('/data/devices/all');
+            return { ok: true, data: resp.data };
+        } catch (error) {
+            console.error("Error fetching all devices:", error);
+            return { ok: false, error: error.message };
+        }
+    };
+
+    static createDevice = async (device) => {
+        try {
+            const resp = await iotApi.post('/data/devices', device);
+            return { ok: true, data: resp.data };
+        } catch (error) {
+            console.error("Error creating device:", error);
+            return { ok: false, error: error.response?.data?.msg || error.message };
+        }
+    };
+
+    static updateDevice = async (id, device) => {
+        try {
+            const resp = await iotApi.put(`/data/devices/${id}`, device);
+            return { ok: true, data: resp.data };
+        } catch (error) {
+            console.error("Error updating device:", error);
+            return { ok: false, error: error.response?.data?.msg || error.message };
+        }
+    };
+
+    static deleteDevice = async (id) => {
+        try {
+            const resp = await iotApi.delete(`/data/devices/${id}`);
+            return { ok: true, data: resp.data };
+        } catch (error) {
+            console.error("Error deleting device:", error);
+            return { ok: false, error: error.message };
         }
     };
 }

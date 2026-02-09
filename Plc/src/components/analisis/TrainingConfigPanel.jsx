@@ -12,6 +12,7 @@ import {
     CAlert
 } from '@coreui/react-pro';
 import ControlService from '../../service/control/control.service';
+import LiveTrainingMonitor from './LiveTrainingMonitor';
 
 /**
  * Component to configure and manually trigger model training
@@ -54,7 +55,7 @@ const TrainingConfigPanel = ({ deviceUid }) => {
     };
 
     return (
-        <CCard className="mb-3">
+        <CCard className="h-100">
             <CCardHeader className="bg-primary text-white py-2">
                 <strong>⚙️ Configuración de Entrenamiento</strong>
             </CCardHeader>
@@ -133,6 +134,11 @@ const TrainingConfigPanel = ({ deviceUid }) => {
                         </small>
                     )}
                 </CForm>
+
+                {/* Training Monitor */}
+                <div className="mt-3">
+                    <LiveTrainingMonitor />
+                </div>
             </CCardBody>
         </CCard>
     );

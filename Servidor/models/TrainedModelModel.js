@@ -43,25 +43,45 @@ class TrainedModelModel {
         const pool = await dbConnection();
         
         try {
+            console.log(`🔄 [DB] Desactivando modelos anteriores para ${deviceUid}...`);
+            
             // Desactivar modelos anteriores del mismo dispositivo
-            await pool.query(
+            const updateResult = await pool.query(
                 'UPDATE Esp32_Trained_Models SET is_active = FALSE WHERE device_uid = $1',
                 [deviceUid]
             );
+            
+            console.log(`🔄 [DB] ${updateResult.rowCount} modelo(s) desactivado(s)`);
 
+            // JSONB columns accept JSON strings - we explicitly stringify the array
+            // This prevents the pg driver from incorrectly serializing the array
+            const historyJson = trainingHistory ? JSON.stringify(trainingHistory) : null;
+
+            console.log(`📝 [DB] Insertando nuevo modelo activo...`);
+            console.log(`📝 [DB] History preview:`, historyJson ? historyJson.substring(0, 100) + '...' : 'null');
+            
             // Insertar nuevo modelo como activo
             const result = await pool.query(
                 `INSERT INTO Esp32_Trained_Models 
                 (device_uid, model_path, samples_count, batches_count, threshold, is_active, training_history, final_loss) 
-                VALUES ($1, $2, $3, $4, $5, TRUE, $6, $7) 
+                VALUES ($1, $2, $3, $4, $5, TRUE, $6::jsonb, $7) 
                 RETURNING *`,
-                [deviceUid, modelPath, samplesCount, batchesCount, threshold, trainingHistory, finalLoss]
+                [deviceUid, modelPath, samplesCount, batchesCount, threshold, historyJson, finalLoss]
             );
 
-            console.log(`✅ Modelo registrado en BD: ${modelPath}`);
+            console.log(`✅ [DB] Modelo registrado exitosamente en BD (ID: ${result.rows[0].id}): ${modelPath}`);
+            console.log(`✅ [DB] is_active = ${result.rows[0].is_active}`);
+            
             return result.rows[0];
         } catch (error) {
-            console.error("❌ Error registrando modelo entrenado:", error);
+            console.error("❌ [DB] Error registrando modelo entrenado:", error);
+            console.error("❌ [DB] Error details:", {
+                message: error.message,
+                code: error.code,
+                detail: error.detail,
+                deviceUid,
+                modelPath
+            });
             throw error;
         }
     }
@@ -139,6 +159,35 @@ class TrainedModelModel {
             return result.rows[0];
         } catch (error) {
             console.error("❌ Error activando modelo:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Obtiene un modelo por ID
+     */
+    static async getById(modelId) {
+        const pool = await dbConnection();
+        try {
+            const result = await pool.query('SELECT * FROM Esp32_Trained_Models WHERE id = $1', [modelId]);
+            return result.rows[0] || null;
+        } catch (error) {
+            console.error("❌ Error obteniendo modelo por ID:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Elimina un modelo de la BD
+     */
+    static async delete(modelId) {
+        const pool = await dbConnection();
+        try {
+            await pool.query('DELETE FROM Esp32_Trained_Models WHERE id = $1', [modelId]);
+            console.log(`🗑️ Modelo ${modelId} eliminado de la BD`);
+            return true;
+        } catch (error) {
+            console.error("❌ Error eliminando modelo de BD:", error);
             throw error;
         }
     }

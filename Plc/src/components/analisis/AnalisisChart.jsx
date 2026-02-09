@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { VegaLite } from 'react-vega';
 
-const AnalisisChart = ({ logs }) => { // logs = array of Esp32_Log
+const AnalisisChart = ({ logs, height = 300 }) => { // logs = array of Esp32_Log
     const chartData = useMemo(() => {
         console.log("AnalisisChart: Recibido logs:", logs);
         if (!logs || logs.length === 0) return [];
@@ -11,13 +11,27 @@ const AnalisisChart = ({ logs }) => { // logs = array of Esp32_Log
         // Para visualizarlos de izquierda (viejo) a derecha (nuevo), invertimos el orden.
         const reversedLogs = [...logs].reverse(); // Orden ASC
 
-        const data = reversedLogs.map((log) => {
+        const data = reversedLogs.map((log, index) => {
+            console.log(`📊 Processing log ${index}:`, {
+                id: log.id,
+                device_uid: log.device_uid,
+                created_at: log.created_at,
+                mean: log.mean,
+                resultado: log.resultado
+            });
+
             let resultado = log.resultado;
             if (typeof resultado === 'string') {
                 try { resultado = JSON.parse(resultado); }
-                catch (e) { return null; }
+                catch (e) {
+                    console.error(`❌ Failed to parse resultado for log ${index}:`, e);
+                    return null;
+                }
             }
-            if (!resultado) return null;
+            if (!resultado) {
+                console.warn(`⚠️ Log ${index}: resultado is null/undefined`);
+                return null;
+            }
 
             const isAnomaly = resultado.isAnomaly || false;
             // Ensure numbers are distinct from NaN
@@ -28,32 +42,54 @@ const AnalisisChart = ({ logs }) => { // logs = array of Esp32_Log
 
             const lossVal = parseNum(resultado.loss);
             const thresholdVal = parseNum(resultado.threshold);
-            const meanVal = parseNum(log.mean);
+
+            // Handle missing 'mean' field - compute it from rawValues if needed
+            let meanVal = parseNum(log.mean);
+            if (!meanVal || !isFinite(meanVal)) {
+                console.warn(`⚠️ Log ${index}: 'mean' is missing/invalid, trying to compute from rawValues`);
+                if (resultado.rawValues && Array.isArray(resultado.rawValues) && resultado.rawValues.length > 0) {
+                    const sum = resultado.rawValues.reduce((a, b) => a + b, 0);
+                    meanVal = sum / resultado.rawValues.length;
+                    console.log(`✅ Log ${index}: Computed mean = ${meanVal} from ${resultado.rawValues.length} raw values`);
+                } else {
+                    console.error(`❌ Log ${index}: Cannot compute mean - no rawValues available`);
+                    meanVal = 0; // Fallback to 0
+                }
+            }
 
             // Force valid timestamp
             const ts = new Date(log.created_at).getTime();
-            if (!ts) return null;
+            if (!ts || !isFinite(ts)) {
+                console.warn(`⚠️ Log ${index}: Invalid timestamp from created_at:`, log.created_at);
+                return null;
+            }
 
-            return {
+            const processedItem = {
                 id: log.id,
                 timestamp: ts,
                 loss: lossVal,
                 mean: meanVal,
                 threshold: thresholdVal,
                 category: isAnomaly ? 'Anomalía' : 'Normal',
-                color: isAnomaly ? 'red' : 'green'
+                color: isAnomaly ? 'red' : 'blue'  // Blue for normal, red for anomalies
             };
+
+            console.log(`✅ Log ${index} processed successfully:`, processedItem);
+            return processedItem;
         }).filter(item => item !== null);
 
+        console.log("📊 AnalisisChart: Processed data:", data);
         if (data.length > 0) {
-            console.log("AnalisisChart: RAW DATA SAMPLE:",);
+            console.log("📊 AnalisisChart: First processed item:", data[0]);
+        } else {
+            console.warn("⚠️ AnalisisChart: No data after processing!");
         }
         return data;
     }, [logs]);
 
     const spec = {
         width: 600,
-        height: 300,
+        height: height,  // Use prop instead of hardcoded 300
         mark: "point", // Defines the default mark
         encoding: {
             x: {
