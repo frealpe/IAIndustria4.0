@@ -4,83 +4,125 @@ import {
   CCard,
   CCardBody,
   CCardHeader,
-  CNav,
-  CNavItem,
-  CNavLink,
-  CTabContent,
-  CTabPane,
   CButton,
 } from "@coreui/react-pro";
 import { SocketContext } from "../../context/SocketContext";
-// import { useInteligenciaStore } from "../../hook/inteligencia/useInteligencia"; // Removed as requested refactor moves logic to component
 import { useControl } from "../../hook/control/useControl";
-import TarjetaTransparente from "../tarjeta/TarjetaTransparente";
-// import AiChartComponent from "../graficos/AiChartComponent";
-import AdcRealtimeChart from "../graficos/AdcRealtimeChart";
+import AdcRealtimeChartD3 from "../graficos/AdcRealtimeChartD3";
 import TableHOC from "../tablas/TableHOC";
-// import GptMessage from "../tarjeta/GptMessage";
-// import MyMessage from "../tarjeta/MyMessage";
-// import TypingLoader from "../loaders/TypingLoader";
-// import TextMessageBox from "../tarjeta/TextMessageBox";
-
-// New Components
-import AnalisisBlock from "../analisis/AnalisisBlock";
 import AsistenteBlock from "../asistente/AsistenteBlock";
+import SensorTable from "../monitor/SensorTable";
+import ControlService from "../../service/control/control.service";
+import DeviceCharts from "../graficos/DeviceCharts";
+import PerformanceBubbleChart from "../graficos/PerformanceBubbleChart";
 
 export const Control = () => {
-  // const { envioMensajeIA } = useInteligenciaStore(); // Removed as requested refactor moves logic to component
   const { socket } = useContext(SocketContext);
-
-  // const [messages, setMessages] = useState([]); // Removed as requested refactor moves logic to component
-  // const [isLoading, setIsLoading] = useState(false); // Removed as requested refactor moves logic to component
   const [chartData, setChartData] = useState(null);
-  const [historialChartData, setHistorialChartData] = useState(null); // Separate state for historical data
+  const [historialChartData, setHistorialChartData] = useState(null);
   const [agentStats, setAgentStats] = useState(null);
   const [dataSource, setDataSource] = useState('Manual');
-  const [activeTab, setActiveTab] = useState('realtime'); // 'realtime' | 'historical'
-  const [selectedRows, setSelectedRows] = useState([]); // Estado para selección múltiple de filas
-  const [isAssistantOpen, setIsAssistantOpen] = useState(false); // Estado para asistente flotante
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+  const [highlightedPoint, setHighlightedPoint] = useState(null);
 
+  const [activeDevice, setActiveDevice] = useState(null);
 
   const controlData = useControl();
-  const { caracterizacionData, comparacionData, dataloggerData, anomaliasData, loadInitialData } = controlData || {};
+  const { anomaliasData, loadInitialData } = controlData || {};
 
-  // const messagesEndRef = useRef(null); // Removed as requested refactor moves logic to component
-
-  // =======================
   // INITIAL DATA LOAD
-  // =======================
   useEffect(() => {
-    console.log("useControl content:", controlData);
     if (loadInitialData && typeof loadInitialData === 'function') {
       loadInitialData();
-    } else {
-      console.warn("loadInitialData is missing or not a function:", loadInitialData);
     }
   }, [loadInitialData]);
 
+  // LOAD HISTORICAL DATA FOR CHART ON MOUNT
+  useEffect(() => {
+    const loadHistoricalData = async () => {
+      const result = await ControlService.getRecentLogs(2000); // Load last 2000 logs (optimized for memory)
+      if (result.ok && result.data && result.data.length > 0) {
+        console.log(`📊 Loaded ${result.data.length} historical logs for chart`);
+        // Transform data to match expected format
+        const formattedData = result.data.map((log, index) => {
+          // Parse resultado if it's a string
+          let resultado = log.resultado;
+          if (typeof resultado === 'string') {
+            try {
+              resultado = JSON.parse(resultado);
+            } catch (e) {
+              console.warn(`Failed to parse resultado for log ${log.id}:`, e);
+              resultado = {};
+            }
+          }
 
-  // =======================
-  // SOCKET LISTENER
-  // =======================
+          return {
+            id: index,
+            voltaje: log.mean || 0,
+            deviceId: log.device_uid,
+            timestamp: log.created_at,
+            isAnomaly: resultado?.isAnomaly || false  // Extract anomaly flag from parsed resultado
+          };
+        });
+        console.log(`✅ Formatted ${formattedData.length} data points, Anomalies: ${formattedData.filter(d => d.isAnomaly).length}`);
+        setHistorialChartData(formattedData); // Use historical state, not real-time state
+        setDataSource('Database');
+      } else {
+        console.log('No historical data available, waiting for real-time data...');
+      }
+    };
+
+    loadHistoricalData();
+  }, []); // Run once on mount
+
+  // SUSCRIPCIÓN A SOCKET PARA NUEVOS DATOS
   useEffect(() => {
     if (!socket) return;
 
+    const handleNewData = (newLog) => {
+      console.log('📡 Nuevo dato recibido:', newLog);
+      setHistorialChartData(prevData => {
+        const newData = [...prevData, newLog];
+        // Limitar a máximo 3000 puntos para evitar consumo excesivo de memoria
+        if (newData.length > 3000) {
+          console.log('⚠️ Límite de memoria alcanzado, eliminando datos antiguos');
+          return newData.slice(-3000); // Mantener solo los últimos 3000
+        }
+        return newData;
+      });
+      setDataSource('Real-time');
+    };
+
     const handleMcpDatos = (incomingData) => {
-      // LOGIC FOR SINGLE DATA POINT (Streaming)
       if (incomingData && !Array.isArray(incomingData) && incomingData.voltaje !== undefined) {
-        // ... (código existente)
-        console.log("⚡ Stream dato recibido:", incomingData.voltaje);
-        setChartData((prevData) => {
-          const current = Array.isArray(prevData) ? prevData : [];
-          const updated = [...current, incomingData];
-          return updated.length > 100 ? updated.slice(-100) : updated;
+        // Update active device if ID is present
+        if (incomingData.device_uid) {
+          setActiveDevice(incomingData.device_uid);
+        }
+
+        // Format new data point
+        const newPoint = {
+          id: Date.now(), // Temporary ID
+          voltaje: incomingData.voltaje,
+          deviceId: incomingData.device_uid || 'Unknown',
+          timestamp: new Date(), // Use current time for real-time
+          isAnomaly: incomingData.isAnomaly || false
+        };
+
+        // Update Chart Data
+        setHistorialChartData(prevData => {
+          const validPrevData = prevData || [];
+          const newData = [...validPrevData, newPoint];
+          // Limit to max 3000 points
+          if (newData.length > 3000) {
+            return newData.slice(-3000);
+          }
+          return newData;
         });
-        setDataSource('Agent');
-      }
-      // LOGIC FOR FULL ARRAY (Legacy/Snapshot)
-      else {
-        // ... (código existente)
+        setDataSource('Real-time');
+
+      } else {
         let finalData = incomingData;
         let finalStats = null;
         if (!Array.isArray(incomingData) && incomingData.data && Array.isArray(incomingData.data)) {
@@ -90,42 +132,46 @@ export const Control = () => {
         setChartData(finalData);
         setAgentStats(finalStats);
         setDataSource('Agent');
+
+        // Extract device_uid from the latest data point in the array
+        if (Array.isArray(finalData) && finalData.length > 0) {
+          const lastPoint = finalData[finalData.length - 1];
+          if (lastPoint && lastPoint.device_uid) {
+            setActiveDevice(lastPoint.device_uid);
+          }
+        }
       }
     };
 
     const handleNewAnomaly = (newRecord) => {
       console.log("🚨 Nueva anomalía recibida por Socket:", newRecord);
       if (controlData && controlData.addAnomaly) {
-        controlData.addAnomaly(newRecord); // Actualizar store y tabla en tiempo real
+        controlData.addAnomaly(newRecord);
       }
     };
 
     socket.on('mcpdatos', handleMcpDatos);
-    socket.on('new_anomaly', handleNewAnomaly); // Escuchar evento de anomalía
+    socket.on('new_anomaly', handleNewAnomaly);
 
     return () => {
       socket.off('mcpdatos', handleMcpDatos);
       socket.off('new_anomaly', handleNewAnomaly);
     };
-  }, [socket, controlData]); // Agregar controlData a dependencias
+  }, [socket, controlData]);
 
-
-  // =======================
   // DRAG & DROP LOGIC
-  // =======================
   const [assistPosition, setAssistPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
 
   const handleDragStart = (e) => {
     setIsDragging(true);
-    // Calcular offset relativo a la posición actual
     dragStartRef.current = {
       x: e.clientX - assistPosition.x,
       y: e.clientY - assistPosition.y
     };
-    e.stopPropagation(); // Evitar otros eventos
-    e.preventDefault(); // Evitar selección de texto
+    e.stopPropagation();
+    e.preventDefault();
   };
 
   useEffect(() => {
@@ -152,177 +198,107 @@ export const Control = () => {
     };
   }, [isDragging]);
 
-
   return (
     <div
-      className="w-100 p-1"
+      className="w-100 p-3"
       style={{
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr', // 50% - 50%
-        gridTemplateRows: '1fr 1fr', // Filas iguales
-        gap: '10px',
-        height: '88vh', // Altura casi total
-        boxSizing: 'border-box'
+        gridTemplateColumns: '1fr 1fr', // 2 MAIN COLUMNS (50% / 50%)
+        gridTemplateRows: '1fr 1fr', // Flexible equal rows
+        gap: '15px',
+        overflow: 'hidden',
+        height: 'calc(100vh - 140px)'
       }}
     >
-      {/* ============================== */}
-      {/* 1. LEFT TOP: GRÁFICA           */}
-      {/* ============================== */}
-      <div style={{ gridColumn: '1 / 2', gridRow: '1 / 2', overflow: 'hidden' }}>
-        <CCard className="h-100 shadow-sm">
-          <CCardHeader className="bg-light p-0">
-            <CNav variant="tabs" className="justify-content-start border-bottom-0">
-              <CNavItem>
-                <CNavLink
-                  active={activeTab === 'realtime'}
-                  onClick={() => setActiveTab('realtime')}
-                  style={{ cursor: 'pointer', borderTop: 'none', borderLeft: 'none', borderRight: 'none' }}
-                  className={activeTab === 'realtime' ? 'fw-bold text-danger border-bottom border-danger border-3' : 'text-muted'}
-                >
-                  📊 Tiempo Real
-                </CNavLink>
-              </CNavItem>
-              <CNavItem>
-                <CNavLink
-                  active={activeTab === 'historical'}
-                  onClick={() => setActiveTab('historical')}
-                  style={{ cursor: 'pointer', borderTop: 'none', borderLeft: 'none', borderRight: 'none' }}
-                  className={activeTab === 'historical' ? 'fw-bold text-info border-bottom border-info border-3' : 'text-muted'}
-                >
-                  🗄️ Análisis Histórico
-                </CNavLink>
-              </CNavItem>
-            </CNav>
-          </CCardHeader>
-          <CCardBody className="p-1 d-flex flex-column justify-content-center align-items-center bg-white overflow-hidden">
-            <CTabContent className="w-100 h-100">
-
-              {/* TAB 1: TIEMPO REAL */}
-              <CTabPane visible={activeTab === 'realtime'} className="h-100 w-100 fade show">
-                {chartData ? (
-                  <div className="w-100 h-100 relative">
-                    <div className="position-absolute top-0 end-0 p-2 z-10">
-                      <CBadge color={dataSource === 'Agent' ? 'danger' : 'success'}>
-                        {dataSource === 'Agent' ? 'LIVE' : 'BUFFER'}
-                      </CBadge>
-                      <span className="ms-2 small text-muted">{chartData.length} pts</span>
-                    </div>
-                    <AdcRealtimeChart data={chartData} width="container" height={320} />
-                  </div>
-                ) : (
-                  <div className="text-center text-muted p-5">Esperando datos...</div>
-                )}
-              </CTabPane>
-
-              {/* TAB 2: HISTÓRICO */}
-              <CTabPane visible={activeTab === 'historical'} className="h-100 w-100 fade show">
-                {historialChartData ? (
-                  <div className="w-100 h-100">
-                    <div className="text-end p-1">
-                      <small className="text-info fw-bold">Registro Seleccionado</small>
-                    </div>
-                    <AdcRealtimeChart data={historialChartData} width="container" height={320} />
-                  </div>
-                ) : (
-                  <div className="d-flex h-100 align-items-center justify-content-center text-muted flex-column">
-                    <h6 className="mb-0">Selecciona una anomalía</h6>
-                    <small>Haz click en el botón de gráfica de la tabla inferior</small>
-                  </div>
-                )}
-              </CTabPane>
-
-            </CTabContent>
+      {/* 1. LEFT COLUMN: DEVICE CHARTS (Full Height) */}
+      <div style={{ gridColumn: '1 / 2', gridRow: '1 / 3' }}>
+        <CCard className="h-100 shadow-lg border-0 d-flex flex-column">
+          <CCardBody className="p-1 d-flex flex-column" style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
+            <DeviceCharts
+              data={historialChartData}
+              autoLoad={false}
+              highlightedTimestamp={highlightedPoint?.timestamp}
+            />
           </CCardBody>
         </CCard>
       </div>
 
-      {/* ============================== */}
-      {/* 2. LEFT BOTTOM: TABLAS BD      */}
-      {/* ============================== */}
-      {/* ============================== */}
-      {/* 2. LEFT BOTTOM: TABLA ANOMALÍAS */}
-      {/* ============================== */}
-      <div style={{ gridColumn: '1 / 2', gridRow: '2 / 3', overflow: 'hidden' }}>
-        <CCard className="h-100 shadow-sm">
-          <CCardHeader className="bg-light d-flex justify-content-between align-items-center py-2">
-            <small className="fw-bold text-danger">🚨 Histórico de Anomalías</small>
-            <CBadge color="danger" shape="rounded-pill">{anomaliasData?.length || 0}</CBadge>
-          </CCardHeader>
-          <CCardBody className="p-2 bg-white d-flex flex-column" style={{ overflow: 'hidden' }}>
-            {/* Logic for Grouping */}
-            {(() => {
-              const groupedAnomalies = React.useMemo(() => {
-                if (!anomaliasData) return [];
-                const groups = {};
-                anomaliasData.forEach(a => {
-                  const dev = a.device_uid || 'Desconocido';
-                  if (!groups[dev]) groups[dev] = [];
-                  groups[dev].push(a);
-                });
-                return Object.keys(groups).map(dev => ({
-                  id: dev, // Shows as Device UID in outer table
-                  timestamp: groups[dev][0]?.created_at || Date.now(),
-                  anomalies: groups[dev],
-                  count: groups[dev].length
-                }));
-              }, [anomaliasData]);
+      {/* 2. TOP RIGHT: SENSOR STATUS (Left) + ANOMALIES (Right) */}
+      <div style={{ gridColumn: '2 / 3', gridRow: '1 / 2', overflow: 'hidden' }}>
+        <div className="h-100" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', height: '100%' }}>
+          {/* SENSOR STATUS */}
+          <div style={{ overflow: 'hidden', height: '100%' }}>
+            <SensorTable devices={controlData?.devices} activeDevice={activeDevice} />
+          </div>
 
-              return (
-                <TableHOC
-                  data={groupedAnomalies}
-                  renderExpandable={(group) => (
-                    <div className="w-100">
-                      <h6 className="text-secondary mb-2 bg-light p-2 rounded">
-                        📋 Anomalías del dispositivo: <strong>{group.id}</strong> ({group.count})
-                      </h6>
-                      <div style={{ height: '300px' }}>
-                        <TableHOC
-                          data={group.anomalies}
-                          onRowClick={(d) => {
-                            const rawData = d.rawValues || d.dataSnapshot || d.resultado || d;
-                            let formattedData = [];
-                            if (Array.isArray(rawData)) {
-                              formattedData = rawData.map((val, idx) => ({
-                                id: idx,
-                                voltaje: val,
-                                timestamp: d.timestamp || Date.now(),
-                                deviceId: 'Histórico'
-                              }));
-                            }
-                            setHistorialChartData(formattedData);
-                            setActiveTab('historical');
-                            setAgentStats(null);
-                          }}
-                          selectedIds={selectedRows}
-                          onSelectionChange={setSelectedRows}
-                        />
-                      </div>
-                    </div>
-                  )}
-                  onRowClick={() => { }} // Outer click does nothing specific yet
-                  selectedIds={[]} // Outer selection not implemented/requested
-                />
-              );
-            })()}
-          </CCardBody>
-        </CCard>
-      </div>
+          {/* ANOMALY HISTORY TABLE */}
+          <div style={{ overflow: 'hidden', height: '100%' }}>
+            <CCard className="h-100 shadow-sm border-0">
+              <CCardHeader className="bg-white border-bottom-0 py-3">
+                <span className="text-danger fw-bold" style={{ fontSize: '0.8rem' }}>
+                  ⚠ HISTÓRICO DE ANOMALÍAS
+                </span>
+              </CCardHeader>
+              <CCardBody className="p-0 bg-white d-flex flex-column" style={{ overflow: 'auto', height: '100%' }}>
+                {(!anomaliasData || anomaliasData.length === 0) && (
+                  <div className="d-flex h-100 align-items-center justify-content-center text-muted fst-italic" style={{ fontSize: '0.9rem', opacity: 0.6 }}>
+                    No se han registrado desviaciones en la última sesión.
+                  </div>
+                )}
 
-      {/* ============================== */}
-      {/* 3. RIGHT: CHAT / ASISTENTE     */}
-      {/* ============================== */}
-      {/* ============================== */}
-      {/* 3. RIGHT COLUMN                */}
-      {/* ============================== */}
-      <div style={{ gridColumn: '2 / 3', gridRow: '1 / 3', overflow: 'hidden' }}>
-        <div style={{ height: '100%', overflow: 'hidden' }}>
-          <AnalisisBlock data={chartData} agentStats={agentStats} />
+                {anomaliasData && anomaliasData.length > 0 && (() => {
+                  const groupedAnomalies = anomaliasData.reduce((acc, curr) => {
+                    const dev = curr.device_uid || 'Desconocido';
+                    if (!acc[dev]) acc[dev] = [];
+                    acc[dev].push(curr);
+                    return acc;
+                  }, {});
+
+                  const tableData = Object.keys(groupedAnomalies).map(dev => ({
+                    id: dev,
+                    timestamp: groupedAnomalies[dev][0]?.created_at || Date.now(),
+                    anomalies: groupedAnomalies[dev],
+                    count: groupedAnomalies[dev].length
+                  }));
+
+                  return (
+                    <TableHOC
+                      data={tableData}
+                      renderExpandable={(group) => (
+                        <div className="w-100">
+                          <h6 className="text-secondary mb-2 bg-light p-2 rounded">
+                            📋 Anomalías del dispositivo: <strong>{group.id}</strong> ({group.count})
+                          </h6>
+                          <div style={{ height: '300px' }}>
+                            <TableHOC
+                              data={group.anomalies}
+                              selectedIds={selectedRows}
+                              onSelectionChange={setSelectedRows}
+                              onRowClick={(row) => {
+                                console.log("🔍 Seleccionando punto en gráfica:", row);
+                                setHighlightedPoint(row);
+                              }}
+                              hideActions={true}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      selectedIds={[]}
+                    />
+                  );
+                })()}
+              </CCardBody>
+            </CCard>
+          </div>
         </div>
       </div>
 
-      {/* ============================== */}
-      {/* FLOATING ASSISTANT             */}
-      {/* ============================== */}
+      {/* 3. BOTTOM RIGHT: PERFORMANCE BUBBLE CHART */}
+      <div style={{ gridColumn: '2 / 3', gridRow: '2 / 3', overflow: 'hidden', height: '100%' }}>
+        <PerformanceBubbleChart data={historialChartData || []} />
+      </div>
+
+      {/* FLOATING ASSISTANT */}
       <div
         style={{
           position: 'fixed',
@@ -331,12 +307,12 @@ export const Control = () => {
           zIndex: 1050,
           width: isAssistantOpen ? '400px' : '60px',
           height: isAssistantOpen ? '600px' : '60px',
-          transition: isDragging ? 'none' : 'all 0.3s ease-in-out', // Quitar transición al arrastrar para suavidad
+          transition: isDragging ? 'none' : 'all 0.3s ease-in-out',
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
           borderRadius: isAssistantOpen ? '10px' : '50%',
           overflow: 'hidden',
           backgroundColor: isAssistantOpen ? 'white' : '#0d6efd',
-          transform: `translate(${assistPosition.x}px, ${assistPosition.y}px)` // Aplicar posición
+          transform: `translate(${assistPosition.x}px, ${assistPosition.y}px)`
         }}
       >
         {!isAssistantOpen ? (
@@ -352,8 +328,8 @@ export const Control = () => {
           <div className="d-flex flex-column h-100 relative">
             <div
               className="d-flex justify-content-between align-items-center bg-light px-3 py-2 border-bottom"
-              style={{ cursor: 'move', userSelect: 'none' }} // Cursor de movimiento
-              onMouseDown={handleDragStart} // Iniciar arrastre
+              style={{ cursor: 'move', userSelect: 'none' }}
+              onMouseDown={handleDragStart}
             >
               <strong className="text-primary pointer-events-none">🤖 Asistente Virtual</strong>
               <CButton
@@ -375,6 +351,6 @@ export const Control = () => {
           </div>
         )}
       </div>
-    </div>
+    </div >
   );
 };
