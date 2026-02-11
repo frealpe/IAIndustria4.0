@@ -36,7 +36,7 @@ const getDatalogger = async (req, res = response) => {
     const pool = getPool();
     try {
         // Obtener los últimos 20 registros del primer dispositivo
-        const query = `SELECT * FROM Esp32_Log ORDER BY created_at DESC LIMIT 20`;
+        const query = `SELECT * FROM datos ORDER BY created_at DESC LIMIT 20`;
         const { rows } = await pool.query(query);
         res.json(rows);
     } catch (error) {
@@ -52,7 +52,7 @@ const getRecentLogs = async (req, res = response) => {
     const { limit = 500, device_uid } = req.query;
     const pool = getPool();
     try {
-        let query = `SELECT * FROM Esp32_Log `;
+        let query = `SELECT * FROM datos `;
         const params = [];
         
         if (device_uid) {
@@ -78,25 +78,48 @@ const getRecentLogs = async (req, res = response) => {
 }
 const getAnomalias = async (req, res = response) => {
     const pool = getPool();
+    const { device_uid, startDate, endDate } = req.query; 
     try {
-        // Consultar Esp32_Log filtrando donde resultado->'isAnomaly' es true
-        // El campo resultado es JSONB.
-        const query = `
-            SELECT * FROM Esp32_Log 
+        let query = `
+            SELECT * FROM datos 
             WHERE (resultado->>'isAnomaly')::boolean IS TRUE 
-            ORDER BY created_at DESC 
-            LIMIT 100
         `;
-        const { rows } = await pool.query(query);
-        console.log(`📊 [Backend] getAnomalias: Found ${rows.length} anomalies`);
+        
+        const params = [];
+        if (device_uid) {
+            query += ` AND device_uid = $${params.length + 1} `;
+            params.push(device_uid);
+        }
+
+        if (startDate) {
+            query += ` AND created_at >= $${params.length + 1} `;
+            params.push(startDate);
+        }
+        if (endDate) {
+            query += ` AND created_at <= $${params.length + 1} `;
+            params.push(endDate);
+        }
+
+        query += `
+            ORDER BY created_at DESC 
+            LIMIT 200
+        `;
+        
+        const { rows } = await pool.query(query, params);
+        console.log(`📊 [Backend] getAnomalias: Found ${rows.length} anomalies${device_uid ? ` for ${device_uid}` : ''} (Filter: ${startDate || 'N/A'} - ${endDate || 'N/A'})`);
+        
         if (rows.length > 0) {
             console.log('📊 [Backend] First anomaly sample:', {
                 id: rows[0].id,
                 device_uid: rows[0].device_uid,
                 created_at: rows[0].created_at,
                 mean: rows[0].mean,
-                has_resultado: !!rows[0].resultado
+                resultado_type: typeof rows[0].resultado,
+                resultado_keys: typeof rows[0].resultado === 'object' ? Object.keys(rows[0].resultado) : 'N/A'
             });
+            if (typeof rows[0].resultado === 'string') {
+                console.log('⚠️ [Backend] resultado is a STRING, needs parsing!');
+            }
         }
         res.json(rows);
     } catch (error) {
@@ -110,16 +133,41 @@ const getAnomalias = async (req, res = response) => {
 // Get ALL logs for a specific device (both normal and anomalies)
 const getDeviceLogs = async (req, res = response) => {
     const { device_uid } = req.params;
+    const { startDate, endDate } = req.query;
+    
+    console.log(`📥 [Backend] Request getDeviceLogs: 
+        Device: ${device_uid}
+        StartDate: ${startDate || 'N/A'}
+        EndDate: ${endDate || 'N/A'}`);
+
     const pool = getPool();
     try {
-        const query = `
-            SELECT * FROM Esp32_Log 
+        let query = `
+            SELECT * FROM datos 
             WHERE device_uid = $1
-            ORDER BY created_at DESC 
-            LIMIT 500
         `;
-        const { rows } = await pool.query(query, [device_uid]);
-        console.log(`📊 [Backend] getDeviceLogs for ${device_uid}: Found ${rows.length} logs`);
+        const params = [device_uid];
+
+        if (startDate) {
+            params.push(startDate);
+            query += ` AND created_at >= $${params.length} `;
+        }
+        if (endDate) {
+            params.push(endDate);
+            query += ` AND created_at <= $${params.length} `;
+        }
+
+        // Si hay filtrado por fecha, permitimos traer más datos (hasta 2000)
+        // Si no, mantenemos el límite de 500 para rendimiento real-time
+        const limit = (startDate || endDate) ? 2000 : 500;
+
+        query += `
+            ORDER BY created_at DESC 
+            LIMIT ${limit}
+        `;
+        
+        const { rows } = await pool.query(query, params);
+        console.log(`📊 [Backend] getDeviceLogs for ${device_uid}: Found ${rows.length} logs (Filter: ${startDate || 'N/A'} - ${endDate || 'N/A'}, Limit: ${limit})`);
         res.json(rows);
     } catch (error) {
         console.error('Error al obtener logs del dispositivo:', error);
@@ -158,7 +206,7 @@ const getLogsByDevices = async (req, res = response) => {
     try {
         // Usamos ANY($1) para filtrar por el array de dispositivos
         const query = `
-            SELECT * FROM Esp32_Log 
+            SELECT * FROM datos 
             WHERE device_uid = ANY($1) 
             ORDER BY created_at DESC 
             LIMIT 500
@@ -180,7 +228,7 @@ const getLogsByDevices = async (req, res = response) => {
  * Get trained models history from Database
  */
 const getTrainedModels = async (req, res = response) => {
-    const TrainedModelModel = require('../models/TrainedModelModel');
+    const ModeloEntrenado = require('../models/ModeloEntrenado');
     
     try {
         const { device_uid } = req.query;
@@ -190,7 +238,7 @@ const getTrainedModels = async (req, res = response) => {
         // For now, let's assume filtering by device is preferred
         
         if (device_uid) {
-            const models = await TrainedModelModel.getModelHistory(device_uid);
+            const models = await ModeloEntrenado.getModelHistory(device_uid);
             res.json(models);
         } else {
              // If no device specified, maybe return all? Or just empty.
@@ -198,7 +246,7 @@ const getTrainedModels = async (req, res = response) => {
              // Let's implement a 'getAll' if needed, but for now let's query raw if model method missing
              // Or better, let's just stick to device filtering which is what frontend uses.
              const pool = getPool();
-             const { rows } = await pool.query('SELECT * FROM Esp32_Trained_Models ORDER BY trained_at DESC LIMIT 100');
+             const { rows } = await pool.query('SELECT * FROM modelo_entrenado ORDER BY trained_at DESC LIMIT 100');
              res.json(rows);
         }
     } catch (error) {
@@ -213,11 +261,11 @@ const getTrainedModels = async (req, res = response) => {
  * Activate a specific model (Database-based)
  */
 const activateModel = async (req, res = response) => {
-    const TrainedModelModel = require('../models/TrainedModelModel');
+    const ModeloEntrenado = require('../models/ModeloEntrenado');
     const { model_id } = req.params; 
     
     try {
-        const result = await TrainedModelModel.setActiveModel(model_id);
+        const result = await ModeloEntrenado.setActiveModel(model_id);
         res.json({ ok: true, model: result });
     } catch (error) {
         console.error('Error al activar modelo:', error);
@@ -233,14 +281,14 @@ const activateModel = async (req, res = response) => {
  * Delete a specific model (Database + Filesystem)
  */
 async function deleteModel(req, res = response) {
-    const TrainedModelModel = require('../models/TrainedModelModel');
+    const ModeloEntrenado = require('../models/ModeloEntrenado');
     const fs = require('fs');
     const path = require('path');
     const { model_id } = req.params;
 
     try {
         // 1. Get model info first to find the path
-        const model = await TrainedModelModel.getById(model_id);
+        const model = await ModeloEntrenado.getById(model_id);
         
         if (!model) {
             return res.status(404).json({ msg: 'Model not found in DB' });
@@ -249,7 +297,7 @@ async function deleteModel(req, res = response) {
         const modelPath = model.model_path;
 
         // 2. Delete from Database
-        await TrainedModelModel.delete(model_id);
+        await ModeloEntrenado.delete(model_id);
 
         // 3. Delete from Filesystem
         console.log(`🗑️ Eliminando archivos en: ${modelPath}`);
