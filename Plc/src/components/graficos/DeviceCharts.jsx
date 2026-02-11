@@ -10,14 +10,19 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null,
         if (!data || data.length === 0) return { table: [] };
 
         return {
-            table: data.map(d => ({
-                ...d,
-                timestamp: new Date(d.timestamp), // Ensure Date objects
-                voltage: +d.voltaje || +d.voltage,
-                deviceUid: d.deviceUid || d.deviceId || 'Unknown',
-                anomalyLabel: d.isAnomaly ? 'Anomalía' : 'Normal',
-                isSelected: selectedAnomalyIds.includes(d.id || d.prueba)
-            }))
+            table: data
+                .filter(d => (d.voltaje !== undefined || d.voltage !== undefined))
+                .map(d => {
+                    const v = d.voltage !== undefined ? d.voltage : d.voltaje;
+                    return {
+                        ...d,
+                        timestamp: new Date(d.timestamp),
+                        voltage: isNaN(+v) ? 0 : +v, // Ensure numeric value
+                        deviceUid: d.device_uid || d.deviceUid || d.deviceId || 'Unknown',
+                        anomalyLabel: d.isAnomaly ? 'Anomalía' : 'Normal',
+                        isSelected: selectedAnomalyIds.includes(d.id || d.prueba)
+                    };
+                })
         };
     }, [data, selectedAnomalyIds]);
 
@@ -163,7 +168,7 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null,
 
     // Vega-Lite Spec for Distribution (Gaussian/Density refined)
     const distributionSpec = useMemo(() => {
-        if (!stats) return {};
+        if (!stats) return null;
 
         const { mean, stdDev } = stats;
 
@@ -259,13 +264,6 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null,
                     <CCardHeader className="p-1 bg-light border-0 d-flex justify-content-between align-items-center">
                         <div className="d-flex align-items-center gap-2">
                             <strong>📈 Serie Temporal</strong>
-                            {stats && (
-                                <div className="d-flex gap-2 small ms-2 border-start ps-2 border-secondary">
-                                    <span className="text-muted" style={{ fontSize: '0.8rem' }}>Total: <b>{stats.total}</b></span>
-                                    <span className="text-success" style={{ fontSize: '0.8rem' }}>OK: <b>{stats.normal}</b></span>
-                                    <span className="text-danger" style={{ fontSize: '0.8rem' }}>⚠ <b>{stats.anomalies}</b></span>
-                                </div>
-                            )}
                         </div>
                     </CCardHeader>
                     <CCardBody
@@ -289,7 +287,11 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null,
                             <strong>📊 Distribución (Gaussiana)</strong>
                         </CCardHeader>
                         <CCardBody className="p-0 d-flex justify-content-center align-items-center">
-                            <VegaLite spec={distributionSpec} data={chartData} actions={false} style={{ width: '100%' }} />
+                            {stats && stats.total > 1 ? (
+                                <VegaLite spec={distributionSpec} data={chartData} actions={false} style={{ width: '100%' }} />
+                            ) : (
+                                <div className="text-muted small">Esperando datos suficientes...</div>
+                            )}
                         </CCardBody>
                     </CCard>
                 </div>
@@ -297,12 +299,19 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null,
                 {/* Realtime Signal Chart */}
                 <div className="h-100">
                     <CCard className="h-100 border-0 shadow-sm">
-                        <CCardHeader className="p-1 bg-light border-0">
+                        <CCardHeader className="p-1 bg-light border-0 d-flex justify-content-between align-items-center">
                             <strong>🔴 Señal en Tiempo Real</strong>
+                            {stats && (
+                                <div className="d-flex gap-2 small border-start ps-2 border-secondary">
+                                    <span className="text-muted" style={{ fontSize: '0.75rem' }}>Total: <b>{stats.total}</b></span>
+                                    <span className="text-success" style={{ fontSize: '0.75rem' }}>OK: <b>{stats.normal}</b></span>
+                                    <span className="text-danger" style={{ fontSize: '0.75rem' }}>⚠ <b>{stats.anomalies}</b></span>
+                                </div>
+                            )}
                         </CCardHeader>
                         <CCardBody className="p-0 d-flex flex-column justify-content-center">
                             <AdcRealtimeChartVega
-                                data={chartData.table} // Vega expects data array
+                                data={chartData.table.slice(-50)} // Window of last 50 points for better real-time feel
                                 compact={true}
                                 height={160}
                             />

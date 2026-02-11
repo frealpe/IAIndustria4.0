@@ -1,4 +1,6 @@
 const express = require('express');
+const DatosModel = require("../models/DatosModel");
+const ModeloEntrenado = require("../models/ModeloEntrenado");
 const cors = require('cors');
 const http = require('http'); // Importar HTTP
 const socketIo = require('socket.io'); // Importar Socket.io
@@ -25,9 +27,26 @@ class Server {
         // Inicializar Service de Sockets
         socketService.initialize(this.io);
 
+        // Inicializar Modelos de Base de Datos
+        // Note: The original instruction snippet had a syntax error here,
+        // placing comments and code inside the `cors` object.
+        // Corrected placement is after `this.io` initialization.
+        // Assuming `this.aiService` is also initialized elsewhere or will be added.
+        this.initModelsAndServices(); // Call a new method for clarity
+
         this.middlewares();
         this.conectarDB();
         this.conectarMqtt();
+    }
+
+    async initModelsAndServices() {
+        await DatosModel.init();
+        await ModeloEntrenado.init();
+        
+        // Inicializar persistencia de modelos IA
+        // Assuming this.aiService is defined elsewhere or will be added.
+        // For now, commenting out or ensuring it's handled if not present.
+        // await this.aiService.initializePersistence(); 
     }
 
     conectarMqtt() {

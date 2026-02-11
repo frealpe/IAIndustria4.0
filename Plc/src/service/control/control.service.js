@@ -31,9 +31,14 @@ class ControlService {
         }
     };
 
-    static getAnomalias = async () => {
+    static getAnomalias = async (device_uid = null, startDate = null, endDate = null) => {
         try {
-            const resp = await iotApi.get('/data/anomalias');
+            const params = {};
+            if (device_uid) params.device_uid = device_uid;
+            if (startDate) params.startDate = startDate;
+            if (endDate) params.endDate = endDate;
+            
+            const resp = await iotApi.get('/data/anomalias', { params });
             return { ok: true, data: resp.data };
         } catch (error) {
             console.error("Error fetching anomalias:", error);
@@ -41,9 +46,13 @@ class ControlService {
         }
     };
 
-    static getDeviceLogs = async (device_uid) => {
+    static getDeviceLogs = async (device_uid, startDate = null, endDate = null) => {
         try {
-            const resp = await iotApi.get(`/data/device-logs/${device_uid}`);
+            const params = {};
+            if (startDate) params.startDate = startDate;
+            if (endDate) params.endDate = endDate;
+            
+            const resp = await iotApi.get(`/data/device-logs/${device_uid}`, { params });
             return { ok: true, data: resp.data };
         } catch (error) {
             console.error("Error fetching device logs:", error);

@@ -8,6 +8,7 @@ const pool = new Pool({
   password: process.env.PG_PASSWORD,
   database: process.env.PG_DBNAME,
   ssl: { rejectUnauthorized: false },
+  max: 50, // Aumentamos el pool para alta frecuencia
 });
 
 pool.connect()

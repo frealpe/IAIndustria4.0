@@ -22,19 +22,23 @@ void TaskWifiReconnect(void *pvParamenters) {
 void TaskMqttReconnect(void *pvParamenters) {
   (void)pvParamenters;
   while (1) {
+    vTaskDelay(10 / portTICK_PERIOD_MS);
     if ((WiFi.status() == WL_CONNECTED)) {
-      if (mqtt_server != 0) {
+      if (mqtt_server[0] != '\0') {
         // llamar la función del loop mqtt
         mqttloop();
         // Enviar por MQTT el JSON
         if (mqttClient.connected()) {
-          if (millis() - lasMsg > mqtt_time_interval) { // 60 s
+          if (millis() - lasMsg > (mqtt_time_interval)) {
             lasMsg = millis();
             mqtt_publish();
-            log("INFO: Mansaje enviado por MQTT...");
+            log("INFO: Mensaje enviado por MQTT...");
           }
         }
       }
+    } else {
+      // Si no hay wifi, dormir un poco más para no saturar
+      vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
   }
 }

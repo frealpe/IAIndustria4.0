@@ -142,7 +142,7 @@ void settingsReset() {
   mqtt_retain = false;            // Retención MQTT
   mqtt_qos = 0;                   // QoS MQTT
   mqtt_time_send = true;          // Envío por tiempo
-  mqtt_time_interval = 1000;     // Intervalo envío
+  mqtt_time_interval = 1000;      // Intervalo envío
   mqtt_status_send = true;        // Envío estado
   log("[ INFO ] Se reiniciaron todos los valores por defecto"); // Log info
 }

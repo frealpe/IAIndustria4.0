@@ -96,7 +96,8 @@ void startClient() {
     log("[ ERROR ] WiFi no conectado");
     blinkRandomSingle(10, 100, WIFILED);
     wifi_change = true;
-    startAP(); // Si falla, levanta el Modo AP de emergencia
+    // startAP(); // COMENTADO: No queremos modo AP de emergencia si falla la
+    // conexión inicial
   }
 }
 
@@ -145,6 +146,8 @@ void wifiLoop() {
     previousMillisWIFI = currentMillis;
 
     // Si falla 2 veces consecutivas (aprox 1 minuto)
+    // Se ha comentado para evitar que salte a modo AP solo
+    /*
     if (w == 2) {
       log("[ INFO ] Cambiando a Modo AP");
       wifi_change = true;
@@ -153,6 +156,9 @@ void wifiLoop() {
     } else {
       log("[ WARNING ] SSID " + String(wifi_ssid) + " desconectado ");
     }
+    */
+    log("[ WARNING ] SSID " + String(wifi_ssid) +
+        " desconectado. Reintentando... (" + String(w) + ")");
   } else {
     // Si está conectado, parpadeo "heartbeat" lento asíncrono
     blinkSingleAsy(10, 500, WIFILED);

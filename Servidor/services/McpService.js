@@ -3,7 +3,7 @@ const { McpServer, ResourceTemplate } = require("@modelcontextprotocol/sdk/serve
 /* Importamos la librería Zod para la validación de esquemas de datos y tipos */
 const { z } = require("zod");
 // const dfd = require("danfojs-node"); // Ya no se usa aquí, se movió al helper
-const { analyzeData } = require("../helpers/analysisHelper");
+const { analyzeData, executeDanfoCode } = require("../helpers/analysisHelper");
 /* Importamos la conexión a la base de datos PostgreSQL desde la configuración */
 const { dbConnection } = require("../database/config");
 const socketService = require("./SocketService"); // Importamos SocketService
@@ -65,7 +65,8 @@ class McpService {
             "query_db", 
             {
                 description: "Genera y ejecuta consultas SQL. ESQUEMA DE BASE DE DATOS:\n" +
-                             "- esp32_log (id: serial, prueba: timestamp, resultado: jsonb[{pwm, tiempo, voltaje, ...}])\n" +
+                             "- datos (id: serial, prueba: timestamp, resultado: jsonb[{pwm, tiempo, voltaje, ...}])\n" +
+                             "- modelo_entrenado (id, device_uid, model_path, accuracy, is_active)\n" +
                              "NOTA: `resultado` es un JSONB array. Usa `jsonb_array_elements(resultado)` para desagregarlo.\n" +
                              "SI EL USUARIO PIDE GRAFICAR, selecciona 'resultado' y el sistema lo enviará al frontend automágicamente.",
                 inputSchema: z.object({
@@ -113,20 +114,26 @@ class McpService {
             {
                 description: "Realiza un análisis estadístico avanzado de los datos usando Danfo.js. Si es tabla 'comparacion', analiza 'voltaje0' (Planta) y 'voltaje1' (Identificación). Para otras, analiza 'voltaje'. Soporta filtrado por lista de pruebas.",
                 inputSchema: z.object({
-                    tabla: z.enum(['esp32_log']).describe("Tabla a analizar"),
+                    tabla: z.enum(['datos']).describe("Tabla a analizar"),
                     limite: z.number().optional().describe("Cantidad de últimos registros a analizar (default 50) si no se especifican pruebas"),
-                    pruebas: z.array(z.string()).optional().describe("Lista de IDs o Timestamps de pruebas específicas a analizar")
+                    pruebas: z.array(z.string()).optional().describe("Lista de IDs o Timestamps de pruebas específicas a analizar"),
+                    codigo: z.string().optional().describe("Código JavaScript/Danfo.js Opcional para ejecutar análisis custom. Variable `df` disponible."),
+                    sql: z.string().optional().describe("Consula SQL PERSONALIZADA para seleccionar datos específicos. Si se usa, ignora `tabla`, `limite` y `pruebas`. Las columnas de la consulta serán las del DataFrame.")
                 })
             },
-            async ({ tabla, limite = 50, pruebas }) => {
+            async ({ tabla, limite = 50, pruebas, codigo, sql }) => {
                 try {
                     const pool = dbConnection();
                     let query;
-                    let params;
+                    let params = [];
 
                     // ... (Mismo código de construcción de query que antes) ...
                     // --- PASO 1: CONSTRUCCIÓN DINÁMICA DE LA CONSULTA SQL ---
-                    if (pruebas && pruebas.length > 0) {
+                    if (sql) {
+                        // Modo SQL Directo (Inteligente)
+                        query = sql;
+                        console.log("🧠 Ejecutando SQL Inteligente proporcionado por el Agente:", query);
+                    } else if (pruebas && pruebas.length > 0) {
                         const isIdSearch = /^\d+$/.test(String(pruebas[0]));
                         const placeholders = pruebas.map((_, i) => `$${i + 1}`).join(',');
                         
@@ -146,33 +153,66 @@ class McpService {
                     console.log(`🔍 DB Result: Found ${result.rows.length} rows.`);
 
                     if (result.rows.length === 0) {
-                        return { content: [{ type: "text", text: "No hay datos para analizar con los criterios dados." }] };
+                        return { content: [{ type: "text", text: "No hay datos para analizar con los criterios dados (SQL o Filtros)." }] };
                     }
 
-                    // Aplanamos el JSONB
-                    let flatData = [];
-                    result.rows.forEach(row => {
-                        let rowData = row.resultado;
-                        if (typeof rowData === 'string') { try { rowData = JSON.parse(rowData); } catch(e) {} }
+                    // Preprocesamiento de datos:
+                    // Si usamos SQL directo, los datos son tal cual vienen (ej: SELECT count(*) as c ...)
+                    // Si usamos la lógica por defecto (SELECT resultado...), hay que aplanar el JSONB.
+                    let finalData = [];
+                    
+                    if (sql) {
+                        // Si es SQL personalizado, usamos las filas tal cual
+                         /* 
+                           Intento de mejora inteligente:
+                           Si el SQL selecciona 'resultado' o 'data', intentamos parsear JSON si viene como string.
+                           Pero por defecto confiamos en que el agente selecciona columnas planas.
+                        */
+                        finalData = result.rows;
+                    } else {
+                        // Lógica Híbrida: Si hay 'resultado', aplanamos. Si no (ej: count), pasamos la fila tal cual.
+                        result.rows.forEach(row => {
+                            if (row.resultado) {
+                                // Caso Estándar: Datos en columna JSONB 'resultado'
+                                let rowData = row.resultado;
+                                if (typeof rowData === 'string') { try { rowData = JSON.parse(rowData); } catch(e) {} }
 
-                        if (Array.isArray(rowData)) {
-                            flatData = flatData.concat(rowData);
-                        } else if (typeof rowData === 'object' && rowData !== null) {
-                            flatData.push(rowData);
-                        }
-                    });
+                                if (Array.isArray(rowData)) {
+                                    finalData = finalData.concat(rowData);
+                                } else if (typeof rowData === 'object' && rowData !== null) {
+                                    finalData.push(rowData);
+                                }
+                            } else {
+                                // Caso Agregación/Proyección SQL (ej: SELECT count(*) ...)
+                                // Pasamos la fila tal cual para que analysisHelper la detecte como agregación
+                                finalData.push(row);
+                            }
+                        });
+                    }
 
-                    if (flatData.length === 0) {
+                    if (finalData.length === 0) {
                         return { content: [{ type: "text", text: "Los datos encontrados no tienen formato válido." }] };
                     }
 
                     // --- PASO 3: ANÁLISIS ESTADÍSTICO (HELPER) ---
-                    const { output: analysisOutput, stats } = analyzeData(flatData, tabla);
+                    // Si viene código custom, ejecutamos eso. Si no, usamos análisis estándar.
+                    let finalResult;
+                    if (codigo) {
+                         console.log("🧪 Ejecutando código dinámico Danfo integrado...");
+                         finalResult = executeDanfoCode(finalData, codigo);
+                    } else {
+                         finalResult = analyzeData(finalData, tabla);
+                    }
+
+                    const { output: analysisOutput, stats } = finalResult;
 
                     // 🔥 CRÍTICO: Emitir datos aplanados por Socket para graficar en UI
-                    console.log(`📡 Emitting ${flatData.length} analyzed points via Socket...`);
-                    // Sends object { data, stats }
-                    socketService.emit('mcpdatos', { data: flatData, stats });
+                    // Solo emitimos si tenemos una cantidad razonable de datos puntuales (no agregados como count)
+                    // Heurística simple: Si hay más de 1 columna y más de 1 fila, o si es la estructura estándar
+                    if (finalData.length > 0 && finalData.length < 2000) {
+                        console.log(`📡 Emitting ${finalData.length} analyzed points via Socket...`);
+                        socketService.emit('mcpdatos', { data: finalData, stats });
+                    }
 
                     return {
                         content: [{ 
@@ -190,6 +230,7 @@ class McpService {
                 }
             }
         );
+
     }
 
     /**

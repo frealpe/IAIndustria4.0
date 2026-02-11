@@ -26,11 +26,6 @@ void setup() {
     log("\n[ERROR]Error al iniciar el sistema de archivos SPIFFS");
   }
 
-  // Forzamos la actualización de la configuración para aplicar el nuevo
-  // intervalo
-  settingsReset();
-  settingsSave();
-
   if (!settingsRead()) {
     settingsSave();
     log("\n[ERROR]Error al leer el archivo de configuraciones Settings.json");
@@ -40,8 +35,8 @@ void setup() {
   Serial.println("[INFO] setup() terminado"); // <-- línea añadida
   // Crear Tarea Reconexión WIFI
   xTaskCreate(TaskWifiReconnect, "TaskWifiReconnect", 1024 * 6, NULL, 3, NULL);
-  // Crear Tarea Reconexión MQTT
-  xTaskCreate(TaskMqttReconnect, "TaskMqttReconnect", 1024 * 6, NULL, 2, NULL);
+  // Crear Tarea Reconexión MQTT (Pila aumentada a 8K)
+  xTaskCreate(TaskMqttReconnect, "TaskMqttReconnect", 1024 * 8, NULL, 2, NULL);
   // LED MQTT Task
   xTaskCreate(TaskMQTTLed, "TaskMQTTLed", 2048, NULL, 1, NULL);
 }

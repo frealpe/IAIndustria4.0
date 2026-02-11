@@ -18,6 +18,20 @@ class SocketService {
             socket.on('disconnect', () => {
                 console.log('❌ Cliente desconectado:', socket.id);
             });
+
+            // Listen for MQTT commands from frontend
+            socket.on('mqtt:command', (data) => {
+                try {
+                    console.log('📡 [Socket] Relaying command to MQTT:', data);
+                    const mqttService = require('../mqtt/conectMqtt');
+                    if (data && data.topic && data.payload) {
+                        const payloadStr = typeof data.payload === 'string' ? data.payload : JSON.stringify(data.payload);
+                        mqttService.publicarMQTT(data.topic, payloadStr);
+                    }
+                } catch (err) {
+                    console.error('❌ Error handling mqtt:command:', err);
+                }
+            });
         });
 
         console.log('✅ SocketService inicializado');
@@ -29,7 +43,7 @@ class SocketService {
             console.warn('⚠️ Intentando emitir evento sin inicializar SocketService');
             return;
         }
-        console.log(`📡 Emitiendo evento [${event}]`);
+        // console.log(`[!!! DEBUG !!!] Emitiendo evento [${event}]`); 
         this.io.emit(event, data);
     }
 }

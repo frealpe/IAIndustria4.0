@@ -11,16 +11,52 @@ const DateRangeSelector = ({
     onEndDateChange,
     onFilter,
     onReset,
-    isFiltered
+    isFiltered,
+    style = {},
+    embedded = false
 }) => {
     return (
         <div style={{
-            position: 'absolute', top: '20px', left: '10px', zIndex: 20,
-            background: 'rgba(255, 255, 255, 0.95)', padding: '5px 10px', borderRadius: '8px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)', display: 'flex', gap: '8px', alignItems: 'center',
-            border: '1px solid #eee'
+            ...(!embedded && {
+                position: 'absolute', top: '20px', left: '10px', zIndex: 20,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                border: '1px solid #eee',
+                background: 'rgba(255, 255, 255, 0.95)',
+                borderRadius: '8px',
+            }),
+            display: 'flex',
+            flexDirection: embedded ? 'column' : 'row',
+            gap: '8px',
+            alignItems: embedded ? 'stretch' : 'center', // Stretch for full width
+            padding: '5px 10px',
+            ...style
         }}>
-            <div style={{ width: '220px' }}>
+
+            {/* Buttons Row (Top if embedded) */}
+            <div className="d-flex gap-2 align-items-center" style={{ justifyContent: embedded ? 'flex-end' : 'flex-start' }}>
+                <CButton
+                    color="primary"
+                    size="sm"
+                    onClick={onFilter}
+                    variant="ghost"
+                >
+                    Filtrar
+                </CButton>
+
+                {isFiltered && (
+                    <CButton
+                        color="secondary"
+                        size="sm"
+                        onClick={onReset}
+                        variant="outline"
+                    >
+                        Reset
+                    </CButton>
+                )}
+            </div>
+
+            {/* Date Picker (Bottom if embedded, Left if not) */}
+            <div style={{ width: embedded ? '100%' : '220px' }}>
                 <CDateRangePicker
                     locale="es-ES"
                     startDate={startDate}
@@ -32,31 +68,6 @@ const DateRangeSelector = ({
                     placeholder={['Desde', 'Hasta']}
                     cleaner
                 />
-            </div>
-
-            <div className="d-flex gap-2 align-items-center">
-                <CButton
-                    color="primary"
-                    size="sm"
-                    onClick={onFilter}
-                    variant="ghost"
-                >
-                    Filtrar
-                </CButton>
-
-                {isFiltered && (
-                    <>
-                        <CButton
-                            color="secondary"
-                            size="sm"
-                            onClick={onReset}
-                            variant="outline"
-                        >
-                            Reset
-                        </CButton>
-                        <CBadge color="info" shape="rounded-pill">Histórico</CBadge>
-                    </>
-                )}
             </div>
         </div>
     );

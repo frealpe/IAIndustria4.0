@@ -41,19 +41,29 @@ function connect() {
 
   mqttClient.on('message', (topic, message) => {
     const msgString = message.toString();
-    console.log(`📥 [${topic}] => ${msgString}`);
+    // console.log(`📥 [${topic}] => ${msgString}`);
 
     // Procesamiento SVM
     try {
       const data = JSON.parse(msgString);
-      console.log("🔍 [MQTT Payload]", JSON.stringify(data, null, 2));
+      // console.log("🔍 [MQTT Payload]", JSON.stringify(data, null, 2));
       
       // Verificamos si tiene la estructura esperada: data.data.deviceADCValue
       if (data && data.data && data.data.deviceADCValue !== undefined) {
         const adcValue = data.data.deviceADCValue;
         const deviceId = data.deviceMqttId || "UNKNOWN_DEVICE"; // Extraer ID
+
+        // PRIORIDAD MÁXIMA: Emitir al frontend INMEDIATAMENTE
+        const currentDataPoint = {
+          id: Date.now(),
+          voltaje: adcValue,
+          timestamp: Date.now(),
+          device_uid: deviceId
+        };
+        socketService.emit('mcpdatos', currentDataPoint);
+        // console.log(`⚡ [FAST] Emitido: ${adcValue} | Dev: ${deviceId}`);
         
-        // Enviamos al servicio SVM (ahora es Async porque puede entrenar)
+        // Procesamiento SVM (Async - No bloquea)
         SvmService.addSample(adcValue, deviceId).then(result => {
            if (result) {
               // Notificar anomalía en tiempo real
@@ -64,39 +74,20 @@ function connect() {
 
               if (result.status === "collecting") {
                   console.log(`🧠 [IA] Aprendiendo... (${result.count}/10 lotes)`);
-              } else if (result.status === "inference") {
-                  // Ya está detectando anomalías
-              }
+              } 
            }
         });
 
-        // Agregar valor ADC al buffer para visualizador
+        // Buffer para visualizador (Legacy/Backend logic)
         adcBuffer.push({
           value: adcValue,
           timestamp: Date.now(),
           deviceId: deviceId
         });
 
-        // Mantener solo los últimos MAX_ADC_VALUES valores
         if (adcBuffer.length > MAX_ADC_VALUES) {
           adcBuffer.shift();
         }
-
-        // Formatear el dato actual
-        const currentDataPoint = {
-          id: Date.now(), // ID único (timestamp)
-          voltaje: adcValue,
-          timestamp: Date.now(),
-          device_uid: deviceId
-        };
-
-        // Agregar al buffer local (opcional, por si alguien pide histórico)
-        adcBuffer.push(currentDataPoint);
-        if (adcBuffer.length > MAX_ADC_VALUES) adcBuffer.shift();
-
-        // Emitir SOLO el dato nuevo al frontend
-        socketService.emit('mcpdatos', currentDataPoint);
-        console.log(`📊 Emitiendo dato individual ADC: ${adcValue}`);
       }
     } catch (e) {
       console.error("Error parseando JSON MQTT:", e.message);

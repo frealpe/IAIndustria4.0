@@ -145,7 +145,6 @@ export const useAnalysis = (selectedDevices = []) => {
         // Actions
         fetchLogs,
         fetchTrainedModels,
-        fetchTrainedModels,
         activateModel,
         deleteModel,
     };

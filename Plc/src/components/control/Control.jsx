@@ -8,7 +8,6 @@ import {
 } from "@coreui/react-pro";
 import { SocketContext } from "../../context/SocketContext";
 import { useControl } from "../../hook/control/useControl";
-import AdcRealtimeChartD3 from "../graficos/AdcRealtimeChartD3";
 import TableHOC from "../tablas/TableHOC";
 import AsistenteBlock from "../asistente/AsistenteBlock";
 import SensorTable from "../monitor/SensorTable";
@@ -77,87 +76,63 @@ export const Control = () => {
   }, []); // Run once on mount
 
   // SUSCRIPCIÓN A SOCKET PARA NUEVOS DATOS
+  const handleMcpDatosRef = useRef();
+  handleMcpDatosRef.current = (incomingData) => {
+    if (incomingData && !Array.isArray(incomingData) && incomingData.voltaje !== undefined) {
+      if (incomingData.device_uid) setActiveDevice(incomingData.device_uid);
+
+      const newPoint = {
+        id: incomingData.id || Date.now(),
+        voltaje: incomingData.voltaje,
+        voltage: incomingData.voltaje, // Support both names for compatibility
+        deviceId: incomingData.device_uid || 'Unknown',
+        timestamp: new Date(),
+        isAnomaly: incomingData.isAnomaly || false
+      };
+
+      setHistorialChartData(prevData => {
+        const validPrevData = prevData || [];
+        const newData = [...validPrevData, newPoint];
+        return newData.length > 3000 ? newData.slice(-3000) : newData;
+      });
+      setDataSource('Real-time');
+    } else {
+      let finalData = incomingData;
+      let finalStats = null;
+      if (!Array.isArray(incomingData) && incomingData.data && Array.isArray(incomingData.data)) {
+        finalData = incomingData.data;
+        finalStats = incomingData.stats;
+      }
+      setChartData(finalData);
+      setAgentStats(finalStats);
+      setDataSource('Agent');
+
+      if (Array.isArray(finalData) && finalData.length > 0) {
+        const lastPoint = finalData[finalData.length - 1];
+        if (lastPoint && lastPoint.device_uid) {
+          setActiveDevice(lastPoint.device_uid);
+        }
+      }
+    }
+  };
+
   useEffect(() => {
     if (!socket) return;
 
-    const handleNewData = (newLog) => {
-      console.log('📡 Nuevo dato recibido:', newLog);
-      setHistorialChartData(prevData => {
-        const newData = [...prevData, newLog];
-        // Limitar a máximo 3000 puntos para evitar consumo excesivo de memoria
-        if (newData.length > 3000) {
-          console.log('⚠️ Límite de memoria alcanzado, eliminando datos antiguos');
-          return newData.slice(-3000); // Mantener solo los últimos 3000
-        }
-        return newData;
-      });
-      setDataSource('Real-time');
-    };
-
-    const handleMcpDatos = (incomingData) => {
-      if (incomingData && !Array.isArray(incomingData) && incomingData.voltaje !== undefined) {
-        // Update active device if ID is present
-        if (incomingData.device_uid) {
-          setActiveDevice(incomingData.device_uid);
-        }
-
-        // Format new data point
-        const newPoint = {
-          id: incomingData.id || Date.now(), // Use server ID if available
-          voltaje: incomingData.voltaje,
-          deviceId: incomingData.device_uid || 'Unknown',
-          timestamp: new Date(), // Use current time for real-time
-          isAnomaly: incomingData.isAnomaly || false
-        };
-
-        // Update Chart Data
-        setHistorialChartData(prevData => {
-          const validPrevData = prevData || [];
-          const newData = [...validPrevData, newPoint];
-          // Limit to max 3000 points
-          if (newData.length > 3000) {
-            return newData.slice(-3000);
-          }
-          return newData;
-        });
-        setDataSource('Real-time');
-
-      } else {
-        let finalData = incomingData;
-        let finalStats = null;
-        if (!Array.isArray(incomingData) && incomingData.data && Array.isArray(incomingData.data)) {
-          finalData = incomingData.data;
-          finalStats = incomingData.stats;
-        }
-        setChartData(finalData);
-        setAgentStats(finalStats);
-        setDataSource('Agent');
-
-        // Extract device_uid from the latest data point in the array
-        if (Array.isArray(finalData) && finalData.length > 0) {
-          const lastPoint = finalData[finalData.length - 1];
-          if (lastPoint && lastPoint.device_uid) {
-            setActiveDevice(lastPoint.device_uid);
-          }
-        }
-      }
-    };
-
+    const onMcpDatos = (data) => handleMcpDatosRef.current(data);
     const handleNewAnomaly = (newRecord) => {
-      console.log("🚨 Nueva anomalía recibida por Socket:", newRecord);
-      if (controlData && controlData.addAnomaly) {
-        controlData.addAnomaly(newRecord);
-      }
+      console.log("🚨 Nueva anomalía recibida:", newRecord);
+      if (controlData?.addAnomaly) controlData.addAnomaly(newRecord);
     };
 
-    socket.on('mcpdatos', handleMcpDatos);
+    socket.on('mcpdatos', onMcpDatos);
     socket.on('new_anomaly', handleNewAnomaly);
 
     return () => {
-      socket.off('mcpdatos', handleMcpDatos);
+      socket.off('mcpdatos', onMcpDatos);
       socket.off('new_anomaly', handleNewAnomaly);
     };
-  }, [socket, controlData]);
+  }, [socket, controlData?.addAnomaly]);
 
   // DRAG & DROP LOGIC
   const [assistPosition, setAssistPosition] = useState({ x: 0, y: 0 });

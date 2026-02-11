@@ -22,10 +22,10 @@ const AdcRealtimeChartVega = ({ data = [], height = 200, compact = false }) => {
                     x: {
                         field: 'timestamp',
                         type: 'temporal',
-                        axis: compact ? { ticks: false, labels: false, title: null } : { title: 'Tiempo' }
+                        axis: compact ? { title: null, format: '%H:%M:%S', labelFontSize: 10 } : { title: 'Tiempo' }
                     },
                     y: {
-                        field: 'voltaje',
+                        field: 'voltage',
                         type: 'quantitative',
                         scale: { zero: false, padding: 0.1 },
                         axis: { title: compact ? null : 'Voltaje' }
@@ -36,7 +36,7 @@ const AdcRealtimeChartVega = ({ data = [], height = 200, compact = false }) => {
                 mark: { type: 'point', filled: true },
                 encoding: {
                     x: { field: 'timestamp', type: 'temporal' },
-                    y: { field: 'voltaje', type: 'quantitative' },
+                    y: { field: 'voltage', type: 'quantitative' },
                     color: {
                         condition: { test: "datum.isAnomaly === true", value: "#dc2626" },
                         value: "#2563eb"
@@ -46,7 +46,7 @@ const AdcRealtimeChartVega = ({ data = [], height = 200, compact = false }) => {
                         value: 20
                     },
                     tooltip: [
-                        { field: 'voltaje', type: 'quantitative', title: 'Voltaje' },
+                        { field: 'voltage', type: 'quantitative', title: 'Voltaje' },
                         { field: 'timestamp', type: 'temporal', title: 'Tiempo', format: '%H:%M:%S' },
                         { field: 'isAnomaly', type: 'nominal', title: 'Anomalía' }
                     ]
@@ -64,7 +64,9 @@ const AdcRealtimeChartVega = ({ data = [], height = 200, compact = false }) => {
     return (
         <div className="w-100 h-100">
             {!compact && <h6 className="text-center text-primary mb-2">Señal en Tiempo Real</h6>}
-            <VegaLite spec={spec} data={chartData} actions={false} style={{ width: '100%' }} />
+            <div className="w-100" style={{ height: height }}>
+                <VegaLite spec={spec} data={chartData} actions={false} style={{ width: '100%', height: '100%' }} />
+            </div>
         </div>
     );
 };
