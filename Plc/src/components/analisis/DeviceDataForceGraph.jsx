@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import ControlService from '../../service/control/control.service';
 import { SocketContext } from '../../context/SocketContext';
-import { CBadge } from '@coreui/react-pro';
+import { CBadge, CFormSelect } from '@coreui/react-pro';
 import DateRangeSelector from './DateRangeSelector';
 
 /**
@@ -14,6 +14,9 @@ const DeviceDataForceGraph = ({ device_uid, device_name, width = 600, height = 6
     const [loading, setLoading] = useState(true);
     const [isResetting, setIsResetting] = useState(false);
     const [selectedNode, setSelectedNode] = useState(null);
+
+    const [layoutType, setLayoutType] = useState('default'); // 'default' | 'disjoint'
+    const [repulsion, setRepulsion] = useState(200);
 
     // --- DIMENSIONS & RESIZING ---
     const [dimensions, setDimensions] = useState({ w: width, h: height });
@@ -54,7 +57,7 @@ const DeviceDataForceGraph = ({ device_uid, device_name, width = 600, height = 6
     const batchBufferRef = useRef([]);
 
     // 1. FETCH LOGS
-    const fetchLogs = async (isBackground = false) => {
+    const fetchLogs = async (isBackground = false, overrideStart = null, overrideEnd = null) => {
         if (!isBackground) setLoading(true);
         try {
             const formatForApi = (date) => {
@@ -63,17 +66,20 @@ const DeviceDataForceGraph = ({ device_uid, device_name, width = 600, height = 6
                 return date;
             };
 
-            const startStr = formatForApi(startDate);
-            let endStr = formatForApi(endDate);
+            const startVal = overrideStart || startDate;
+            const endVal = overrideEnd || endDate;
+
+            const startStr = formatForApi(startVal);
+            let endStr = formatForApi(endVal);
 
             // Inclusive local end-of-day
-            if (endDate instanceof Date && endDate.getHours() === 0) {
-                const expanded = new Date(endDate);
+            if ((endVal instanceof Date) && endVal.getHours() === 0) {
+                const expanded = new Date(endVal);
                 expanded.setHours(23, 59, 59, 999);
                 endStr = expanded.toISOString();
             }
 
-            console.log(`� [ForceGraph] Fetching logs. Range: ${startStr} - ${endStr}`);
+            console.log(` [ForceGraph] Fetching logs. Range: ${startStr} - ${endStr}`);
 
             const [logsRes, anomsRes] = await Promise.all([
                 ControlService.getDeviceLogs(device_uid, startStr, endStr),
@@ -128,6 +134,37 @@ const DeviceDataForceGraph = ({ device_uid, device_name, width = 600, height = 6
         fetchLogs();
     };
 
+    const handleReset = () => {
+        const dStart = new Date();
+        dStart.setHours(0, 0, 0, 0);
+        const dEnd = new Date();
+        dEnd.setHours(23, 59, 59, 999);
+
+        setStartDate(dStart);
+        setEndDate(dEnd);
+
+        // NUCLEAR RESET with immediate new dates
+        setIsResetting(true);
+
+        if (simulationRef.current) {
+            simulationRef.current.stop();
+            simulationRef.current = null;
+        }
+
+        nodesRef.current = [];
+        linksRef.current = [];
+        gNodesRef.current = null;
+        gLinksRef.current = null;
+
+        if (svgRef.current) {
+            d3.select(svgRef.current).selectAll("*").remove();
+        }
+
+        setIsFiltered(true);
+        // Pass explicit today dates to avoid async state delay
+        fetchLogs(false, dStart, dEnd);
+    };
+
     // 2. SOCKETS
     const { socket } = React.useContext(SocketContext);
     useEffect(() => {
@@ -175,15 +212,37 @@ const DeviceDataForceGraph = ({ device_uid, device_name, width = 600, height = 6
             gNodesRef.current = svg.append("g").attr("class", "nodes");
 
             simulationRef.current = d3.forceSimulation()
-                .force("link", d3.forceLink().id(d => d.id).distance(d => d.isAnomaly ? 100 : 70))
-                .force("charge", d3.forceManyBody().strength(-100)) // Stronger repulsion for high node counts
-                .force("center", d3.forceCenter(curW / 2, curH / 2))
+                .force("charge", d3.forceManyBody().strength(-50))
                 .force("collide", d3.forceCollide().radius(d => d.size + 4))
                 .velocityDecay(0.3); // Smoother stabilization
-        } else {
-            simulationRef.current.force("center", d3.forceCenter(curW / 2, curH / 2));
+
         }
 
+        // Update simulation layout forces based on layoutType
+        if (simulationRef.current) {
+            if (layoutType === 'default') {
+                simulationRef.current
+                    .force("link", d3.forceLink().id(d => d.id).distance(d => d.isAnomaly ? 100 : 30)) // Reduced from 70
+                    .force("charge", d3.forceManyBody().strength(-100)) // Use fixed repulsion for layout stability in default
+                    .force("center", d3.forceCenter(curW / 2, curH / 2))
+                    .force("x", null)
+                    .force("y", null);
+            } else {
+                // Disjoint: Stronger repulsion but tighter grouping by color
+                simulationRef.current
+                    .force("charge", d3.forceManyBody().strength(-repulsion)) // Dynamic Repulsion
+                    .force("link", null)
+                    .force("center", null)
+                    .force("x", d3.forceX(d => {
+                        if (d.type === 'root') return curW / 2;
+                        // Separation: 30% vs 70% (closer but distinct)
+                        return d.isAnomaly ? curW * 0.7 : curW * 0.3;
+                    }).strength(0.2)) // Stronger pull to cluster center
+                    .force("y", d3.forceY(curH / 2).strength(0.2));
+            }
+
+            simulationRef.current.restart();
+        }
         // Prepare Data
         const rootNode = {
             id: "Root",
@@ -208,7 +267,7 @@ const DeviceDataForceGraph = ({ device_uid, device_name, width = 600, height = 6
                 id: nodeId,
                 label: `V:${parseFloat(log.mean).toFixed(1)}`,
                 type: "data",
-                size: isAnom ? 8 : 4,
+                size: isAnom ? 8 : 2.5, // Reduced from 4
                 isAnomaly: isAnom,
                 color: isAnom ? "#dc3545" : (res?.raw ? "#6c757d" : "#198754"),
                 data: log
@@ -235,11 +294,36 @@ const DeviceDataForceGraph = ({ device_uid, device_name, width = 600, height = 6
             .attr("stroke", "#999")
             .attr("stroke-opacity", 0.4);
 
+        const drag = simulation => {
+            function dragstarted(event) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                event.subject.fx = event.subject.x;
+                event.subject.fy = event.subject.y;
+            }
+
+            function dragged(event) {
+                event.subject.fx = event.x;
+                event.subject.fy = event.y;
+            }
+
+            function dragended(event) {
+                if (!event.active) simulation.alphaTarget(0);
+                event.subject.fx = null;
+                event.subject.fy = null;
+            }
+
+            return d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended);
+        };
+
         const node = gNodesRef.current.selectAll("g")
             .data(nodesRef.current, d => d.id)
             .join(
                 enter => {
-                    const g = enter.append("g").attr("cursor", "pointer")
+                    const g = enter.append("g").attr("cursor", "move")
+                        .call(drag(simulationRef.current))
                         .on("click", (e, d) => { e.stopPropagation(); setSelectedNode(d.type === 'data' ? d : null); });
                     g.append("circle").attr("stroke", "#fff").attr("stroke-width", 1.5);
                     g.append("text").attr("dy", "0.31em").style("pointer-events", "none").style("font-size", "10px");
@@ -251,14 +335,25 @@ const DeviceDataForceGraph = ({ device_uid, device_name, width = 600, height = 6
         node.select("text").text(d => d.type === 'root' ? d.label : "").attr("x", d => d.size + 5);
 
         simulationRef.current.nodes(nodesRef.current);
-        simulationRef.current.force("link").links(linksRef.current);
+
+        // Link update only if layoutType is default (where link force exists)
+        if (layoutType === 'default') {
+            simulationRef.current.force("link").links(linksRef.current);
+        }
+
         simulationRef.current.alpha(1).restart();
 
         simulationRef.current.on("tick", () => {
-            link.attr("x1", d => isNaN(d.source.x) ? curW / 2 : d.source.x)
-                .attr("y1", d => isNaN(d.source.y) ? curH / 2 : d.source.y)
-                .attr("x2", d => isNaN(d.target.x) ? curW / 2 : d.target.x)
-                .attr("y2", d => isNaN(d.target.y) ? curH / 2 : d.target.y);
+            if (layoutType === 'default') {
+                link
+                    .attr("x1", d => isNaN(d.source.x) ? curW / 2 : d.source.x)
+                    .attr("y1", d => isNaN(d.source.y) ? curH / 2 : d.source.y)
+                    .attr("x2", d => isNaN(d.target.x) ? curW / 2 : d.target.x)
+                    .attr("y2", d => isNaN(d.target.y) ? curH / 2 : d.target.y)
+                    .attr("display", null);
+            } else {
+                link.attr("display", "none");
+            }
 
             node.attr("transform", d => {
                 const tx = !isNaN(d.x) ? d.x : curW / 2;
@@ -267,7 +362,7 @@ const DeviceDataForceGraph = ({ device_uid, device_name, width = 600, height = 6
             });
         });
 
-    }, [logs, loading, isResetting, curW, curH, device_uid, device_name]);
+    }, [logs, loading, isResetting, curW, curH, device_uid, device_name, layoutType, repulsion]);
 
     if (loading) return (
         <div style={{ minHeight: '400px' }} className="w-100 d-flex justify-content-center align-items-center bg-light border rounded">
@@ -288,9 +383,39 @@ const DeviceDataForceGraph = ({ device_uid, device_name, width = 600, height = 6
                 startDate={startDate} endDate={endDate}
                 onStartDateChange={setStartDate} onEndDateChange={setEndDate}
                 onFilter={handleFilter}
-                onReset={() => { setStartDate(null); setEndDate(null); setIsFiltered(false); }}
+                onReset={handleReset}
                 isFiltered={isFiltered}
             />
+
+            <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 100, width: '220px', display: 'flex', flexDirection: 'column', gap: '5px', alignItems: 'flex-end' }}>
+                <CFormSelect
+                    size="sm"
+                    value={layoutType}
+                    onChange={(e) => setLayoutType(e.target.value)}
+                    options={[
+                        { label: 'Centralizado (Default)', value: 'default' },
+                        { label: 'Disjoint (Cluster)', value: 'disjoint' }
+                    ]}
+                />
+
+                {layoutType === 'disjoint' && (
+                    <div className="bg-white p-2 border rounded shadow-sm" style={{ width: '100%' }}>
+                        <label htmlFor="repulsionRange" className="form-label" style={{ fontSize: '10px' }}>
+                            Densidad / Repulsión: {repulsion}
+                        </label>
+                        <input
+                            type="range"
+                            className="form-range"
+                            min="50"
+                            max="500"
+                            step="10"
+                            value={repulsion}
+                            onChange={(e) => setRepulsion(Number(e.target.value))}
+                            id="repulsionRange"
+                        />
+                    </div>
+                )}
+            </div>
 
             {(loading || isResetting) && (
                 <div style={{
