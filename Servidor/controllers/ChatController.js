@@ -59,8 +59,12 @@ class ChatController {
         console.log("📝 Query enviada a ChatService:", queryText); // Log para verificar qué se envía exactamente al LLM
 
         try {
-            // Llamamos al servicio principal (Agente LangChain) con el prompt enriquecido
-            const { text, data } = await chatService.processQuery(queryText);
+            // Extraer historial del cuerpo de la petición (si existe)
+            // Esperamos un array de objetos: [{ role: 'user'|'assistant', content: '...' }]
+            const history = req.body.history || [];
+
+            // Llamamos al servicio principal (Agente LangChain) con el prompt enriquecido y el historial
+            const { text, data } = await chatService.processQuery(queryText, history);
             
             // Devolvemos la respuesta generada por el agente
             res.json({ response: text, data });

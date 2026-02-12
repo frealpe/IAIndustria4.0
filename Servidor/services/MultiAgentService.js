@@ -3,11 +3,12 @@ const { createReactAgent } = require("@langchain/langgraph/prebuilt");
 const { StateGraph, Annotation, START, END } = require("@langchain/langgraph");
 const mcpService = require("./McpService");
 const { tool } = require("@langchain/core/tools");
-const { getChatModel } = require("./agentes/modelFactory");
+const { getChatModel, getLocalModel } = require("./agentes/modelFactory");
 const { DB_SCHEMA } = require("../constants/schema");
 const { z } = require("zod");
 
 const model = getChatModel({ temperature: 0 });
+const modelLocal = getLocalModel();
 const rawTools = mcpService.getRawTools();
 
 const getToolsByName = (names) => {
@@ -43,19 +44,26 @@ const analysisAgent = createReactAgent({
 });
 
 // --- GRAFO ---
-const GraphState = Annotation.Root({ input: Annotation(), user_intent: Annotation(), agent_response: Annotation() });
+const GraphState = Annotation.Root({ 
+    input: Annotation(), 
+    chat_history: Annotation({ reducer: (x, y) => x.concat(y), default: () => [] }), 
+    user_intent: Annotation(), 
+    agent_response: Annotation() 
+});
 
 const nodeOrchestrator = async (state) => {
     console.log("🕵️ [Orchestrator] Input:", state.input);
+    const historyText = state.chat_history.map(m => `${m.role}: ${m.content}`).join("\n");
+    
     const response = await model.invoke([
         new SystemMessage(
-            "Eres el Orquestador. Tu única misión es clasificar la intención del usuario.\n" +
+            "Eres el Orquestador. Tu única misión es clasificar la intención del usuario basándote en su mensaje actual Y el historial.\n" +
             "ROLES:\n" +
-            "- DATA_SCIENTIST: Para análisis estadístico, tendencias, regresión, anomalías, R2, predicciones o gráficas complejas.\n" +
-            "- SQL_EXPERT: SOLO para listados simples, búsquedas de texto exacto o contar registros.\n" +
+            "- DATA_SCIENTIST: Para CUALQUIER ANÁLISIS relacionado con datos de sensores, tendencias, regresión, anomalías (incluso contar cuántas hay), R2, predicciones, gráficas complejas O SEGUIMIENTO DE ANÁLISIS PREVIOS.\n" +
+            "- SQL_EXPERT: SOLO para listados simples de inventario (qué dispositivos hay), búsquedas de texto exacto en descripciones o contar registros TOTALES de la tabla sin filtros complejos de JSON.\n" +
             "Responde solo JSON: {\"next\":\"...\"}"
         ),
-        new HumanMessage(state.input)
+        new HumanMessage(`HISTORIAL:\n${historyText}\n\nUSUARIO ACTUAL:\n${state.input}`)
     ]);
     console.log("🕵️ [Orchestrator] Response:", response.content);
     const decision = JSON.parse(response.content.replace(/```json/g, '').replace(/```/g, ''));
@@ -64,14 +72,27 @@ const nodeOrchestrator = async (state) => {
 
 const nodeSqlExpert = async (state) => {
     console.log("🤖 [SQL Expert] Processing...");
-    const result = await sqlAgent.invoke({ messages: [new HumanMessage(state.input)] });
+    // Inject schema tips into system message if not already present
+    const messages = [
+        new SystemMessage("Eres un Senior DBA. Generas SQL SELECT precisos.\n" + 
+            "ESQUEMA: " + DB_SCHEMA + "\n" +
+            "REGLAS:\n" +
+            "1. Para buscar dispositivos por nombre (ej: 'Planta 1'), SIEMPRE haz JOIN con `devices` y usa `dev.name ILIKE '%planta%1%'`.\n" +
+            "2. No inventes tablas. Todo está en `datos` y `devices`.\n" +
+            "3. Anomalías = `(resultado->>'isAnomaly')::boolean IS TRUE`."
+        ),
+        ...state.chat_history.map(m => m.role === 'user' ? new HumanMessage(m.content) : new SystemMessage(m.content)),
+        new HumanMessage(state.input)
+    ];
+    const result = await sqlAgent.invoke({ messages });
     console.log("🤖 [SQL Expert] Result:", result.messages[result.messages.length - 1].content);
     return { agent_response: result.messages[result.messages.length - 1].content };
 };
 
 const nodeDataScientist = async (state) => {
     console.log("📊 [Data Scientist] Processing...");
-    const result = await analysisAgent.invoke({ messages: [new HumanMessage(state.input)] });
+    const messages = [...state.chat_history.map(m => m.role === 'user' ? new HumanMessage(m.content) : new SystemMessage(m.content)), new HumanMessage(state.input)];
+    const result = await analysisAgent.invoke({ messages });
     console.log("📊 [Data Scientist] Result:", result.messages[result.messages.length - 1].content);
     return { agent_response: result.messages[result.messages.length - 1].content };
 };
@@ -88,8 +109,9 @@ const workflow = new StateGraph(GraphState)
 const app = workflow.compile();
 
 class MultiAgentService {
-    async processQuery(queryText) {
-        const result = await app.invoke({ input: queryText });
+    async processQuery(queryText, history = []) {
+        // Convert input history [{role, content}] to internally consistent format if needed
+        const result = await app.invoke({ input: queryText, chat_history: history });
         let structuredData = null;
         try {
             const cleaned = result.agent_response.replace(/```json/g, '').replace(/```/g, '').trim();
