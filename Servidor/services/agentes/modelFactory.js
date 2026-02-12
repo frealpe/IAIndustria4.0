@@ -46,13 +46,18 @@ function getChatModel(opts = {}) {
 }
 
 /**
- * Gets the configured Local Model (Ollama/DeepSeek)
+ * Gets the configured Local Model (Ollama/DeepSeek/Llama)
+ * @param {string} type - 'sql' | 'llama'
  * @param {Object} opts 
  */
-function getLocalModel(opts = {}) {
+function getLocalModel(type = 'sql', opts = {}) {
+    const modelName = type === 'sql' ? env.LOCAL_MODEL_SQL : env.LOCAL_MODEL_LLAMA;
+    
+    console.log(`🏠 Initializing Local AI Model: ${modelName}`);
+
     // Reusing ChatOpenAI logic for Ollama compatibility
     return new ChatOpenAI({
-        modelName: env.LOCAL_MODEL,
+        modelName: modelName,
         openAIApiKey: "ollama", // Dummy key
         configuration: {
             baseURL: env.OLLAMA_BASE_URL

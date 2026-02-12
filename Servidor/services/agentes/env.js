@@ -15,9 +15,10 @@ const env = {
     // GROQ_API_KEY: process.env.GROQ_API_KEY,
     // GROQ_MODEL: process.env.GROQ_MODEL || 'mixtral-8x7b-32768',
 
-    // Local
+    // Local (Ollama)
     OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || "http://localhost:11434/v1",
-    LOCAL_MODEL: process.env.LOCAL_MODEL || "deepseek-coder:6.7b"
+    LOCAL_MODEL_SQL: process.env.LOCAL_MODEL_SQL || "llama3.1:latest",
+    LOCAL_MODEL_LLAMA: process.env.LOCAL_MODEL_LLAMA || "llama3.1:latest"
 };
 
 module.exports = { env };

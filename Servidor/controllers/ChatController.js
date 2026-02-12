@@ -44,8 +44,9 @@ class ChatController {
                  // Esto le dice al Agente QUÉ IDs analizar y EN QUÉ TABLA buscar.
                  queryText += `\n\n[SISTEMA - CONTEXTO UI]: El usuario ha seleccionado explícitamente las siguientes pruebas${tableContext} para análisis: ${JSON.stringify(message.selectedTests)}. ÚSALAS para filtrar tus consultas SQL (WHERE id IN ...). La tabla objetivo es '${message.selectedTable || "desconocida"}'.`;
             } else {
-                 // Si NO hay selección, advertimos al Agente para que sepa rechazar análisis que requieran contexto específico.
-                 queryText += `\n\n[SISTEMA - CONTEXTO UI]: El usuario NO ha seleccionado ninguna prueba. Si solicita un análisis, INDÍCALE que debe seleccionar al menos una prueba en la tabla.`;
+                 // Si NO hay selección, simplemente informamos que no hay selección previa, 
+                 // permitiendo que el Agente use SQL para buscar sus propios datos.
+                 queryText += `\n\n[SISTEMA - CONTEXTO UI]: No hay pruebas seleccionadas en la interfaz. Puedes usar SQL para buscar los datos que necesites.`;
             }
 
             // 🔹 INYECCIÓN DE CONTEXTO DE ARCHIVOS
