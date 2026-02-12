@@ -49,7 +49,7 @@
             {
               "path": "/home/fabio/Escritorio/IA/MCP/Documentacion/Capitulo2/Agentes.png",
               "name": "Agentes.png",
-              "size": 885639
+              "size": 1202691
             },
             {
               "path": "/home/fabio/Escritorio/IA/MCP/Documentacion/Capitulo2/Configuracion.lyx~",
@@ -59,7 +59,7 @@
             {
               "path": "/home/fabio/Escritorio/IA/MCP/Documentacion/Capitulo2/Graph TD",
               "name": "Graph TD",
-              "size": 1431
+              "size": 2384
             }
           ]
         },
@@ -14189,11 +14189,6 @@
                   "name": "analisis",
                   "children": [
                     {
-                      "path": "/home/fabio/Escritorio/IA/MCP/Plc/src/components/analisis/AnalisisChart.jsx",
-                      "name": "AnalisisChart.jsx",
-                      "size": 5914
-                    },
-                    {
                       "path": "/home/fabio/Escritorio/IA/MCP/Plc/src/components/analisis/AnalisisTable.jsx",
                       "name": "AnalisisTable.jsx",
                       "size": 9617
@@ -14211,7 +14206,7 @@
                     {
                       "path": "/home/fabio/Escritorio/IA/MCP/Plc/src/components/analisis/DeviceDataForceGraph.jsx",
                       "name": "DeviceDataForceGraph.jsx",
-                      "size": 26650
+                      "size": 27376
                     },
                     {
                       "path": "/home/fabio/Escritorio/IA/MCP/Plc/src/components/analisis/DeviceManagement.jsx",
@@ -14612,7 +14607,7 @@
                 {
                   "path": "/home/fabio/Escritorio/IA/MCP/Plc/src/service/projectStructure.json",
                   "name": "projectStructure.json",
-                  "size": 964233
+                  "size": 1100298
                 }
               ]
             },
@@ -14869,7 +14864,7 @@
             {
               "path": "/home/fabio/Escritorio/IA/MCP/Servidor/constants/projectStructure.json",
               "name": "projectStructure.json",
-              "size": 964233
+              "size": 1100298
             },
             {
               "path": "/home/fabio/Escritorio/IA/MCP/Servidor/constants/schema.js",
@@ -14890,7 +14885,7 @@
             {
               "path": "/home/fabio/Escritorio/IA/MCP/Servidor/controllers/DataController.js",
               "name": "DataController.js",
-              "size": 15824
+              "size": 15825
             }
           ]
         },
@@ -14927,7 +14922,7 @@
             {
               "path": "/home/fabio/Escritorio/IA/MCP/Servidor/helpers/analysisHelper.js",
               "name": "analysisHelper.js",
-              "size": 30203
+              "size": 30567
             }
           ]
         },
@@ -15002,28 +14997,7 @@
         {
           "path": "/home/fabio/Escritorio/IA/MCP/Servidor/outputs",
           "name": "outputs",
-          "children": [
-            {
-              "path": "/home/fabio/Escritorio/IA/MCP/Servidor/outputs/anomalies_planta1_1770861317609.csv",
-              "name": "anomalies_planta1_1770861317609.csv",
-              "size": 62389
-            },
-            {
-              "path": "/home/fabio/Escritorio/IA/MCP/Servidor/outputs/anomalies_planta1_1770861588187.csv",
-              "name": "anomalies_planta1_1770861588187.csv",
-              "size": 62745
-            },
-            {
-              "path": "/home/fabio/Escritorio/IA/MCP/Servidor/outputs/anomalies_planta1_1770864609464.csv",
-              "name": "anomalies_planta1_1770864609464.csv",
-              "size": 66925
-            },
-            {
-              "path": "/home/fabio/Escritorio/IA/MCP/Servidor/outputs/anomalies_planta1_1770866581941.csv",
-              "name": "anomalies_planta1_1770866581941.csv",
-              "size": 69805
-            }
-          ]
+          "children": []
         },
         {
           "path": "/home/fabio/Escritorio/IA/MCP/Servidor/package-lock.json",
@@ -15466,12 +15440,12 @@
             {
               "path": "/home/fabio/Escritorio/IA/MCP/Servidor/services/McpService.js",
               "name": "McpService.js",
-              "size": 18502
+              "size": 4568
             },
             {
               "path": "/home/fabio/Escritorio/IA/MCP/Servidor/services/MultiAgentService.js",
               "name": "MultiAgentService.js",
-              "size": 22434
+              "size": 4965
             },
             {
               "path": "/home/fabio/Escritorio/IA/MCP/Servidor/services/SocketService.js",
@@ -15505,11 +15479,6 @@
               "children": []
             }
           ]
-        },
-        {
-          "path": "/home/fabio/Escritorio/IA/MCP/Servidor/test_agent_fix.js",
-          "name": "test_agent_fix.js",
-          "size": 351
         },
         {
           "path": "/home/fabio/Escritorio/IA/MCP/Servidor/trained_models",
