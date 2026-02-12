@@ -247,6 +247,7 @@ function detectOutliers(series) {
  */
 function executeDanfoCode(data, codigo) {
     try {
+        console.log(`🧪 [ Danfo ] Ejecutando código dinámico sobre ${data.length} filas.`);
         const df = new dfd.DataFrame(data);
         
     // --- SANITIZACIÓN AUTOMÁTICA ROBUSTA ---
@@ -483,8 +484,11 @@ function executeDanfoCode(data, codigo) {
         } catch(e) { console.warn("Error applying final shims:", e.message); }
 
         // Regresión lineal simple - retorna slope, intercept, r, r2, t_stat (no p-valor exacto)
-        helpers.regressionStats = function(yArr, xArr) {
-            if (!Array.isArray(yArr) || yArr.length < 2) return {};
+        helpers.regressionStats = function(yInput, xInput) {
+            const yArr = Array.isArray(yInput) ? yInput : (yInput && yInput.values ? yInput.values : []);
+            const xArr = Array.isArray(xInput) ? xInput : (xInput && xInput.values ? xInput.values : null);
+            
+            if (!Array.isArray(yArr) || yArr.length < 2) return { slope: 0, intercept: 0, r: 0, r2: 0 };
             const n = yArr.length;
             const x = Array.isArray(xArr) && xArr.length === n ? xArr.map(Number) : yArr.map((_, i) => i);
             const y = yArr.map(Number);

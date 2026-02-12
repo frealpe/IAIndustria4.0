@@ -1,0 +1,83 @@
+---
+config:
+  layout: elk
+---
+graph TD
+
+    %% =====================
+    %% USER LAYER
+    %% =====================
+    User([👤 Usuario]) --> Orchestrator{🧠 Orchestrator Node}
+
+    %% =====================
+    %% MULTI AGENT SERVICE
+    %% =====================
+    subgraph MultiAgentService [🤖 Servicio Multi-Agente]
+        direction TB
+        
+        SQLExpert[📊 Agent\nSQL Expert]
+        DataScientist[📈 Agent\nData Scientist]
+        Validator{✅ Validador JSON}
+        StructuredResponse([📦 Respuesta\nEstructurada])
+        
+        Orchestrator -- "Consulta / Datos Crudos" --> SQLExpert
+        Orchestrator -- "Análisis / Tendencias" --> DataScientist
+        
+        SQLExpert --> Validator
+        DataScientist --> Validator
+        
+        Validator --> StructuredResponse
+    end
+
+    %% =====================
+    %% MCP SERVICE
+    %% =====================
+    subgraph McpService [🏭 Servidor MCP Industrial]
+        direction TB
+        
+        Tools[(🧰 Tools Registry)]
+        
+        query_db["query_db\n(SQL Crudo)"]
+        leer_archivos["leer_archivos_proyecto\n(File System)"]
+        analizar_datos["analizar_datos_avanzado"]
+        
+        InternalSQL[_executeQuery]
+        DB[(🐘 PostgreSQL)]
+        Danfo[Danfo.js\nanalysisHelper]
+        SocketOut[[📡 SocketService\nmcpdatos]]
+
+        Tools --> query_db
+        Tools --> leer_archivos
+        Tools --> analizar_datos
+        
+        query_db --> InternalSQL
+        analizar_datos --> InternalSQL
+        
+        InternalSQL --> DB
+        InternalSQL --> SocketOut
+        
+        analizar_datos --> Danfo
+        Danfo --> SocketOut
+    end
+
+    %% =====================
+    %% CONNECTIONS
+    %% =====================
+    SQLExpert ==> Tools
+    DataScientist ==> Tools
+
+    StructuredResponse --> User
+    SocketOut -.-> Frontend([🖥️ Frontend UI\nGráficas en Tiempo Real])
+
+    %% =====================
+    %% STYLES
+    %% =====================
+    style MultiAgentService fill:#f5f7ff,stroke:#5c7cff,stroke-width:2px
+    style McpService fill:#f6fff5,stroke:#2e7d32,stroke-width:2px
+
+    style SQLExpert fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    style DataScientist fill:#ede7f6,stroke:#4527a0,stroke-width:2px
+
+    style DB fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style SocketOut fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+

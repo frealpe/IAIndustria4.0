@@ -107,7 +107,7 @@ const getAnomalias = async (req, res = response) => {
 
         query += `
             ORDER BY created_at DESC 
-            LIMIT 200
+            LIMIT 1000
         `;
         
         const { rows } = await pool.query(query, params);

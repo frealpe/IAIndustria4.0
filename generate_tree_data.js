@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const rootPath = '/home/fabio/Escritorio/IA/MCP';
-const excludeDirs = ['node_modules', '.git', 'build', 'dist', '.gemini', '.antigravity', '.qodo', '.vscode'];
+const excludeDirs = ['node_modules', '.git', 'build', 'dist', '.gemini', '.antigravity', '.qodo', '.vscode', '.pio'];
 
 function dirTree(filename) {
     const stats = fs.lstatSync(filename);
@@ -17,12 +17,17 @@ function dirTree(filename) {
             .map(child => dirTree(path.join(filename, child)))
             .filter(child => child !== null);
     } else {
-        // info.size = stats.size;
+        info.size = stats.size;
     }
 
     return info;
 }
 
 const tree = dirTree(rootPath);
-fs.writeFileSync(path.join(rootPath, 'Plc/src/service/projectStructure.json'), JSON.stringify(tree, null, 2));
-console.log('Project structure JSON generated at Plc/src/service/projectStructure.json');
+const outputPathPlc = path.join(rootPath, 'Plc/src/service/projectStructure.json');
+const outputPathServidor = path.join(rootPath, 'Servidor/constants/projectStructure.json');
+
+fs.writeFileSync(outputPathPlc, JSON.stringify(tree, null, 2));
+fs.writeFileSync(outputPathServidor, JSON.stringify(tree, null, 2));
+
+console.log('✅ Project structure JSON updated in both Frontend and Backend constants.');

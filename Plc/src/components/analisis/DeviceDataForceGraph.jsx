@@ -89,15 +89,30 @@ const DeviceDataForceGraph = ({ device_uid, device_name, width = 600, height = 6
             const logsData = (logsRes.ok && Array.isArray(logsRes.data)) ? logsRes.data : [];
             const anomsData = (anomsRes.ok && Array.isArray(anomsRes.data)) ? anomsRes.data : [];
 
+            // 1. Map anomalies first to ensure we have them all
+            const anomMap = new Map();
+            anomsData.forEach(l => { if (l && l.id) anomMap.set(l.id, l); });
+
+            // 2. Map normal logs
             const logMap = new Map();
             logsData.forEach(l => { if (l && l.id) logMap.set(l.id, l); });
-            anomsData.forEach(l => { if (l && l.id) logMap.set(l.id, l); });
 
-            const finalLogs = Array.from(logMap.values())
-                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-                .slice(0, 1000); // Aumentado para no perder anomalías históricas
+            // 3. Create lists
+            const anomalies = Array.from(anomMap.values());
+            const normalLogs = Array.from(logMap.values()).filter(l => !anomMap.has(l.id));
 
-            console.log(`✅ [ForceGraph] Final count: ${finalLogs.length}`);
+            // 4. Combine: ALL anomalies + remaining space for normal logs (newest first)
+            // Limit total nodes to 1000 for performance
+            const MAX_NODES = 1000;
+            const slotsForNormal = Math.max(0, MAX_NODES - anomalies.length);
+
+            const normalSorted = normalLogs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            const selectedNormal = normalSorted.slice(0, slotsForNormal);
+
+            const finalLogs = [...anomalies, ...selectedNormal]
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            console.log(`✅ [ForceGraph] Final count: ${finalLogs.length} (Anomalies: ${anomalies.length})`);
             setLogs(finalLogs);
         } catch (err) {
             console.error("❌ [ForceGraph] Error:", err);

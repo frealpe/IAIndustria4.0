@@ -81,15 +81,15 @@ const AsistenteBlock = ({ onNewData, selectedRows, selectedTable }) => {
             >
                 <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <GptMessage text="Soy tu Agente de Control experto. ¿En qué puedo ayudarte hoy?" />
-                    {messages.map((m, i) =>
+                    {messages.map((m, i) => (
                         m.isGpt ? (
                             <div key={i}>
-                                <GptMessage text={m.text} />
+                                <GptMessage text={m.text} data={m.data} />
                             </div>
                         ) : (
                             <MyMessage key={i} text={m.text} />
                         )
-                    )}
+                    ))}
                     {isLoading && (
                         <div className="fade-in mt-2">
                             <TypingLoader />
