@@ -82,7 +82,12 @@ const getAnomalias = async (req, res = response) => {
     try {
         let query = `
             SELECT * FROM datos 
-            WHERE (resultado->>'isAnomaly')::boolean IS TRUE 
+            WHERE (
+                (resultado->>'isAnomaly')::boolean IS TRUE OR 
+                (resultado->>'is_anomaly')::boolean IS TRUE OR 
+                (resultado->>'isAnomaly') = 'true' OR
+                (resultado->>'is_anomaly') = 'true'
+            )
         `;
         
         const params = [];

@@ -95,7 +95,7 @@ const DeviceDataForceGraph = ({ device_uid, device_name, width = 600, height = 6
 
             const finalLogs = Array.from(logMap.values())
                 .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-                .slice(0, 500);
+                .slice(0, 1000); // Aumentado para no perder anomalías históricas
 
             console.log(`✅ [ForceGraph] Final count: ${finalLogs.length}`);
             setLogs(finalLogs);
@@ -180,14 +180,23 @@ const DeviceDataForceGraph = ({ device_uid, device_name, width = 600, height = 6
     useEffect(() => {
         if (!socket || !device_uid || isFiltered) return;
 
-        const handleData = (data) => {
-            if (!data || data.device_uid !== device_uid) return;
-            batchBufferRef.current.push({
-                id: data.id || `live-${Date.now()}`,
-                device_uid,
-                created_at: new Date().toISOString(),
-                mean: data.mean || data.voltaje || 0,
-                resultado: data
+        const handleData = (incoming) => {
+            if (!incoming) return;
+
+            // 1. Unify structure: handle raw array, single object, or { data: [...], stats } wrapper
+            const items = Array.isArray(incoming) ? incoming : (incoming.data && Array.isArray(incoming.data) ? incoming.data : [incoming]);
+
+            items.forEach(data => {
+                const dUid = data.device_uid || (data.resultado && data.resultado.device_uid);
+                if (!dUid || dUid !== device_uid) return;
+
+                batchBufferRef.current.push({
+                    id: data.id || data.db_id || `live-${Date.now()}-${Math.random()}`,
+                    device_uid: dUid,
+                    created_at: data.created_at || new Date().toISOString(),
+                    mean: data.mean ?? data.voltaje ?? 0,
+                    resultado: data.resultado || data // Use itself as fallback (for flattened data)
+                });
             });
         };
 

@@ -176,12 +176,8 @@ class McpService {
                     // Si usamos la lógica por defecto (SELECT resultado...), hay que aplanar el JSONB.
                     let finalData = [];
                     
-                    if (sql) {
-                        // Si es SQL personalizado, usamos las filas tal cual
-                        finalData = resultRows;
-                    } else {
                     const normalizeRow = (row) => {
-                        // Asegurar que claves comunes existan con el casing que espera el Data Scientist
+                        // Asegurar que claves comunes existan con el casing que espera el Data Scientist y el Frontend
                         const normalized = { ...row };
                         const commonMappings = {
                             'rawvalues': 'rawValues',
@@ -190,38 +186,54 @@ class McpService {
                             'deviceuid': 'device_uid',
                             'deviceid': 'device_id'
                         };
-                        Object.keys(row).forEach(key => {
+                        
+                        // Si existe 'resultado', intentar inyectar sus campos en el top level para facilitar análisis
+                        if (row.resultado) {
+                            let rowData = row.resultado;
+                            if (typeof rowData === 'string') { try { rowData = JSON.parse(rowData); } catch(e) {} }
+                            if (typeof rowData === 'object' && rowData !== null) {
+                                Object.assign(normalized, rowData);
+                            }
+                        }
+
+                        // Normalización de Casing
+                        Object.keys(normalized).forEach(key => {
                             const lowerKey = key.toLowerCase();
-                            if (commonMappings[lowerKey] && !row[commonMappings[lowerKey]]) {
-                                normalized[commonMappings[lowerKey]] = row[key];
+                            if (commonMappings[lowerKey] && normalized[commonMappings[lowerKey]] === undefined) {
+                                normalized[commonMappings[lowerKey]] = normalized[key];
                             }
                         });
+
+                        // Casters básicos
+                        if (normalized.mean !== undefined) normalized.mean = Number(normalized.mean);
+                        
                         return normalized;
                     };
 
                     resultRows.forEach(row => {
-                        // Incluso si es SQL personalizado, si viene la columna 'resultado', intentamos aplanarla
-                        if (row.resultado) {
+                        // Construimos metadatos básicos de la fila si no están en 'resultado'
+                        const metadata = { 
+                            db_id: row.id, 
+                            device_uid: row.device_uid, 
+                            mean: row.mean ? Number(row.mean) : null, 
+                            created_at: row.created_at 
+                        };
+
+                        if (row.resultado && !sql) {
+                            // Lógica de aplanamiento estándar para la tabla 'datos' (si no es SQL custom)
                             let rowData = row.resultado;
                             if (typeof rowData === 'string') { try { rowData = JSON.parse(rowData); } catch(e) {} }
 
-                            const metadata = { 
-                                db_id: row.id, 
-                                device_uid: row.device_uid, 
-                                mean: row.mean ? Number(row.mean) : null, 
-                                created_at: row.created_at 
-                            };
-
                             if (Array.isArray(rowData)) {
                                 finalData = finalData.concat(rowData.map(item => normalizeRow({ ...metadata, ...item })));
-                            } else if (typeof rowData === 'object' && rowData !== null) {
+                            } else {
                                 finalData.push(normalizeRow({ ...metadata, ...rowData }));
                             }
                         } else {
+                            // En SQL custom o si no hay 'resultado', simplemente normalizamos la fila tal cual
                             finalData.push(normalizeRow(row));
                         }
                     });
-                    }
 
                     if (finalData.length === 0) {
                         return { content: [{ type: "text", text: "Los datos encontrados no tienen formato válido." }] };
