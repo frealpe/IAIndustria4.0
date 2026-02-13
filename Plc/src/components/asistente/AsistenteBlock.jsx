@@ -42,16 +42,33 @@ const AsistenteBlock = ({ onNewData, selectedRows, selectedTable }) => {
                 }
             ]);
 
-            if (resultado && Array.isArray(resultado) && resultado.length > 0) {
-                // Enviar datos al padre si es necesario para graficar
-                let dataToGraph = resultado;
-                if (resultado[0].resultado && Array.isArray(resultado[0].resultado)) {
-                    dataToGraph = resultado[0].resultado;
+            // Verify if result is valid (Array for charts OR Object for reports)
+            if (resultado && (Array.isArray(resultado) || typeof resultado === 'object')) {
+                console.log("🔍 [AsistenteBlock] Resultado received:", resultado);
+                // Extract data for graph if exists
+                let dataToGraph = null;
+                if (Array.isArray(resultado)) {
+                    dataToGraph = resultado;
+                } else if (resultado.data) {
+                    // If  resultado has 'data' field, extract it
+                    dataToGraph = resultado.data;
                 }
 
-                if (onNewData) {
-                    onNewData(dataToGraph);
+                // If resultado has structure like { resumen, metrias, charts, conclusion }, extract it
+                let analysisObj = null;
+                if (resultado.resumen || resultado.charts || resultado.metrias) {
+                    analysisObj = resultado;
+                    console.log("📊 [AsistenteBlock] Analysis object detected:", analysisObj);
+                    console.log("📊 [AsistenteBlock] Charts:", analysisObj.charts?.length || 0);
                 }
+
+                // Send both to parent
+                if (onNewData) {
+                    console.log("📤 [AsistenteBlock] Sending to parent:", { dataToGraph, analysisObj });
+                    onNewData(dataToGraph, analysisObj);
+                }
+            } else {
+                console.warn("⚠️ [AsistenteBlock] Resultado is invalid:", resultado);
             }
 
         } catch (error) {

@@ -22,7 +22,7 @@ class McpService {
         };
 
         register("query_db", {
-            description: "Ejecuta SQL SELECT en PostgreSQL. Esquema:\n" + DB_SCHEMA,
+            description: "Ejecuta SQL SELECT en PostgreSQL. Esquema:\n" + DB_SCHEMA + "\n⚠️ NOTA: Esta herramienta retorna MÁXIMO 30 FILAS. Para análisis completos, conteos o estadísticas usa 'analizar_datos_avanzado'.",
             inputSchema: z.object({ sql: z.string().describe("Consulta SQL") })
         }, async ({ sql }) => await this._executeQuery(sql));
 

@@ -11,47 +11,7 @@ import DeviceDataForceGraph from '../../components/analisis/DeviceDataForceGraph
 const Analitica = () => {
     const [chartData, setChartData] = useState(null);
     const [agentStats, setAgentStats] = useState(null);
-    const [isAssistantOpen, setIsAssistantOpen] = useState(false);
     const [selectedDevice, setSelectedDevice] = useState(null);
-
-    // DRAG & DROP LOGIC
-    const [assistPosition, setAssistPosition] = useState({ x: 0, y: 0 });
-    const [isDragging, setIsDragging] = useState(false);
-    const dragStartRef = useRef({ x: 0, y: 0 });
-
-    const handleDragStart = (e) => {
-        setIsDragging(true);
-        dragStartRef.current = {
-            x: e.clientX - assistPosition.x,
-            y: e.clientY - assistPosition.y
-        };
-        e.stopPropagation();
-        e.preventDefault();
-    };
-
-    useEffect(() => {
-        const handleMouseMove = (e) => {
-            if (!isDragging) return;
-            setAssistPosition({
-                x: e.clientX - dragStartRef.current.x,
-                y: e.clientY - dragStartRef.current.y
-            });
-        };
-
-        const handleMouseUp = () => {
-            setIsDragging(false);
-        };
-
-        if (isDragging) {
-            window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', handleMouseUp);
-        }
-
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, [isDragging]);
 
     return (
         <CContainer fluid className="p-4" style={{ height: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
@@ -100,69 +60,22 @@ const Analitica = () => {
                     </CCardBody>
                 </CCard>
 
-                {/* CARD 2: RIGHT SIDE (Empty) */}
+                {/* CARD 2: RIGHT SIDE (Asistente Virtual) */}
                 <CCard className="h-100 shadow-sm border-0 overflow-hidden">
-                    <CCardBody className="p-1 h-100 overflow-hidden d-flex justify-content-center align-items-center text-muted">
-                        <div className="text-center">
-                            <h5>Espacio Disponible</h5>
-                            <p>Seleccione una opción para visualizar aquí.</p>
-                        </div>
-                    </CCardBody>
-                </CCard>
-            </div>
-
-            {/* FLOATING ASSISTANT */}
-            <div
-                style={{
-                    position: 'fixed',
-                    bottom: '20px',
-                    right: '25px',
-                    zIndex: 1050,
-                    width: isAssistantOpen ? '400px' : '60px',
-                    height: isAssistantOpen ? '600px' : '60px',
-                    transition: isDragging ? 'none' : 'all 0.3s ease-in-out',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    borderRadius: isAssistantOpen ? '10px' : '50%',
-                    overflow: 'hidden',
-                    backgroundColor: isAssistantOpen ? 'white' : '#0d6efd',
-                    transform: `translate(${assistPosition.x}px, ${assistPosition.y}px)`
-                }}
-            >
-                {!isAssistantOpen ? (
-                    <div
-                        className="w-100 h-100 d-flex justify-content-center align-items-center text-white"
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => setIsAssistantOpen(true)}
-                        title="Abrir Asistente"
-                    >
-                        <span style={{ fontSize: '24px' }}>💬</span>
-                    </div>
-                ) : (
-                    <div className="d-flex flex-column h-100 relative">
-                        <div
-                            className="d-flex justify-content-between align-items-center bg-light px-3 py-2 border-bottom"
-                            style={{ cursor: 'move', userSelect: 'none' }}
-                            onMouseDown={handleDragStart}
-                        >
-                            <strong className="text-primary pointer-events-none">🤖 Asistente Virtual</strong>
-                            <CButton
-                                color="secondary"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setIsAssistantOpen(false)}
-                            >
-                                ✕
-                            </CButton>
-                        </div>
-                        <div className="flex-grow-1 overflow-hidden bg-white">
+                    <CCardHeader className="bg-white border-0 py-3">
+                        <strong className="text-primary">🤖 Asistente de Análisis</strong>
+                    </CCardHeader>
+                    <CCardBody className="p-0 h-100 overflow-hidden d-flex flex-column">
+                        {/* Asistente Block - Full height */}
+                        <div className="flex-grow-1 overflow-hidden">
                             <AsistenteBlock
                                 onNewData={(d, s) => { setChartData(d); setAgentStats(s); }}
                                 selectedRows={[]}
                                 selectedTable="analitica"
                             />
                         </div>
-                    </div>
-                )}
+                    </CCardBody>
+                </CCard>
             </div>
         </CContainer>
     );

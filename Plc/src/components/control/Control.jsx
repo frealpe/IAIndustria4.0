@@ -13,7 +13,6 @@ import AsistenteBlock from "../asistente/AsistenteBlock";
 import SensorTable from "../monitor/SensorTable";
 import ControlService from "../../service/control/control.service";
 import DeviceCharts from "../graficos/DeviceCharts";
-import PerformanceBubbleChart from "../graficos/PerformanceBubbleChart";
 
 export const Control = () => {
   const { socket } = useContext(SocketContext);
@@ -22,7 +21,6 @@ export const Control = () => {
   const [agentStats, setAgentStats] = useState(null);
   const [dataSource, setDataSource] = useState('Manual');
   const [selectedRows, setSelectedRows] = useState([]);
-  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [highlightedPoint, setHighlightedPoint] = useState(null);
 
   const [activeDevice, setActiveDevice] = useState(null);
@@ -134,44 +132,7 @@ export const Control = () => {
     };
   }, [socket, controlData?.addAnomaly]);
 
-  // DRAG & DROP LOGIC
-  const [assistPosition, setAssistPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStartRef = useRef({ x: 0, y: 0 });
 
-  const handleDragStart = (e) => {
-    setIsDragging(true);
-    dragStartRef.current = {
-      x: e.clientX - assistPosition.x,
-      y: e.clientY - assistPosition.y
-    };
-    e.stopPropagation();
-    e.preventDefault();
-  };
-
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (!isDragging) return;
-      setAssistPosition({
-        x: e.clientX - dragStartRef.current.x,
-        y: e.clientY - dragStartRef.current.y
-      });
-    };
-
-    const handleMouseUp = () => {
-      setIsDragging(false);
-    };
-
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-    }
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging]);
 
   return (
     <div
@@ -269,63 +230,13 @@ export const Control = () => {
         </div>
       </div>
 
-      {/* 3. BOTTOM RIGHT: PERFORMANCE BUBBLE CHART */}
+      {/* 3. BOTTOM RIGHT: ASISTENTE INTEGRADO */}
       <div style={{ gridColumn: '2 / 3', gridRow: '2 / 3', overflow: 'hidden', height: '100%' }}>
-        <PerformanceBubbleChart data={historialChartData || []} />
-      </div>
-
-      {/* FLOATING ASSISTANT */}
-      <div
-        style={{
-          position: 'fixed',
-          bottom: '20px',
-          right: '20px',
-          zIndex: 1050,
-          width: isAssistantOpen ? '400px' : '60px',
-          height: isAssistantOpen ? '600px' : '60px',
-          transition: isDragging ? 'none' : 'all 0.3s ease-in-out',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          borderRadius: isAssistantOpen ? '10px' : '50%',
-          overflow: 'hidden',
-          backgroundColor: isAssistantOpen ? 'white' : '#0d6efd',
-          transform: `translate(${assistPosition.x}px, ${assistPosition.y}px)`
-        }}
-      >
-        {!isAssistantOpen ? (
-          <div
-            className="w-100 h-100 d-flex justify-content-center align-items-center text-white"
-            style={{ cursor: 'pointer' }}
-            onClick={() => setIsAssistantOpen(true)}
-            title="Abrir Asistente"
-          >
-            <span style={{ fontSize: '24px' }}>💬</span>
-          </div>
-        ) : (
-          <div className="d-flex flex-column h-100 relative">
-            <div
-              className="d-flex justify-content-between align-items-center bg-light px-3 py-2 border-bottom"
-              style={{ cursor: 'move', userSelect: 'none' }}
-              onMouseDown={handleDragStart}
-            >
-              <strong className="text-primary pointer-events-none">🤖 Asistente Virtual</strong>
-              <CButton
-                color="secondary"
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsAssistantOpen(false)}
-              >
-                ✕
-              </CButton>
-            </div>
-            <div className="flex-grow-1 overflow-hidden bg-white">
-              <AsistenteBlock
-                onNewData={(d, s) => { setChartData(d); setAgentStats(s); }}
-                selectedRows={selectedRows}
-                selectedTable="anomalies"
-              />
-            </div>
-          </div>
-        )}
+        <AsistenteBlock
+          onNewData={(d, s) => { setChartData(d); setAgentStats(s); }}
+          selectedRows={selectedRows}
+          selectedTable="anomalies"
+        />
       </div>
     </div >
   );

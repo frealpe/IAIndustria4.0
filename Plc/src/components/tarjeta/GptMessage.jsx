@@ -66,10 +66,30 @@ function GptMessage({ text, data }) {
                 </CRow>
               )}
 
-              {/* Gráfica si viene por separado */}
+              {/* Gráfica si viene por separado (legacy) */}
               {data.grafica && (
                 <div className="mb-3 border rounded p-2 bg-white">
                   <VegaChart spec={data.grafica} />
+                </div>
+              )}
+
+              {/* Gráficas Vega-Lite (nuevo formato charts array) */}
+              {data.charts && Array.isArray(data.charts) && data.charts.length > 0 && (
+                <div className="mb-3">
+                  {console.log("📊 [GptMessage] Rendering", data.charts.length, "charts")}
+                  {data.charts.map((chart, idx) => {
+                    console.log(`📊 [GptMessage] Chart ${idx}:`, chart);
+                    return (
+                      <div key={idx} className="mb-2 border rounded p-2 bg-white">
+                        {chart.title && (
+                          <div className="fw-bold mb-2 text-primary" style={{ fontSize: '13px' }}>
+                            📊 {chart.title}
+                          </div>
+                        )}
+                        <VegaChart spec={chart.spec} />
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
