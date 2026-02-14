@@ -26,6 +26,7 @@ const analysisAgent = createReactAgent({
     llm: model,
     tools: getToolsByName(['analizar_datos_avanzado', 'leer_archivos_proyecto', 'query_db']),
     stateModifier: new SystemMessage(
+        "⚠️ REGLA ABSOLUTA: SIEMPRE debes responder ÚNICAMENTE con JSON válido. NUNCA respondas con texto plano, markdown, o explicaciones fuera del JSON.\n\n" +
         "Eres un Científico de Datos Experto. Tu capacidad especial es PROGRAMAR análisis en tiempo real Y GENERAR VISUALIZACIONES DINÁMICAS.\n\n" +
         "ESQUEMA DISPONIBLE:\n" + DB_SCHEMA + "\n\n" +
         "REGLAS CRÍTICAS DE SQL:\n" +
@@ -103,7 +104,18 @@ const analysisAgent = createReactAgent({
         "  ],\n" +
         "  \"conclusion\": \"El sistema opera establemente con voltaje dentro del rango normal.\"\n" +
         "}\n" +
-        "NOTA: El campo 'charts' es OPCIONAL. Solo inclúyelo cuando el análisis se beneficie de visualización."
+        "NOTA: El campo 'charts' es OPCIONAL. Solo inclúyelo cuando el análisis se beneficie de visualización.\n\n" +
+        "RECORDATORIO FINAL - MANEJO DE ERRORES:\n" +
+        "- Tu ÚNICA salida válida es JSON (el schema de arriba)\n" +
+        "- Si las herramientas fallan, repórtalos DENTRO del campo 'resumen'\n" +
+        "- NUNCA escribas 'Parece que', 'El error', 'Voy a', 'Procederé', u otras frases fuera del JSON\n" +
+        "- Ejemplo de respuesta cuando hay ERROR:\n" +
+        "{\n" +
+        "  \"resumen\": \"Error al ejecutar análisis: no se encontraron datos para el dispositivo especificado.\",\n" +
+        "  \"metrias\": [{\"label\": \"Estado\", \"value\": \"Sin datos\", \"status\": \"warning\"}],\n" +
+        "  \"charts\": [],\n" +
+        "  \"conclusion\": \"Verifica el nombre del dispositivo e intenta nuevamente.\"\n" +
+        "}"
     )
 });
 
@@ -123,8 +135,8 @@ const nodeOrchestrator = async (state) => {
         new SystemMessage(
             "Eres el Orquestador. Tu única misión es clasificar la intención del usuario basándote en su mensaje actual Y el historial.\n" +
             "ROLES:\n" +
-            "- DATA_SCIENTIST: Para CUALQUIER ANÁLISIS relacionado con datos de sensores, tendencias, regresión, anomalías (incluso contar cuántas hay), R2, predicciones, gráficas complejas O SEGUIMIENTO DE ANÁLISIS PREVIOS.\n" +
-            "- SQL_EXPERT: SOLO para listados simples de inventario (qué dispositivos hay), búsquedas de texto exacto en descripciones o contar registros TOTALES de la tabla sin filtros complejos de JSON.\n" +
+            "- DATA_SCIENTIST: Para CUALQUIER ANÁLISIS relacionado con datos de sensores, tendencias, regresión, anomalías, R2, predicciones, gráficas, estadísticas O SEGUIMIENTO DE ANÁLISIS PREVIOS.\n" +
+            "- SQL_EXPERT: Para consultas directas SQL, listados de inventario, búsquedas de texto, conteos simples, o cuando el usuario pida ver datos crudos sin análisis.\n" +
             "Responde solo JSON: {\"next\":\"...\"}"
         ),
         new HumanMessage(`HISTORIAL:\n${historyText}\n\nUSUARIO ACTUAL:\n${state.input}`)
@@ -167,11 +179,52 @@ const nodeDataScientist = async (state) => {
         const messages = [...historyMsgs, new HumanMessage(state.input || "Analyze data")];
         
         const result = await analysisAgent.invoke({ messages });
-        console.log("📊 [Data Scientist] Result:", result.messages[result.messages.length - 1].content);
-        return { agent_response: result.messages[result.messages.length - 1].content };
+        const rawResponse = result.messages[result.messages.length - 1].content;
+        console.log("📊 [Data Scientist] Raw Result:", rawResponse.substring(0, 200) + "...");
+        
+        // Validate that response is valid JSON before returning
+        try {
+            // Try to extract JSON from markdown code blocks (flexible whitespace)
+            const jsonMatch = rawResponse.match(/```json\s*([\s\S]*?)\s*```/) || 
+                             rawResponse.match(/```\s*([\s\S]*?)\s*```/);
+            
+            const candidateJson = jsonMatch ? jsonMatch[1].trim() : rawResponse.trim();
+            
+            // Attempt to parse
+            JSON.parse(candidateJson);
+            
+            // If successful, return the candidate (could be extracted from markdown or raw)
+            console.log("✅ [Data Scientist] Valid JSON response extracted");
+            return { agent_response: candidateJson };
+        } catch (parseError) {
+            // Agent returned invalid JSON - create fallback response
+            console.warn("⚠️ [Data Scientist] Agent response is not valid JSON, creating fallback");
+            console.warn("⚠️ [Data Scientist] Parse error:", parseError.message);
+            console.warn("⚠️ [Data Scientist] Raw response (first 500 chars):", rawResponse.substring(0, 500));
+            
+            const errorResponse = {
+                resumen: "El agente no pudo generar una respuesta estructurada. Respuesta original: " + rawResponse.substring(0, 200),
+                metrias: [
+                    {label: "Estado", value: "Error de formato", status: "warning"},
+                    {label: "Tipo de error", value: "JSON inválido", status: "info"}
+                ],
+                charts: [],
+                conclusion: "Por favor, intenta reformular tu pregunta o simplifica la consulta."
+            };
+            
+            console.log("🔧 [Data Scientist] Returning fallback JSON");
+            return { agent_response: JSON.stringify(errorResponse) };
+        }
     } catch (e) {
-        console.error("❌ [Data Scientist] Error constructing messages:", e);
-        throw e;
+        // Complete failure - return structured error
+        console.error("❌ [Data Scientist] Critical error:", e);
+        const errorResponse = {
+            resumen: `Error crítico al procesar la consulta: ${e.message}`,
+            metrias: [{label: "Estado", value: "Error crítico", status: "critical"}],
+            charts: [],
+            conclusion: "Se produjo un error inesperado. Por favor, contacta al administrador si el problema persiste."
+        };
+        return { agent_response: JSON.stringify(errorResponse) };
     }
 };
 

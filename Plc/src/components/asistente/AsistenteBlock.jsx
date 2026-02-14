@@ -89,15 +89,14 @@ const AsistenteBlock = ({ onNewData, selectedRows, selectedTable }) => {
     return (
         <CCard className="h-100 shadow-sm d-flex flex-column">
             <CCardHeader className="bg-light d-flex justify-content-between align-items-center py-2">
-                <strong>🤖 Asistente de Control</strong>
-                <CBadge color="primary">GPT-4o</CBadge>
+               
             </CCardHeader>
             <div
                 className="flex-grow-1 p-3 bg-light bg-opacity-10 d-flex flex-column"
                 style={{ overflowY: 'auto' }}
             >
                 <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <GptMessage text="Soy tu Agente de Control experto. ¿En qué puedo ayudarte hoy?" />
+                    <GptMessage text="Soy tu Asistente de Análisis experto. ¿En qué puedo ayudarte hoy?" />
                     {messages.map((m, i) => (
                         m.isGpt ? (
                             <div key={i}>

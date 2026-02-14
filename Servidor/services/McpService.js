@@ -22,7 +22,7 @@ class McpService {
         };
 
         register("query_db", {
-            description: "Ejecuta SQL SELECT en PostgreSQL. Esquema:\n" + DB_SCHEMA + "\n⚠️ NOTA: Esta herramienta retorna MÁXIMO 30 FILAS. Para análisis completos, conteos o estadísticas usa 'analizar_datos_avanzado'.",
+            description: "Ejecuta SQL SELECT en PostgreSQL. Esquema:\n" + DB_SCHEMA + "\n💡 Para análisis estadísticos avanzados, regresiones y visualizaciones usa 'analizar_datos_avanzado'.",
             inputSchema: z.object({ sql: z.string().describe("Consulta SQL") })
         }, async ({ sql }) => await this._executeQuery(sql));
 
@@ -66,7 +66,16 @@ class McpService {
                 const finalResult = codigo ? executeDanfoCode(finalData, codigo) : analyzeData(finalData, 'datos');
                 socketService.emit('mcpdatos', { data: finalData, stats: finalResult.stats });
                 return { content: [{ type: "text", text: `ANALYSIS_SUCCESS:\n${finalResult.output}` }] };
-            } catch (err) { return { content: [{ type: "text", text: err.message }], isError: true }; }
+            } catch (err) { 
+                console.error("❌ [MCP] analizar_datos_avanzado error:", err.message);
+                return { 
+                    content: [{ 
+                        type: "text", 
+                        text: `ANALYSIS_ERROR: ${err.message}\nGUIDANCE: Incluye este error en tu respuesta JSON dentro del campo 'resumen'.` 
+                    }], 
+                    isError: true 
+                }; 
+            }
         });
     }
 
@@ -78,7 +87,7 @@ class McpService {
             const result = await pool.query(sql, params);
             if (internal) return { rows: result.rows };
             if (result.rows.length > 5) socketService.emit('mcpdatos', result.rows);
-            return { content: [{ type: "text", text: JSON.stringify(result.rows.slice(0, 30), null, 2) }] };
+            return { content: [{ type: "text", text: JSON.stringify(result.rows, null, 2) }] };
         } catch (err) { return { content: [{ type: "text", text: err.message }], isError: true }; }
     }
 }
