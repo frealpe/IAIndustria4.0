@@ -2,8 +2,11 @@ const express = require('express');
 const DatosModel = require("../models/DatosModel");
 const ModeloEntrenado = require("../models/ModeloEntrenado");
 const cors = require('cors');
-const http = require('http'); // Importar HTTP
-const socketIo = require('socket.io'); // Importar Socket.io
+const https = require('https');
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const socketIo = require('socket.io'); 
 const { dbConnection } = require('../database/config');
 const socketService = require('../services/SocketService'); // Importar SocketService
 const mqttService = require('../mqtt/conectMqtt'); // Importar MQTT
@@ -11,15 +14,36 @@ const mqttService = require('../mqtt/conectMqtt'); // Importar MQTT
 class Server {
     constructor() {
         this.app = express();
-        this.port = process.env.PORT || 3000;
+        this.port = process.env.PORT || 8080;
+        // Configurar Servidor (HTTP o HTTPS)
+        const sslEnabled = process.env.SSL_ENABLED === 'true';
+        const keyPath = process.env.TLS_KEY_PATH || path.join(__dirname, '../certs/server.key');
+        const certPath = process.env.TLS_CERT_PATH || path.join(__dirname, '../certs/server.crt');
 
-        // Crear servidor HTTP sobre Express
-        this.server = http.createServer(this.app);
+        if (sslEnabled && fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+            console.log('🔒 [Server] Iniciando en modo HTTPS...');
+            const caPath = process.env.TLS_CA_PATH || path.join(__dirname, '../certs/ca.crt');
+            const options = {
+                key: fs.readFileSync(keyPath),
+                cert: fs.readFileSync(certPath),
+                ca: fs.existsSync(caPath) ? fs.readFileSync(caPath) : undefined
+            };
+            this.server = https.createServer(options, this.app);
+            this.protocol = 'https';
+        } else {
+            if (sslEnabled) {
+                console.warn('⚠️ [Server] SSL habilitado pero faltan certificados. Usando HTTP.');
+            } else {
+                console.log('🌐 [Server] Iniciando en modo HTTP...');
+            }
+            this.server = http.createServer(this.app);
+            this.protocol = 'http';
+        }
         
-        // Inicializar Socket.io sobre el servidor HTTP
+        // Inicializar Socket.io sobre el servidor
         this.io = socketIo(this.server, {
             cors: {
-                origin: "*", // Permitir conexiones desde cualquier origen (ajustar en producción)
+                origin: "*", 
                 methods: ["GET", "POST"]
             }
         });
@@ -73,7 +97,7 @@ class Server {
     listen() {
         // IMPORTANTE: usar this.server.listen en lugar de this.app.listen
         this.server.listen(this.port, () => {
-            console.log('Servidor corriendo en puerto', this.port);
+            console.log(`🚀 Servidor corriendo en ${this.protocol}://localhost:${this.port}`);
         });
     }
 }

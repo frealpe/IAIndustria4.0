@@ -3,11 +3,23 @@ const mqtt = require('mqtt');
 const SvmService = require('../services/SvmService');
 const socketService = require('../services/SocketService');
 
-const brokerUrl = process.env.BROKER;
+const fs = require('fs');
+const path = require('path');
+
+const brokerUrl = process.env.BROKER || 'mqtt://localhost:1883';
+const isSecure = brokerUrl.startsWith('mqtts') || brokerUrl.startsWith('wss');
+
 const options = {
   username: process.env.MQTT_USER,
   password: process.env.MQTT_PASS,
   clientId: "NodeClient_" + Math.random().toString(16).substr(2, 8),
+  // Solo aplicar certificados si la URL es segura (mqtts/wss)
+  ...(isSecure && {
+    key: (process.env.TLS_KEY_PATH && fs.existsSync(process.env.TLS_KEY_PATH)) ? fs.readFileSync(process.env.TLS_KEY_PATH) : undefined,
+    cert: (process.env.TLS_CERT_PATH && fs.existsSync(process.env.TLS_CERT_PATH)) ? fs.readFileSync(process.env.TLS_CERT_PATH) : undefined,
+    ca: (process.env.TLS_CA_PATH && fs.existsSync(process.env.TLS_CA_PATH)) ? fs.readFileSync(process.env.TLS_CA_PATH) : undefined,
+    rejectUnauthorized: process.env.MQTT_REJECT_UNAUTHORIZED === 'true',
+  })
 };
 
 // Lista de topics

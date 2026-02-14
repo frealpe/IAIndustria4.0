@@ -30,6 +30,13 @@ void setup() {
     settingsSave();
     log("\n[ERROR]Error al leer el archivo de configuraciones Settings.json");
   }
+
+  // Migración automática a MQTTS (Puerto 8883)
+  if (mqtt_port == 1883) {
+    mqtt_port = 8883;
+    settingsSave();
+    log("\n[INFO] Migración a MQTTS: Puerto actualizado a 8883");
+  }
   settingPines();
   wifi_setup();
   Serial.println("[INFO] setup() terminado"); // <-- línea añadida

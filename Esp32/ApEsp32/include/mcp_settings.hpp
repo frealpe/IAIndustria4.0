@@ -138,7 +138,7 @@ void settingsReset() {
   strlcpy(mqtt_server, "192.168.20.23", sizeof(mqtt_server)); // Servidor MQTT
   strlcpy(mqtt_cloud_id, deviceID().c_str(),
           sizeof(mqtt_cloud_id)); // ID Cliente MQTT
-  mqtt_port = 1883;               // Puerto MQTT
+  mqtt_port = 8883;               // Puerto MQTT por defecto (Seguro)
   mqtt_retain = false;            // Retención MQTT
   mqtt_qos = 0;                   // QoS MQTT
   mqtt_time_send = true;          // Envío por tiempo

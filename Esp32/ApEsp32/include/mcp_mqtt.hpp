@@ -2,6 +2,7 @@
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 
 // Helper for Time String (if not defined elsewhere)
 // String longTimeStr(const unsigned long &t) {
@@ -29,7 +30,36 @@ boolean mqtt_willRetain = false;
 // Vamos a usar 'espClient' que estaba declarado en el archivo original, pero lo
 // renombramos a 'wifiClient' para pegar el codigo mas facil? No, mejor
 // declaramos wifiClient para ser 100% igual al codigo copiado.
-WiFiClient wifiClient;
+// -------------------------------------------------------------------
+// Certificado CA (Raíz) para Mosquitto
+// -------------------------------------------------------------------
+const char *root_ca =
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIID+TCCAuGgAwIBAgIUC8dGw8Wq8dHaQpaeZ+ZAriKw+/QwDQYJKoZIhvcNAQEL\n"
+    "BQAwgYsxCzAJBgNVBAYTAkNPMQ4wDAYDVQQIDAVDYXVjYTEQMA4GA1UEBwwHUG9w\n"
+    "YXlhbjEMMAoGA1UECgwDUGxjMRMwEQYDVQQLDApBdXRvbWF0aWNhMQ8wDQYDVQQD\n"
+    "DAZNY3BfSUExJjAkBgkqhkiG9w0BCQEWF2ZyZWFscGVAdW5pY2F1Y2EuZWR1LmNv\n"
+    "MB4XDTI2MDIxNDAwNDI1MFoXDTM2MDIxMjAwNDI1MFowgYsxCzAJBgNVBAYTAkNP\n"
+    "MQ4wDAYDVQQIDAVDYXVjYTEQMA4GA1UEBwwHUG9wYXlhbjEMMAoGA1UECgwDUGxj\n"
+    "MRMwEQYDVQQLDApBdXRvbWF0aWNhMQ8wDQYDVQQDDAZNY3BfSUExJjAkBgkqhkiG\n"
+    "9w0BCQEWF2ZyZWFscGVAdW5pY2F1Y2EuZWR1LmNvMIIBIjANBgkqhkiG9w0BAQEF\n"
+    "AAOCAQ8AMIIBCgKCAQEAuaJtcSkurCxuOuZ4mV6xhSkW3fAH9uF2hU8wKy201mGq\n"
+    "cwLdY2dk6K/MhXS+/0RfTXrG02sqzDDVnMv350wYo6EecroygonRmOVXSTlafKyC\n"
+    "0p7GqQGOL/XsuhhDorJvnEuqhIQGFKUSrZO6IvzEmxguCt/vJj5zsoRMaT3izjuP\n"
+    "se0uku0xsAJVp37UDlYdaGACz2y6N94x7aFtaKY38iMvZJx3+jejc6r9/ZVRPx2r\n"
+    "DV4SjfRnFEjy4uK9ZLDTSIgXTpZla6pz38Wgfv9zifMlttqipVOgurLX+4IV+5rH\n"
+    "bIJA6gqG4VOyw76wK0puc+mfmHhRwTRr9k54zmYsnwIDAQABo1MwUTAdBgNVHQ4E\n"
+    "FgQUcMRAgf4Hsr7NMzeBgROxQfYgfm4wHwYDVR0jBBgwFoAUcMRAgf4Hsr7NMzeB\n"
+    "gROxQfYgfm4wDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEATE7w\n"
+    "FwUgGRWaucsGJMgjY9f3TuqWwcCW1dZ58MkXawJjNFQ6nXnKsfdNC4nw046dKRax\n"
+    "z3khg2bUfdArnaAkPx4taFFvP7OSyFlFlbN7zmvKkuDgZ2JsHXNRzjLGEW3gj2SR\n"
+    "0l4AO3E2doCx0gVO0vEbs6kJC/u9lJj2QRdfz+AbQeQn7FDu0Fr3MG8nN4gcRuZk\n"
+    "vv7xZLM/VwllLPKC/DkNXMAzC3hYdvO3eQQRde01oDH9nVmhxI/2XSbbKN8/UsON\n"
+    "f8w6h+PU84b1zacd/LiCwTdDB3+3V0xCzbEUJouMf44pyYyBFVlMX+2LvovNSz+1\n"
+    "h50cZWe7HxAWGJaGUg==\n"
+    "-----END CERTIFICATE-----\n";
+
+WiFiClientSecure wifiClient;
 PubSubClient mqttClient(wifiClient);
 
 char topic[150];
@@ -54,6 +84,16 @@ void mqtt_response(String method, String type, String msg, String value);
 // MQTT Connect
 // -------------------------------------------------------------------
 boolean mqtt_connect() {
+  // Configurar Certificado si es puerto seguro (e.g. 8883)
+  if (mqtt_port == 8883) {
+    wifiClient.setCACert(root_ca);
+    log("MQTT: Usando conexión segura (TLS)");
+  } else {
+    wifiClient.setInsecure(); // Opcional: permitir conexiones sin validar CA si
+                              // no es puerto 8883
+    log("MQTT: Usando conexión normal");
+  }
+
   mqttClient.setServer(mqtt_server, mqtt_port);
   mqttClient.setCallback(callback);
   mqttClient.setBufferSize(1024 * 5); // Establecer buffer antes de conectar

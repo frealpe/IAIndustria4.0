@@ -1,0 +1,46 @@
+
+
+sudo mkdir -p /etc/mosquitto/certs
+
+
+openssl genrsa -out ca.key 2048
+
+# Crear el certificado de la CA
+# IMPORTANTE: Cuando te pida "Common Name", pon algo como "MiCA_Local"
+openssl req -new -x509 -days 3650 -key ca.key -out ca.crt
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:CO
+State or Province Name (full name) [Some-State]:Cauca  
+Locality Name (eg, city) []:Popayan
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:Plc
+Organizational Unit Name (eg, section) []:Automatica
+Common Name (e.g. server FQDN or YOUR name) []:Mcp_IA
+Email Address []:frealpe@unicauca.edu.co
+
+En la misma carpeta
+
+# Crear la llave privada del servidor
+openssl genrsa -out server.key 2048
+
+# Crear la solicitud de firma (CSR)
+openssl req -new -out server.csr -key server.key
+
+Country Name (2 letter code) [AU]:CO
+State or Province Name (full name) [Some-State]:Cauca
+Locality Name (eg, city) []:Popayan
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:Servidor_MQTT
+Organizational Unit Name (eg, section) []:Automatica
+Common Name (e.g. server FQDN or YOUR name) []:192.168.20.23
+Email Address []:frealpe@unicauca.edu.co
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []:
+An optional company name []:
+

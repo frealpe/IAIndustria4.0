@@ -41,7 +41,7 @@ export default defineConfig(({ mode }) => {
     },
     optimizeDeps: {
       force: true,
-      include: ["@arcgis/core/core/watchUtils"],
+      include: [],
       esbuildOptions: {
         loader: {
           '.js': 'jsx',
@@ -51,7 +51,6 @@ export default defineConfig(({ mode }) => {
     plugins: [react(),cesium(),],
     resolve: {
       alias: [
-        // '@arcgis/core': path.resolve(__dirname, 'node_modules/@arcgis/core'),
         {
           find: 'src/',
           replacement: `${path.resolve(__dirname, 'src')}/`,
@@ -60,7 +59,12 @@ export default defineConfig(({ mode }) => {
       extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.scss'],
     },
     server: {
-      port: 3000,
+      port: 8086,
+      strictPort: true,
+      https: (process.env.SSL_ENABLED === 'true') ? {
+        key: path.resolve(__dirname, '../Servidor/certs/server.key'),
+        cert: path.resolve(__dirname, '../Servidor/certs/server.crt'),
+      } : false,
       proxy: {
         // https://vitejs.dev/config/server-options.html
       },
