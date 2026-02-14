@@ -97,7 +97,7 @@ const DatosModel = {
     }
 
     const query = `
-      INSERT INTO datos (device_uid, device_id, resultado, mean, created_at)
+      INSERT INTO public.datos (device_uid, device_id, resultado, mean, created_at)
       VALUES ($1, $2, $3, $4, NOW())
       RETURNING *;
     `;

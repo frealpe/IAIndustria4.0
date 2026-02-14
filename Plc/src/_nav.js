@@ -1,5 +1,5 @@
 import CIcon from '@coreui/icons-react'
-import { cilSpeedometer, cilChartPie, cilHistory, cilPuzzle, cilCalculator, cilSettings } from '@coreui/icons'
+import { cilSpeedometer, cilChartPie, cilHistory, cilPuzzle, cilCalculator, cilSettings, cilInfo } from '@coreui/icons'
 import { CNavItem } from '@coreui/react-pro'
 
 const _nav = [
@@ -35,9 +35,9 @@ const _nav = [
   },
   {
     component: CNavItem,
-    name: 'Ajustes',
+    name: 'Ayuda',
     to: '/ajustes',
-    icon: <CIcon icon={cilSettings} customClassName="nav-icon" />,
+    icon: <CIcon icon={cilInfo} customClassName="nav-icon" />,
   },
 ]
 

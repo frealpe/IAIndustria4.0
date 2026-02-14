@@ -1,0 +1,112 @@
+{
+    "layers": [
+        {
+            "id": "field",
+            "label": "Capa de Campo (IoT)",
+            "color": "#0d6efd",
+            "x_percent": 15
+        },
+        {
+            "id": "messaging",
+            "label": "Capa Mensajería",
+            "color": "#ffc107",
+            "x_percent": 35
+        },
+        {
+            "id": "server",
+            "label": "Núcleo IA & Backend",
+            "color": "#dc3545",
+            "x_percent": 60
+        },
+        {
+            "id": "ui",
+            "label": "Presentación",
+            "color": "#198754",
+            "x_percent": 85
+        }
+    ],
+    "nodes": [
+        {
+            "id": "Broker",
+            "layer": "messaging",
+            "label": "Mosquitto (MQTTS)",
+            "y_percent": 50
+        },
+        {
+            "id": "Backend",
+            "layer": "server",
+            "label": "Node.js (Express)",
+            "y_percent": 50
+        },
+        {
+            "id": "Orchestrator",
+            "layer": "server",
+            "label": "Orchestrator",
+            "y_percent": 30
+        },
+        {
+            "id": "Supervisor",
+            "layer": "server",
+            "label": "Supervisor",
+            "y_percent": 45,
+            "color": "#fd7e14"
+        },
+        {
+            "id": "DS_Agent",
+            "layer": "server",
+            "label": "Data Scientist",
+            "y_percent": 75
+        },
+        {
+            "id": "SQL_Agent",
+            "layer": "server",
+            "label": "SQL Expert",
+            "y_percent": 60
+        },
+        {
+            "id": "Dashboard",
+            "layer": "ui",
+            "label": "React Dashboard",
+            "y_percent": 50,
+            "color": "#dc3545"
+        }
+    ],
+    "links": [
+        {
+            "source": "Broker",
+            "target": "Backend",
+            "protocol": "MQTTS"
+        },
+        {
+            "source": "Backend",
+            "target": "Orchestrator",
+            "protocol": "Internal"
+        },
+        {
+            "source": "Orchestrator",
+            "target": "Supervisor",
+            "protocol": "Flow"
+        },
+        {
+            "source": "Supervisor",
+            "target": "DS_Agent",
+            "protocol": "Assign"
+        },
+        {
+            "source": "Supervisor",
+            "target": "SQL_Agent",
+            "protocol": "Assign"
+        },
+        {
+            "source": "DS_Agent",
+            "target": "SQL_Agent",
+            "protocol": "MCP"
+        },
+        {
+            "source": "Backend",
+            "target": "Dashboard",
+            "protocol": "HTTPS/WSS"
+        }
+    ],
+    "device_layer": "field"
+}

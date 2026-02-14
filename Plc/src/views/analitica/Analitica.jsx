@@ -46,9 +46,15 @@ const Analitica = () => {
                         {/* ROW 2: Structure (Tree) or Data (Force Graph) */}
                         <div className="p-1 overflow-hidden" style={{ position: 'relative' }}>
                             <div style={{ position: 'absolute', top: 5, left: 10, zIndex: 10, fontSize: '0.8rem', color: '#888' }}>
-                                {selectedDevice ? `Datos: ${selectedDevice.name}` : 'Estructura del Proyecto'}
+                                {selectedDevice?.type === 'agent'
+                                    ? `Grafo de Agentes: ${selectedDevice.name}`
+                                    : selectedDevice
+                                        ? `Datos: ${selectedDevice.name}`
+                                        : 'Estructura del Proyecto'}
                             </div>
-                            {selectedDevice ? (
+                            {selectedDevice?.type === 'agent' ? (
+                                <ProjectTidyTree focusAgent={selectedDevice.id} />
+                            ) : selectedDevice ? (
                                 <DeviceDataForceGraph
                                     device_uid={selectedDevice.id}
                                     device_name={selectedDevice.name}

@@ -3,11 +3,11 @@ import * as d3 from 'd3';
 import { CFormSelect } from '@coreui/react-pro';
 import projectData from '../../service/projectStructure.json';
 
-const ProjectTidyTree = () => {
+const ProjectTidyTree = ({ focusAgent }) => {
     const wrapperRef = useRef();
     const svgRef = useRef();
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-    const [layoutType, setLayoutType] = useState('orthogonal'); // 'orthogonal' | 'radial'
+    const [layoutType, setLayoutType] = useState('orthogonal'); // 'orthogonal' | 'tangled' | 'arc' | 'suits'
 
     useEffect(() => {
         if (!wrapperRef.current) return;
@@ -139,93 +139,32 @@ const ProjectTidyTree = () => {
         // Define color scale for all layouts
         const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
 
-        if (layoutType === 'radial') {
-            // *** RADIAL LAYOUT (Tree of Life) ***
-            const radius = Math.min(width, height) / 2;
-            const cluster = d3.cluster().size([2 * Math.PI, radius - 150]);
-
-            // Sort for better radial grouping
-            root.sort((a, b) => d3.ascending(a.data.name, b.data.name));
-            cluster(root);
-
-            // Center the group
-            svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.8));
-
-            // Links
-            g.append("g")
-                .attr("fill", "none")
-                .attr("stroke", "#555")
-                .attr("stroke-opacity", 0.4)
-                .attr("stroke-width", 1.5)
-                .selectAll("path")
-                .data(root.links())
-                .join("path")
-                .attr("d", d3.linkRadial()
-                    .angle(d => d.x)
-                    .radius(d => d.y));
-
-            // Nodes
-            const node = g.append("g")
-                .selectAll("g")
-                .data(root.descendants())
-                .join("g")
-                .attr("transform", d => `
-rotate(${d.x * 180 / Math.PI - 90})
-translate(${d.y}, 0)
-                `);
-
-            node.append("circle")
-                .attr("r", 3)
-                .attr("fill", d => d.children ? "#555" : "#999");
-
-            node.append("text")
-                .attr("dy", "0.31em")
-                .attr("x", d => d.x < Math.PI === !d.children ? 6 : -6)
-                .attr("text-anchor", d => d.x < Math.PI === !d.children ? "start" : "end")
-                .attr("transform", d => d.x >= Math.PI ? "rotate(180)" : null)
-                .text(d => d.data.name)
-                .clone(true).lower()
-                .attr("stroke", "white")
-                .attr("stroke-width", 3);
-
-        } else if (layoutType === 'arc') {
-            // *** ARC DIAGRAM ***
-
-            // Linear layout of nodes based on hierarchy traversal order or just flat list
+        if (layoutType === 'tangled') {
+            // *** TANGLED TREE VISUALIZATION ***
             const nodes = root.descendants();
             const links = root.links();
 
-            // Create a scale for positioning nodes along the x-axis
-            // We use a band scale but point scale is fine too.
-            // Let's use point scale with some padding
-            const x = d3.scalePoint()
-                .domain(nodes.map(d => d.data.name)) // Use unique names or IDs! Names might collide. Use IDs.
-                .range([0, width - 100])
-                .padding(0.5);
+            // 1. Group nodes by depth (levels)
+            const levels = d3.groups(nodes, d => d.depth);
+            const levelWidth = width / (levels.length + 1);
 
-            // Assign unique IDs if not present or rebuild them based on traversal
-            nodes.forEach((d, i) => { d.id = i; });
+            // 2. Position nodes in columns
+            nodes.forEach(d => {
+                const levelNodes = levels.find(l => l[0] === d.depth)[1];
+                const index = levelNodes.indexOf(d);
+                const spacing = height / (levelNodes.length + 1);
 
-            // Re-domain based on IDs to ensure order matches traversal
-            x.domain(nodes.map(d => d.id));
+                d.xPos = (d.depth + 1) * levelWidth;
+                d.yPos = (index + 1) * spacing;
+            });
 
-            // Position nodes vertically in middle or near bottom
-            const y = height / 2;
+            // Center the group
+            svg.call(zoom.transform, d3.zoomIdentity.translate(0, 0).scale(1));
 
-            // Center the group horizontally if needed, or left align with margin
-            const margin = { top: 20, right: 20, bottom: 20, left: 50 };
-
-            // Allow zooming/panning
-            const gContent = g.append("g")
-                .attr("transform", `translate(${margin.left}, ${y})`);
-
-            svg.call(zoom.transform, d3.zoomIdentity.translate(margin.left, height / 2).scale(0.8));
-
-            // Links (Arcs)
-            gContent.append("g")
+            // 3. Render Links as Bundled Berzier Curves
+            g.append("g")
                 .attr("fill", "none")
-                .attr("stroke-width", 1.5)
-                .attr("stroke-opacity", 0.6)
+                .attr("stroke-opacity", 0.3)
                 .selectAll("path")
                 .data(links)
                 .join("path")
@@ -233,45 +172,46 @@ translate(${d.y}, 0)
                     const module = d.source.ancestors().find(a => a.depth === 1);
                     return module ? colorScale(module.data.name) : "#999";
                 })
+                .attr("stroke-width", d => 2 + (root.height - d.source.depth) * 1.5)
                 .attr("d", d => {
-                    const x1 = x(d.source.id);
-                    const x2 = x(d.target.id);
-                    const r = Math.abs(x2 - x1) / 2;
-                    // Arc goes up (negative y relative to baseline)
-                    return `M${x1},0 A${r},${r} 0 0,${x1 < x2 ? 1 : 0} ${x2},0`;
+                    const xSource = d.source.xPos;
+                    const ySource = d.source.yPos;
+                    const xTarget = d.target.xPos;
+                    const yTarget = d.target.yPos;
+                    // Cubic Berzier with horizontal control points
+                    const midX = (xSource + xTarget) / 2;
+                    return `M${xSource},${ySource} 
+                            C${midX},${ySource} 
+                             ${midX},${yTarget} 
+                             ${xTarget},${yTarget}`;
                 });
 
-            // Nodes (Circles)
-            const node = gContent.append("g")
-                .selectAll("circle")
+            // 4. Render Nodes
+            const node = g.append("g")
+                .selectAll("g")
                 .data(nodes)
-                .join("circle")
-                .attr("cx", d => x(d.id))
-                .attr("cy", 0)
-                .attr("r", 5)
+                .join("g")
+                .attr("transform", d => `translate(${d.xPos},${d.yPos})`);
+
+            node.append("circle")
+                .attr("r", d => 6 - d.depth)
                 .attr("fill", d => {
                     const module = d.ancestors().find(a => a.depth === 1);
-                    return module ? colorScale(module.data.name) : "#999";
+                    return module ? colorScale(module.data.name) : "#555";
                 })
                 .attr("stroke", "#fff")
-                .attr("stroke-width", 1);
+                .attr("stroke-width", 1.5);
 
-            // Labels (Rotated)
-            gContent.append("g")
-                .selectAll("text")
-                .data(nodes)
-                .join("text")
-                .attr("x", d => x(d.id))
-                .attr("y", 12)
-                .attr("text-anchor", "start")
-                .attr("transform", d => `rotate(45, ${x(d.id)}, 12)`)
+            node.append("text")
+                .attr("dy", "0.31em")
+                .attr("x", d => d.children ? -10 : 10)
+                .attr("text-anchor", d => d.children ? "end" : "start")
                 .text(d => d.data.name)
-                .attr("font-size", "10px")
-                .attr("fill", d => {
-                    // Get module name (depth 1 ancestor)
-                    const module = d.ancestors().find(a => a.depth === 1);
-                    return module ? colorScale(module.data.name) : "#333";
-                });
+                .style("font-size", d => (14 - d.depth) + "px")
+                .style("font-weight", d => d.depth === 0 ? "bold" : "500")
+                .clone(true).lower()
+                .attr("stroke", "white")
+                .attr("stroke-width", 3);
 
         } else if (layoutType === 'suits') {
             // *** MOBILE PATENT SUITS (Force Directed) ***
@@ -382,13 +322,25 @@ translate(${d.y}, 0)
             svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.6));
 
         } else {
-            // ... (Orthogonal logic remains)
+            // *** ORTHOGONAL / TREE STRUCTURE ***
+            // This is the default layout.
 
-            // Initial state: collapse nodes deeper than level 1
+            let nodesToExpand = new Set();
+            let focusTarget = null;
+            if (focusAgent) {
+                focusTarget = root.descendants().find(d => d.data.name === focusAgent || d.data.name.includes(focusAgent));
+                if (focusTarget) {
+                    focusTarget.ancestors().forEach(a => nodesToExpand.add(a));
+                }
+            }
+
+            // Initial state: collapse nodes deeper than level 1, unless in focus path
             root.descendants().forEach((d, i) => {
                 d.id = i;
                 d._children = d.children;
-                if (d.depth > 1) d.children = null;
+                if (d.depth > 1 && !nodesToExpand.has(d)) {
+                    d.children = null;
+                }
             });
 
             const dx = 20;
@@ -420,12 +372,6 @@ translate(${d.y}, 0)
                     if (node.x > right.x) right = node;
                 });
 
-                const height_calc = right.x - left.x + dx * 2;
-
-                // Transition viewBox? No, we are using Zoom. 
-                // We just center it initially or let user zoom.
-                // For simplified update logic with Zoom, we don't transition viewBox.
-
                 const transition = svg.transition()
                     .duration(duration);
 
@@ -452,7 +398,7 @@ translate(${d.y}, 0)
                     .attr("x", d => d._children ? -8 : 8)
                     .attr("text-anchor", d => d._children ? "end" : "start")
                     .text(d => d.data.name)
-                    .style("font-weight", d => d.children ? "bold" : "normal") // Use style or attr
+                    .style("font-weight", d => d.children ? "bold" : "normal")
                     .clone(true).lower()
                     .attr("stroke-linejoin", "round")
                     .attr("stroke-width", 3)
@@ -495,12 +441,28 @@ translate(${d.y}, 0)
                 });
             }
 
-            // Initial centering
-            svg.call(zoom.transform, d3.zoomIdentity.translate(40, height / 2).scale(1));
-            update(root);
+            // Initial centering or focusing
+            if (focusTarget) {
+                update(root);
+                // Center on the target
+                const targetX = focusTarget.x;
+                const targetY = focusTarget.y;
+                const scale = 1.5;
+
+                // transform: translate(width/2 - targetY*scale, height/2 - targetX*scale) scale(scale)
+                const t = d3.zoomIdentity
+                    .translate(width / 2 - targetY * scale, height / 2 - targetX * scale)
+                    .scale(scale);
+
+                svg.transition().duration(750).call(zoom.transform, t);
+
+            } else {
+                svg.call(zoom.transform, d3.zoomIdentity.translate(40, height / 2).scale(1));
+                update(root);
+            }
         }
 
-    }, [dimensions, layoutType]);
+    }, [dimensions, layoutType, focusAgent]);
 
     return (
         <div ref={wrapperRef} style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}>
@@ -511,8 +473,7 @@ translate(${d.y}, 0)
                     onChange={(e) => setLayoutType(e.target.value)}
                     options={[
                         { label: 'Estructura (Ortogonal)', value: 'orthogonal' },
-                        { label: 'Tree of Life (Radial)', value: 'radial' },
-                        { label: 'Arc Diagram (Lineal)', value: 'arc' },
+                        { label: 'Tangled Tree (Densidad)', value: 'tangled' },
                         { label: 'Mobile Patent Suits (Nodos)', value: 'suits' }
                     ]}
                 />
