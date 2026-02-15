@@ -5,11 +5,14 @@
 \save_transient_properties true
 \origin unavailable
 \textclass book
+\begin_preamble
+
+\end_preamble
 \use_default_options true
 \maintain_unincluded_children false
 \language spanish
 \language_package default
-\inputencoding auto
+\inputencoding iso8859-15
 \fontencoding global
 \font_roman "default" "default"
 \font_sans "default" "default"
@@ -135,14 +138,257 @@ Para que la inteligencia lógica (LLM) pueda interactuar con la acción física
  en datos procesables para el razonamiento del agente.
 \end_layout
 
+\begin_layout Standard
+MCP (Model Context Protocol) es un estándar abierto desarrollado recientemente
+ por Anthropic que está cambiando la forma en que los asistentes de IA interactú
+an con los datos y las herramientas ver
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:Cliente-Servidor-MCP"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+Introducción En el panorama actual del desarrollo con Inteligencia Artificial,
+ la integración de modelos de lenguaje (LLMs) con fuentes de datos externas
+ (bases de datos, archivos locales, APIs) es fragmentada.
+ Cada integración requiere una implementación personalizada, lo que genera
+ silos de información y deuda técnica.
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Model Context Protocol (MCP) surge como un estándar abierto diseñado para
+ reemplazar estas integraciones punto a punto con un protocolo universal
+ y seguro.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+El Problema: El "Impuesto de Integración" Hasta ahora, conectar un Agente
+ de IA a un entorno de trabajo implicaba:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Mantenimiento constante: APIs que cambian y requieren actualizaciones manuales.
+\end_layout
+
+\begin_layout Standard
+Riesgos de seguridad: Métodos de acceso a datos no estandarizados.
+\end_layout
+
+\begin_layout Standard
+Falta de portabilidad: Una herramienta diseñada para un modelo no funcionaba
+ fácilmente en otro.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+La Solución: Arquitectura MCP MCP funciona bajo un modelo de arquitectura
+ Cliente-Servidor simplificado:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\begin_inset Float table
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Componente
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Función
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MCP Host
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none" width="10cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+La aplicación de IA (ej.
+ Claude Desktop, IDEs, aplicaciones personalizadas en Node.js).
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MCP Client
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Mantiene la conexión bidireccional con los servidores dentro del Host.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MCP Server
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none" width="10cm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Microservicios ligeros que exponen datos o herramientas específicas (Filesystem,
+ GitHub, SQL, sensores) mediante el estándar MCP.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Cliente-Servidor MCP.
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:Cliente-Servidor-MCP"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Beneficios Clave Interoperabilidad: 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Una vez que escribes un servidor MCP (por ejemplo, para leer datos de sensores
+ o estados de un PLC), cualquier aplicación compatible con MCP puede usarlo.
+\end_layout
+
+\begin_layout Itemize
+Control de Contexto: El modelo solo accede a la información necesaria en
+ el momento preciso, optimizando el uso de la ventana de contexto.
+\end_layout
+
+\begin_layout Itemize
+Seguridad Local: Los servidores pueden ejecutarse localmente, permitiendo
+ que la IA interactúe con datos sensibles sin que estos salgan de la infraestruc
+tura privada del usuario o empresa.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Casos de Uso en Desarrollo
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Ingeniería de Software: Acceso directo a repositorios para refactorización
+ de código en tiempo real.
+\end_layout
+
+\begin_layout Itemize
+Sistemas Industriales / IoT: Un servidor MCP que actúe como puente entre
+ protocolos industriales (Modbus/OPC-UA) y el modelo de IA para diagnóstico
+ de fallas.
+\end_layout
+
+\begin_layout Itemize
+Gestión de Datos: Consultas a bases de datos en lenguaje natural mediante
+ la exposición de esquemas SQL seguros a través de MCP.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Conclusión y Próximos Pasos
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+MCP no es solo una herramienta, es el puerto estándar que permitirá que
+ los agentes de IA dejen de ser simples generadores de texto para convertirse
+ en asistentes operativos reales con acceso a herramientas del mundo físico
+ y digital.
+\end_layout
+
+\end_deeper
 \begin_layout Subsection
 Interfaz de Usuario como Reflejo del Razonamiento
 \end_layout
 
 \begin_layout Standard
-Finalmente, la capa de UI, desarrollada en React Native, deja de ser una
- simple ventana de chat para convertirse en un tablero de control del proceso
- de pensamiento del agente.
+Finalmente, la capa de UI, desarrollada en React o React Native, deja de
+ ser una simple ventana de chat para convertirse en un tablero de control
+ del proceso de pensamiento del agente.
  En esta arquitectura, la interfaz es un reflejo fiel de un proceso de razonamie
 nto autónomo, donde el usuario puede observar cómo el agente decide y actúa
  sobre los activos físicos en tiempo real.
@@ -159,7 +405,7 @@ noprefix "false"
 
 \end_inset
 
-
+.
 \end_layout
 
 \begin_layout Standard
@@ -187,20 +433,19 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Arquitectura de Tres Capas para el Control Autónomo de Procesos en la Industria
- 4.0
+Arquitectura de Tres Capas para el Control Autónomo de Procesos 
+\end_layout
+
+\end_inset
+
+
 \begin_inset CommandInset label
 LatexCommand label
 name "fig:Arquitectura-de-Tres"
 
 \end_inset
 
-
-\end_layout
-
-\end_inset
-
-
+ 
 \end_layout
 
 \begin_layout Plain Layout
@@ -245,8 +490,19 @@ Estado y Memoria: El sistema mantiene un registro de lo que ha sucedido
 
 \begin_layout Itemize
 Flujos Cíclicos: Permite que el agente realice bucles de razonamiento: "Leo
- el sensor -> Analizo -> Si el valor es incorrecto, intento ajustar -> Vuelvo
- a leer".
+ el sensor 
+\begin_inset Formula $->$
+\end_inset
+
+ Analizo
+\begin_inset Formula $->$
+\end_inset
+
+ Si el valor es incorrecto, intento ajustar 
+\begin_inset Formula $->$
+\end_inset
+
+ Vuelvo a leer".
 \end_layout
 
 \end_deeper
@@ -1082,7 +1338,7 @@ No todos los modelos de IA deben usarse de la misma manera.
  técnica precisa ver 
 \begin_inset CommandInset ref
 LatexCommand ref
-reference "tab:Modelos-Agénticos"
+reference "tab:Modelos-Agenticose"
 plural "false"
 caps "false"
 noprefix "false"
@@ -1531,15 +1787,15 @@ Generación de scripts de automatización y depuración de errores en Factory
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Modelos Agénticos (Para toma de decisiones y orquestación)
-\begin_inset CommandInset label
-LatexCommand label
-name "tab:Modelos-Agénticos"
+Modelos Agénticos (Para toma de decisiones y orquestación).
+\end_layout
 
 \end_inset
 
-
-\end_layout
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:Modelos-Agenticose"
 
 \end_inset
 
@@ -1832,15 +2088,16 @@ const InformeMotorSchema = z.object({
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Esquema de validación Zod 
-\begin_inset CommandInset label
-LatexCommand label
-name "alg:Esquema-de-validación"
+Esquema de validación Zod.
+ 
+\end_layout
 
 \end_inset
 
 
-\end_layout
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Esquema-de-validación"
 
 \end_inset
 
@@ -1958,15 +2215,16 @@ Json
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Respuesta del modelo
-\begin_inset CommandInset label
-LatexCommand label
-name "alg:Respuesta-del-modelo"
+Respuesta del modelo.
+ 
+\end_layout
 
 \end_inset
 
 
-\end_layout
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Respuesta-del-modelo"
 
 \end_inset
 
@@ -1996,259 +2254,8 @@ Integración inmediata: Tu aplicación en Node.js o React puede leer ese objeto
 \begin_layout Itemize
 Fiabilidad total: Si la IA intenta enviar algo que no sea un número en temperatu
 ra_celsius, el sistema (vía Zod) lo rechaza antes de que cause un error
- en tus bases de datos.
+ en tus bases de datos
 \end_layout
 
-\begin_layout Section
-Servidor MCP
-\end_layout
-
-\begin_layout Standard
-MCP (Model Context Protocol) es un estándar abierto desarrollado recientemente
- por Anthropic que está cambiando la forma en que los asistentes de IA interactú
-an con los datos y las herramientas ver
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "tab:Cliente-Servidor-MCP"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Enumerate
-Introducción En el panorama actual del desarrollo con Inteligencia Artificial,
- la integración de modelos de lenguaje (LLMs) con fuentes de datos externas
- (bases de datos, archivos locales, APIs) es fragmentada.
- Cada integración requiere una implementación personalizada, lo que genera
- silos de información y deuda técnica.
-\end_layout
-
-\begin_deeper
-\begin_layout Standard
-Model Context Protocol (MCP) surge como un estándar abierto diseñado para
- reemplazar estas integraciones punto a punto con un protocolo universal
- y seguro.
-\end_layout
-
-\end_deeper
-\begin_layout Enumerate
-El Problema: El "Impuesto de Integración" Hasta ahora, conectar un Agente
- de IA a un entorno de trabajo implicaba:
-\end_layout
-
-\begin_deeper
-\begin_layout Standard
-Mantenimiento constante: APIs que cambian y requieren actualizaciones manuales.
-\end_layout
-
-\begin_layout Standard
-Riesgos de seguridad: Métodos de acceso a datos no estandarizados.
-\end_layout
-
-\begin_layout Standard
-Falta de portabilidad: Una herramienta diseñada para un modelo no funcionaba
- fácilmente en otro.
-\end_layout
-
-\end_deeper
-\begin_layout Enumerate
-La Solución: Arquitectura MCP MCP funciona bajo un modelo de arquitectura
- Cliente-Servidor simplificado:
-\end_layout
-
-\begin_deeper
-\begin_layout Standard
-\begin_inset Float table
-placement H
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="4" columns="2">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Componente
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Función
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-MCP Host
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none" width="10cm">
-\begin_inset Text
-
-\begin_layout Plain Layout
-La aplicación de IA (ej.
- Claude Desktop, IDEs, aplicaciones personalizadas en Node.js).
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-MCP Client
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Mantiene la conexión bidireccional con los servidores dentro del Host.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-MCP Server
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none" width="10cm">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Microservicios ligeros que exponen datos o herramientas específicas (Filesystem,
- GitHub, SQL, sensores) mediante el estándar MCP.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Cliente-Servidor MCP
-\begin_inset CommandInset label
-LatexCommand label
-name "tab:Cliente-Servidor-MCP"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_deeper
-\begin_layout Enumerate
-Beneficios Clave Interoperabilidad: 
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-Una vez que escribes un servidor MCP (por ejemplo, para leer datos de sensores
- o estados de un PLC), cualquier aplicación compatible con MCP puede usarlo.
-\end_layout
-
-\begin_layout Itemize
-Control de Contexto: El modelo solo accede a la información necesaria en
- el momento preciso, optimizando el uso de la ventana de contexto.
-\end_layout
-
-\begin_layout Itemize
-Seguridad Local: Los servidores pueden ejecutarse localmente, permitiendo
- que la IA interactúe con datos sensibles sin que estos salgan de la infraestruc
-tura privada del usuario o empresa.
-\end_layout
-
-\end_deeper
-\begin_layout Enumerate
-Casos de Uso en Desarrollo
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-Ingeniería de Software: Acceso directo a repositorios para refactorización
- de código en tiempo real.
-\end_layout
-
-\begin_layout Itemize
-Sistemas Industriales / IoT: Un servidor MCP que actúe como puente entre
- protocolos industriales (Modbus/OPC-UA) y el modelo de IA para diagnóstico
- de fallas.
-\end_layout
-
-\begin_layout Itemize
-Gestión de Datos: Consultas a bases de datos en lenguaje natural mediante
- la exposición de esquemas SQL seguros a través de MCP.
-\end_layout
-
-\end_deeper
-\begin_layout Enumerate
-Conclusión y Próximos Pasos
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-MCP no es solo una herramienta, es el puerto estándar que permitirá que
- los agentes de IA dejen de ser simples generadores de texto para convertirse
- en asistentes operativos reales con acceso a herramientas del mundo físico
- y digital.
-\end_layout
-
-\end_deeper
 \end_body
 \end_document

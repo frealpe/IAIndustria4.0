@@ -1,0 +1,48 @@
+---
+config:
+  layout: elk
+---
+graph TD
+    subgraph Brain ["MultiAgentService (LangGraph)"]
+        Orchestrator["Orchestrator Node - Decide Intencion"]
+        
+        subgraph Agents ["Nodos Agentes"]
+            SQL_Node["SQL Expert Node"]
+            Data_Node["Data Scientist Node"]
+        end
+        
+        Orchestrator -->|Consulta Simple| SQL_Node
+        Orchestrator -->|Analisis Complejo| Data_Node
+        SQL_Node -.->|Handover si requiere analisis| Data_Node
+    end
+
+    subgraph Tools ["McpService Herramientas"]
+        Tool_Query["Tool query_db"]
+        Tool_Analyze["Tool analizar_datos_avanzado"]
+    end
+
+    subgraph Data_Layer ["Capas de Datos"]
+        DatosModel["DatosModel.js"]
+        ModeloEntrenado["ModeloEntrenado.js"]
+        AnalysisHelper["AnalysisHelper.js Danfo"]
+    end
+
+    subgraph DB ["PostgreSQL"]
+        Table_Datos[("Tabla datos")]
+        Table_Models[("Tabla modelo_entrenado")]
+    end
+
+    SQL_Node -->|Llama| Tool_Query
+    Data_Node -->|Llama| Tool_Analyze
+
+    Tool_Query -->|Ejecuta SQL| DatosModel
+    Tool_Analyze -->|Ejecuta SQL| DatosModel
+    Tool_Analyze -->|Procesa| AnalysisHelper
+
+    DatosModel -->|Lee Escribe| Table_Datos
+    ModeloEntrenado -->|Lee Escribe| Table_Models
+
+    style Brain fill:#e1f5fe,stroke:#01579b
+    style Tools fill:#fff9c4,stroke:#fbc02d
+    style Data_Layer fill:#e8f5e9,stroke:#2e7d32
+    style DB fill:#f3e5f5,stroke:#7b1fa2

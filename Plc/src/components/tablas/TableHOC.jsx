@@ -14,7 +14,7 @@ import {
 import CIcon from '@coreui/icons-react';
 import { cilChartLine, cilChevronRight, cilChevronBottom } from '@coreui/icons';
 
-const TableHOC = ({ data, onRowClick, selectedIds = [], onSelectionChange, renderExpandable, hideActions = false }) => {
+const TableHOC = ({ data, onRowClick, selectedIds = [], onSelectionChange, renderExpandable, hideActions = false, hiddenColumns = [] }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [expandedRows, setExpandedRows] = useState([]); // Estado para filas expandidas
     const itemsPerPage = 5;
@@ -100,7 +100,7 @@ const TableHOC = ({ data, onRowClick, selectedIds = [], onSelectionChange, rende
                             <CTableHeaderCell scope="col" style={{ width: '40px' }}></CTableHeaderCell>
                             <CTableHeaderCell scope="col" style={{ width: '40px' }}>Sel</CTableHeaderCell>
                             <CTableHeaderCell scope="col">Dispositivo</CTableHeaderCell> {/* Nueva Columna */}
-                            <CTableHeaderCell scope="col">ID</CTableHeaderCell>
+                            {!hiddenColumns.includes('id') && <CTableHeaderCell scope="col">ID</CTableHeaderCell>}
                             <CTableHeaderCell scope="col">Fecha</CTableHeaderCell>
                             {!hideActions && <CTableHeaderCell scope="col" className="text-end">Acciones</CTableHeaderCell>}
                         </CTableRow>
@@ -134,9 +134,11 @@ const TableHOC = ({ data, onRowClick, selectedIds = [], onSelectionChange, rende
                                                 {item.device_uid ? item.device_uid.slice(-4) : (item.id && typeof item.id === 'string' && item.id.length > 5 ? item.id.slice(-4) : 'N/A')}
                                             </small>
                                         </CTableDataCell>
-                                        <CTableDataCell style={{ wordBreak: 'break-all', maxWidth: '120px', fontSize: '0.75rem', lineHeight: '1.2' }}>
-                                            {item.id}
-                                        </CTableDataCell>
+                                        {!hiddenColumns.includes('id') && (
+                                            <CTableDataCell style={{ wordBreak: 'break-all', maxWidth: '120px', fontSize: '0.75rem', lineHeight: '1.2' }}>
+                                                {item.id}
+                                            </CTableDataCell>
+                                        )}
                                         <CTableDataCell onClick={() => handleInternalRowClick(item)} style={{ cursor: 'pointer' }}>
                                             {getDate(item)}
                                         </CTableDataCell>

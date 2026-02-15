@@ -49,9 +49,15 @@ class McpService {
             })
         }, async ({ sql, codigo }) => {
             try {
-                console.log(`🔍 [ MCP ] analizando_datos_avanzado con SQL: ${sql.substring(0, 200)}...`);
+                console.log(`🔍 [ MCP ] analizando_datos_avanzado Request.`);
+                console.log(`   SQL: ${sql.substring(0, 100)}...`);
+                console.log(`   Internal Code provided: ${codigo ? 'YES' : 'NO'} (${codigo ? codigo.substring(0, 50) + '...' : ''})`);
+
                 // Reutilizamos la lógica de consulta interna
+                console.log("   --> Executing SQL...");
                 const executionResult = await this._executeQuery(sql, [], true);
+                console.log(`   <-- SQL Result: ${executionResult.isError ? 'ERROR' : 'OK'}, Rows: ${executionResult.rows ? executionResult.rows.length : 0}`);
+                
                 if (executionResult.isError || !executionResult.rows) return executionResult;
 
                 const finalData = executionResult.rows.map(row => {
@@ -63,9 +69,12 @@ class McpService {
                     return normalized;
                 });
 
+                console.log("   --> Running Analysis/Danfo...");
                 const finalResult = codigo ? executeDanfoCode(finalData, codigo) : analyzeData(finalData, 'datos');
+                console.log("   <-- Analysis Done.");
+                
                 socketService.emit('mcpdatos', { data: finalData, stats: finalResult.stats });
-                return { content: [{ type: "text", text: `ANALYSIS_SUCCESS:\n${finalResult.output}` }] };
+                return { content: [{ type: "text", text: finalResult.output }] };
             } catch (err) { 
                 console.error("❌ [MCP] analizar_datos_avanzado error:", err.message);
                 return { 

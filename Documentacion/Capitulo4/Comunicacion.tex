@@ -1,0 +1,438 @@
+%% LyX 2.3.6 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[oneside,spanish]{book}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\pagestyle{empty}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+\usepackage{float}
+
+\makeatletter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LyX specific LaTeX commands.
+\floatstyle{ruled}
+\newfloat{algorithm}{tbp}{loa}[chapter]
+\providecommand{\algorithmname}{Algoritmo}
+\floatname{algorithm}{\protect\algorithmname}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
+\usepackage{babel}
+
+
+\makeatother
+
+\usepackage{babel}
+\addto\shorthandsspanish{\spanishdeactivate{~<>}}
+
+\usepackage{listings}
+\renewcommand{\lstlistingname}{Listado de código}
+
+\begin{document}
+
+\chapter{Certificado TLS, MQTTS}
+
+\section{Guía de instalación y configuración de Mosquitto MQTT Broker}
+
+\subsection*{Introducción}
+
+El protocolo MQTT (Message Queuing Telemetry Transport) es un estándar
+ligero de mensajería basado en el modelo publicador/suscriptor, ideal
+para la comunicación entre dispositivos IoT y servidores o aplicaciones
+industriales.
+
+El broker MQTT actúa como intermediario entre los clientes que publican
+mensajes (publishers) y los que los reciben (subscribers). En este
+caso, el broker será el PC y el cliente será el PLC.
+\begin{enumerate}
+\item Actualizar el sistema
+
+sudo apt update 
+\item Instalar Mosquitto y las herramientas cliente
+
+sudo apt install mosquitto mosquitto-clients -y 
+
+Estas herramientas instalan tanto el servidor (broker) como los comandos
+de prueba mosquitto\_pub y mosquitto\_sub.
+\item Iniciar y habilitar el servicio
+
+Habilitar el servicio para que inicie automáticamente al arrancar:
+
+sudo systemctl enable mosquitto 
+
+Ejecución directa con salida en consola (modo verbose):
+
+mosquitto -v 
+\item Verificación de funcionamiento
+
+Para comprobar que el servicio escucha en el puerto 1883 (por defecto):
+
+\begin{lstlisting}
+sudo lsof -i :1883 
+\end{lstlisting}
+
+Si se desea usar otro puerto:
+
+\begin{lstlisting}
+mosquitto -p 1884 -v 
+\end{lstlisting}
+
+\item Permitir conexiones externas
+
+Por defecto, Mosquitto puede estar configurado solo para conexiones
+locales. Para habilitar conexiones externas (por ejemplo, desde el
+Esp32):
+
+\begin{lstlisting}
+sudo nano /etc/mosquitto/mosquitto.conf 
+\end{lstlisting}
+
+\begin{lstlisting}
+listener 1883 0.0.0.0 
+protocol mqtt
+listener 8083 0.0.0.0 
+protocol websockets
+# --- Seguridad 
+allow_anonymous false 
+password_file /etc/mosquitto/passwd 
+acl_file /etc/mosquitto/aclfile
+# --- Logs 
+connection_messages true 
+log_type all 
+log_dest syslog 
+log_dest stdout 
+\end{lstlisting}
+
+Guarda con Ctrl + O, luego Enter y sal con Ctrl + X. Después, reinicia
+el servicio:
+
+\begin{lstlisting}
+sudo systemctl restart mosquitto 
+\end{lstlisting}
+
+\item Configuración del acceso seguro (usuarios y permisos)
+
+Crear un usuario y contraseña. Ejemplo: crear usuario plcuser con
+contraseña plc:
+
+\begin{lstlisting}
+sudo mosquitto_passwd -c /etc/mosquitto/passwd plcuser 
+\end{lstlisting}
+
+Para añadir más usuarios (sin sobrescribir el archivo):
+
+\begin{lstlisting}
+sudo mosquitto_passwd /etc/mosquitto/passwd otroUser 
+\end{lstlisting}
+
+Crear archivo de control de acceso (ACL). Define los permisos de publicación
+y suscripción por tema (topic).
+
+\begin{lstlisting}
+sudo nano /etc/mosquitto/aclfile 
+\end{lstlisting}
+
+Contenido recomendado:
+
+\begin{lstlisting}[breaklines=true,showstringspaces=false]
+# --- 1. CONFIGURACIÓN
+user plcuser 
+#Estos se mantienen para la autonomía interna y la comunicación funcional
+topic readwrite Plc/Esp32 
+\end{lstlisting}
+
+Guarda los cambios y reinicia el servicio: 
+
+\begin{lstlisting}
+sudo systemctl restart mosquitto 
+\end{lstlisting}
+
+Verifica nuevamente:
+
+\begin{lstlisting}
+sudo systemctl status mosquitto sudo lsof -i :1883 
+\end{lstlisting}
+
+\item Pruebas de comunicación
+\begin{itemize}
+\item Suscriptor (en el BROKER / PC)
+\end{itemize}
+Escucha todos los tópicos que empiecen con Plc/:
+
+\begin{lstlisting}
+mosquitto_sub -h localhost -t "Plc/#" -u plcuser -P "plc" 
+\end{lstlisting}
+
+\begin{itemize}
+\item Publicador (en el CLIENTE / PLC)
+\end{itemize}
+Envía un mensaje de prueba:
+
+\begin{lstlisting}[breaklines=true,showstringspaces=false]
+mosquitto_pub -h <IP_DEL_BROKER> -t "Plc/Adc" -m "123" -u plcuser -P "plc" 
+\end{lstlisting}
+Ejemplo: Si el PC tiene IP 192.168.1.100, entonces:
+
+\begin{lstlisting}[breaklines=true,showstringspaces=false]
+mosquitto_pub -h 192.168.1.100 -t "Plc/Adc" -m "123" -u plcuser -P "plc" 
+\end{lstlisting}
+
+\item Recomendaciones de seguridad
+
+Deshabilita allow\_anonymous true una vez configuradas las contraseñas.
+
+Usa un puerto diferente de 1883 (por ejemplo, 1884 o 1885) para entornos
+con múltiples brokers.
+
+Si el PLC se conecta desde otra red, abre el puerto en el firewall:
+
+\begin{lstlisting}
+sudo ufw allow 1883/tcp 
+\end{lstlisting}
+
+\end{enumerate}
+El riesgo principal de no utilizar MQTTS (MQTT sobre TLS/SSL) radica
+en que los datos viajan en texto plano, lo que expone toda la comunicación
+de tu red a ataques de interceptación (Eavesdropping). En un entorno
+donde dispositivos como sensores industriales o nodos de control gestionan
+información crítica, un atacante en la misma red podría no solo robar
+credenciales de acceso, sino también realizar ataques de Man-in-the-Middle
+(MitM) para inyectar comandos falsos o manipular las lecturas de los
+sensores. Sin el cifrado que proporciona la capa TLS, la integridad
+y la confidencialidad del sistema quedan totalmente vulneradas, transformando
+un proyecto de automatización en una puerta abierta para el acceso
+no autorizado a tu infraestructura local.
+
+Riesgos Críticos de usar MQTT Simple: Exposición de Credenciales:
+El usuario y la contraseña del broker se pueden capturar fácilmente
+con herramientas de rastreo de paquetes (como Wireshark).
+
+Manipulación de Datos: Un tercero puede publicar mensajes en tus tópicos,
+activando actuadores o enviando alertas falsas.
+
+Falta de Autenticidad: No hay garantía de que el dispositivo que envía
+la información sea realmente tu sensor y no un suplantador.
+
+\section{Procedimiento de configuración de TLS y WebSocket seguro}
+
+\section*{Creación de la infraestructura de directorios}
+
+Primero, cree el directorio donde se almacenar los certificados de
+Mosquitto:
+
+\begin{lstlisting}
+sudo mkdir -p /etc/mosquitto/certs
+\end{lstlisting}
+
+
+\subsection{Generación de la Autoridad Certificadora (CA)}
+\begin{enumerate}
+\item Crear la clave privada de la CA
+
+Ejecute el siguiente comando para generar una clave RSA de 2048 bits:
+
+\begin{lstlisting}
+openssl genrsa -out ca.key 2048
+\end{lstlisting}
+
+\item Crear el certificado de la CA
+\begin{itemize}
+\item Use el siguiente comando para crear el certificado auto firmado de
+la Autoridad Certificadora. \textbf{IMPORTANTE}: cuando se le pida
+el \texttt{Common Name}, ingrese algo como \texttt{MiCA\_Local}.
+\item 
+\begin{lstlisting}
+openssl req -new -x509 -days 3650 -key ca.key -out ca.crt	
+\end{lstlisting}
+
+\selectlanguage{spanish}%
+Durante la ejecución, se le solicitará¡ información en un formato
+denominado Distinguished Name (DN). Utilice los siguientes valores
+de ejemplo:
+\begin{itemize}
+\item \textbf{Country Name} (Código de país): CO 
+\item \textbf{State or Province Name} (Provincia o estado): Cauca 
+\item \textbf{Locality Name} (Localidad): Popayán 
+\item \textbf{Organization Name} (Organización): Plc 
+\item \textbf{Organizational Unit Name} (Unidad organizacional): Automática 
+\item \textbf{Common Name} (Nombre común): Mcp\_IA 
+\item \textbf{Email Address} (Correo electrónico): frealpe@unicauca.edu.co 
+\end{itemize}
+\end{itemize}
+\item Generación del certificado del servidor
+
+Crear la clave privada del servidor, en la misma carpeta de certificados,
+ejecute:
+
+\begin{lstlisting}
+openssl genrsa -out server.key 2048
+\end{lstlisting}
+
+\item 	\foreignlanguage{spanish}{Crear la solicitud de firma de certificado
+(CSR)}
+\selectlanguage{spanish}%
+\begin{itemize}
+\item Cree el archivo de solicitud de firma del certificado
+
+\begin{lstlisting}
+openssl req -new -out server.csr -key server.key
+\end{lstlisting}
+
+\item Ingrese la siguiente información cuando se le solicite
+\begin{itemize}
+\item \textbf{Country Name} (Código de país): CO 
+\item \textbf{State or Province Name} (Provincia o estado): Cauca 
+\item \textbf{Locality Name} (Localidad): Popayán 
+\item \textbf{Organization Name} (Organización): Servidor\_MQTT 
+\item \textbf{Organizational Unit Name} (Unidad organizacional): Automática 
+\item \textbf{Common Name} (Nombre común): 192.168.20.23 (o la dirección
+IP de su servidor) 
+\item \textbf{Email Address} (Correo electrónico): frealpe@unicauca.edu.co 
+\end{itemize}
+\end{itemize}
+\end{enumerate}
+\begin{verbatim}
+	
+\end{verbatim}
+Para los campos de atributos adicionales (\texttt{A challenge password}
+y \texttt{An optional company name}), puede dejarlos en blanco presionando
+Intro.
+
+\section{Configuración de Mosquitto con WebSocket y Seguridad}
+
+\subsection{Introducción}
+
+Mosquitto es un servidor MQTT ligero y de código abierto que facilita
+la comunicación entre dispositivos IoT. Para garantizar una comunicación
+segura y confiable en entornos de producción, es esencial configurar
+Mosquitto con múltiples puertos que soporten distintos protocolos
+y niveles de seguridad.
+
+Esta sección describe cómo configurar Mosquitto para soportar cuatro
+tipos de conexiones: 
+\begin{enumerate}
+\item \textbf{MQTT estándar (puerto 1883)}: Para comunicación sin cifrado,
+útil en redes locales confiables. 
+\item \textbf{MQTT Seguro - MQTTS (puerto 8883)}: Para comunicación cifrada
+mediante TLS, utilizado por dispositivos IoT tradicionales. 
+\item \textbf{WebSocket (puerto 8083)}: Para navegadores web y aplicaciones
+React sin cifrado. 
+\item \textbf{WebSocket Seguro - WSS (puerto 8084)}: Para navegadores web
+con cifrado TLS, la opción más segura para aplicaciones web. 
+\end{enumerate}
+Además, implementaremos autenticación basada en usuario y contraseña,
+así como listas de control de acceso (ACL) para restringir qué clientes
+pueden publicar o suscribirse a temas específicos.
+
+\subsection{Archivo de Configuración Principal}
+
+El archivo de configuración de Mosquitto se encuentra en \texttt{/etc/mosquitto/mosquitto.conf}.
+A continuación se detalla la configuración completa con seguridad
+habilitada:
+
+\begin{algorithm}[H]
+\begin{centering}
+\begin{lstlisting}
+# ======================================================
+# Configuración Mosquitto con WebSocket + Seguridad
+# ======================================================
+
+# --- Puerto MQTT normal (para Node.js, PLC, etc.)
+listener 1883 0.0.0.0
+protocol mqtt
+
+# --- Puerto MQTT SEGURO (MQTTS - El que usa la "llave")
+listener 8883 0.0.0.0
+protocol mqtt
+cafile /etc/mosquitto/certs/ca.crt
+certfile /etc/mosquitto/certs/server.crt
+keyfile /etc/mosquitto/certs/server.key
+
+# --- Puerto WebSocket (para navegadores, React, etc.)
+listener 8083 0.0.0.0
+protocol websockets
+
+# --- Puerto WebSocket SEGURO (WSS - Para la web con SSL)
+listener 8084 0.0.0.0
+protocol websockets
+cafile /etc/mosquitto/certs/ca.crt
+certfile /etc/mosquitto/certs/server.crt
+keyfile /etc/mosquitto/certs/server.key
+
+# --- Seguridad
+allow_anonymous false
+password_file /etc/mosquitto/passwd
+acl_file /etc/mosquitto/aclfile
+
+# --- Logs
+connection_messages true
+log_type all
+log_dest syslog
+log_dest stdout
+\end{lstlisting}
+\par\end{centering}
+\caption{\texttt{Configuración mosquitto.conf}}
+\texttt{\label{alg:Configuraci=0000F3n-mosquitto.conf}}
+
+\end{algorithm}
+
+
+\subsection{Descripción de Directivas de Configuración}
+
+\subsection*{Listeners (Puertos de Escucha)}
+
+Cada \texttt{listener} define un puerto sobre el cual Mosquitto escucha
+conexiones entrantes. La dirección \texttt{0.0.0.0} indica que acepta
+conexiones de cualquier interfaz de red.
+\begin{itemize}
+\item \textbf{listener 1883 0.0.0.0}: Puerto MQTT estándar sin encriptación. 
+\item \textbf{listener 8883 0.0.0.0}: Puerto MQTT seguro con soporte TLS. 
+\item \textbf{listener 8083 0.0.0.0}: Puerto WebSocket sin encriptación. 
+\item \textbf{listener 8084 0.0.0.0}: Puerto WebSocket seguro con TLS. 
+\end{itemize}
+
+\subsection*{Certificados y Claves TLS}
+
+Para los puertos seguros (8883 y 8084), se deben especificar tres
+archivos generados anteriormente:
+\begin{itemize}
+\item \textbf{cafile}: Certificado de la Autoridad Certificadora (\texttt{ca.crt}). 
+\item \textbf{certfile}: Certificado del servidor (\texttt{server.crt}). 
+\item \textbf{keyfile}: Clave privada del servidor (\texttt{server.key}). 
+\end{itemize}
+Estos archivos deben tener permisos apropiados y ser accesibles solo
+por el usuario de Mosquitto.
+
+\subsection*{Autenticación y Control de Acceso}
+\begin{itemize}
+\item \textbf{allow\_anonymous false}: Desactiva las conexiones anónimas,
+requiriendo que todos los clientes proporcionen credenciales. 
+\item \textbf{password\_file}: Ruta al archivo que contiene los nombres
+de usuario y contraseñas hasheadas. 
+\item \textbf{acl\_file}: Ruta al archivo que define las listas de control
+de acceso para cada usuario. 
+\end{itemize}
+
+\subsection*{Registro de Eventos (Logging)}
+\begin{itemize}
+\item \textbf{connection\_messages true}: Registra mensajes de conexión
+y desconexión de clientes. 
+\item \textbf{log\_type all}: Registra todos los tipos de eventos. 
+\item \textbf{log\_dest syslog}: Envía los logs al servicio syslog del sistema. 
+\item \textbf{log\_dest stdout}: Envía los logs a la salida estándar (útil
+para debugging). 
+\end{itemize}
+
+\subsection*{Notas importantes}
+\begin{itemize}
+\item Asegúrese de que todos los certificados y claves estén almacenados
+en \texttt{/etc/mosquitto/certs}. 
+\item El \texttt{Common Name} del servidor debe coincidir con la dirección
+IP o el nombre de dominio del servidor MQTT. 
+\item Los certificados generados con este procedimiento son válidos por
+3650 días (10 años). 
+\item Este proceso establece una Infraestructura de Clave Pública (PKI)
+para asegurar la comunicación mediante TLS. 
+\end{itemize}
+
+\end{document}

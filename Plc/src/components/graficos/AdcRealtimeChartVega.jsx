@@ -62,7 +62,7 @@ const AdcRealtimeChartVega = ({ data = [], height = 200, compact = false }) => {
     }, [data]);
 
     return (
-        <div className="w-100 h-100">
+        <div className="w-100 h-100 d-flex flex-column align-items-center justify-content-center">
             {!compact && <h6 className="text-center text-primary mb-2">Señal en Tiempo Real</h6>}
             <div className="w-100" style={{ height: height }}>
                 <VegaLite spec={spec} data={chartData} actions={false} style={{ width: '100%', height: '100%' }} />

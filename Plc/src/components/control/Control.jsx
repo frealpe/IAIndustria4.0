@@ -59,7 +59,9 @@ export const Control = () => {
             voltaje: log.mean || 0,
             deviceId: log.device_uid,
             timestamp: log.created_at,
-            isAnomaly: resultado?.isAnomaly || false  // Extract anomaly flag from parsed resultado
+            timestamp: log.created_at,
+            isAnomaly: resultado?.isAnomaly || false,  // Extract anomaly flag
+            loss: resultado?.loss || 0                 // Extract loss for Beeswarm
           };
         });
         console.log(`✅ Formatted ${formattedData.length} data points, Anomalies: ${formattedData.filter(d => d.isAnomaly).length}`);
@@ -85,7 +87,8 @@ export const Control = () => {
         voltage: incomingData.voltaje, // Support both names for compatibility
         deviceId: incomingData.device_uid || 'Unknown',
         timestamp: new Date(),
-        isAnomaly: incomingData.isAnomaly || false
+        isAnomaly: incomingData.isAnomaly || false,
+        loss: incomingData.loss || incomingData.resultado?.loss || 0 // Extract loss
       };
 
       setHistorialChartData(prevData => {
@@ -203,7 +206,7 @@ export const Control = () => {
                       data={tableData}
                       renderExpandable={(group) => (
                         <div className="w-100">
-                          <h6 className="text-secondary mb-2 bg-light p-2 rounded">
+                          <h6 className="text-secondary mb-2 bg-light p-2 rounded" style={{ fontSize: '0.75rem' }}>
                             📋 Anomalías del dispositivo: <strong>{group.id}</strong> ({group.count})
                           </h6>
                           <div style={{ height: '300px' }}>
@@ -221,6 +224,7 @@ export const Control = () => {
                         </div>
                       )}
                       selectedIds={[]}
+                      hiddenColumns={['id']}
                     />
                   );
                 })()}

@@ -44,3 +44,8 @@ to be sent with your certificate request
 A challenge password []:
 An optional company name []:
 
+sudo chown -R mosquitto:mosquitto /etc/mosquitto/certs
+sudo chmod 600 /etc/mosquitto/certs/server.key
+sudo systemctl restart mosquitto
+
+

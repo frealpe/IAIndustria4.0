@@ -20,10 +20,8 @@ function analyzeData(flatData, tabla) {
         
         // PAD: Si es una agregación (ej: count), no hacemos análisis de voltaje
         if (flatData.length === 1 && !flatData[0].hasOwnProperty('voltaje') && !flatData[0].hasOwnProperty('mean')) {
-             const key = Object.keys(flatData[0])[0];
-             const val = flatData[0][key];
              return { 
-                 output: `📊 **Resultado Agregado:**\n- **${key.toUpperCase()}:** ${val}`,
+                 output: JSON.stringify(flatData), // Raw JSON for generic queries
                  stats: flatData[0]
              };
         }
@@ -267,8 +265,12 @@ function executeDanfoCode(data, codigo) {
     // 2. Reemplazar intentos de casteo/astype/cast por nuestro helper
     sanitizedCode = sanitizedCode.replace(/df(?:\[\s*['\"]?|\.)([a-zA-Z_]\w*)(?:['\"]?\s*\])?\.(?:cast|asType|astype)\s*\([^\)]*\)/gi, "helpers.castSeriesToFloat(df['$1'])");
 
-    // 3. Reemplazar llamadas a toJSON() por .values para evitar errores de API deprecada
-    sanitizedCode = sanitizedCode.replace(/\.toJSON\s*\(\s*\)/g, '.values');
+    // 3. (Removed) .toJSON() is valid and needed for Vega-Lite data mapping
+    // sanitizedCode = sanitizedCode.replace(/\.toJSON\s*\(\s*\)/g, '.values');
+
+    // 4. Reemplazar llamadas a .size() (que fallan porque size es propiedad) por .count() (nuestro shim)
+    // Solo si parace una llamada de método
+    sanitizedCode = sanitizedCode.replace(/\.size\s*\(\s*\)/g, '.count()');
 
     console.log("🛠️ Código Sanitizado para ejecución:", sanitizedCode);
 
@@ -444,6 +446,79 @@ function executeDanfoCode(data, codigo) {
             dfd.Series.prototype.sqrt = function() { 
                 return new dfd.Series(this.values.map(v => Math.sqrt(Number(v) || 0))); 
             };
+
+            // Shim para arraySync (evita error si el agente intenta usarlo como tensor)
+            const addArraySync = (proto) => {
+                if (!proto.arraySync) {
+                    proto.arraySync = function() { 
+                        return Array.isArray(this.values) ? this.values : []; 
+                    };
+                }
+            };
+            
+            addArraySync(dfd.Series.prototype);
+            addArraySync(dfd.DataFrame.prototype);
+
+            // Intentar aplicar parches al constructor real usado por DataFrame si es diferente
+            try {
+                 const patchSeriesPrototype = (proto) => {
+                     addArraySync(proto);
+                     
+                     // Helper interno para obtener valores numéricos ordenados
+                     const getSortedNumerics = (vals) => {
+                         return vals.map(Number).filter(n => !isNaN(n)).sort((a, b) => a - b);
+                     };
+
+                     // Shim para quantile
+                     if (!proto.quantile) {
+                         proto.quantile = function(q) {
+                             const sorted = getSortedNumerics(this.values);
+                             if (sorted.length === 0) return NaN;
+                             const pos = (sorted.length - 1) * q;
+                             const base = Math.floor(pos);
+                             const rest = pos - base;
+                             if (sorted[base + 1] !== undefined) {
+                                 return sorted[base] + rest * (sorted[base + 1] - sorted[base]);
+                             } else {
+                                 return sorted[base];
+                             }
+                         };
+                     }
+                     
+                     // Shim para size como función (algunos agentes lo llaman así)
+                     if (typeof proto.size !== 'function') {
+                         // Si ya existe como propiedad, la guardamos pero permitimos acceso como fn si no choca
+                         // En JS no se puede tener prop y metodo con mismo nombre facil, 
+                         // pero podemos hacer que una propiedad sea funcion. 
+                         // Dificil si danfo lo define como getter.
+                         // Mejor estrategia: Si el agente llama .size(), fallará si es propiedad number.
+                         // No podemos cambiarlo facilmente si es getter. 
+                         // Solución: En sanitización, reemplazamos .size() por .size. O agregamos .count() que es comun.
+                         proto.count = function() { return this.values.length; };
+                     }
+
+                     // Shim para std/mean si faltan
+                     if (!proto.std) proto.std = function() { return helpers.std(this.values); };
+                     if (!proto.mean) proto.mean = function() { return helpers.mean(this.values); };
+                     
+                     // Reaplicar rolling si hace falta
+                     if (!proto.rolling) proto.rolling = dfd.Series.prototype.rolling;
+                 };
+
+                 if (df && df.columns && df.columns.length > 0) {
+                      const firstCol = df.columns[0];
+                      // Acceder a la serie de forma segura (bracket o property)
+                      const serie = df[firstCol] || (df['$data'] ? df[firstCol] : null); 
+                      // Nota: df[colName] retorna la Series
+                      if (serie && serie.constructor) {
+                           patchSeriesPrototype(serie.constructor.prototype);
+                      }
+                 }
+                 // También al prototipo base por si acaso
+                 patchSeriesPrototype(dfd.Series.prototype);
+
+            } catch(e) { console.warn("Could not patch internal Series constructor:", e.message); }
+
 
             // Asegurar que rolling esté presente en el prototipo
             dfd.Series.prototype.rolling = function(opts) {
@@ -658,7 +733,7 @@ function executeDanfoCode(data, codigo) {
             : String(finalDataResult);
 
         return {
-            output: `✅ Análisis Completado.\n\nResultados:\n${responseText}`,
+            output: responseText, // Return raw JSON text (or string/number) directly
             stats: { 
                 raw: finalDataResult,
                 is_analysis: true

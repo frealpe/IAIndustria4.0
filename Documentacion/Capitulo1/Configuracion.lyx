@@ -525,8 +525,8 @@ Protocolos Industriales:
 \end_layout
 
 \begin_layout Itemize
-MQTT: Utilizado para la telemetría masiva de sensores IoT (como el sensor
- NPK de suelo), permitiendo que el agente reciba datos de forma eficiente.
+MQTT: Utilizado para la telemetría masiva de sensores IoT (como el sensor),
+ permitiendo que el agente reciba datos de forma eficiente.
 \end_layout
 
 \begin_layout Itemize

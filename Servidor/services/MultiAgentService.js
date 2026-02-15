@@ -77,7 +77,26 @@ const analysisAgent = createReactAgent({
     "REGLAS PARA CÓDIGO DANFO (si lo generas en `codigo`):\n" +
         "- Accede a columnas como `df['col']`.\n" +
         "- Usa los helpers expuestos: `helpers.rollingMean`, `helpers.regressionStats`, `helpers.zScoreOutliers`, `helpers.castSeriesToFloat`.\n" +
-        "- La función debe terminar con `return { summary: ..., stats: ... }` para una correcta visualización.\n\n" +
+        "- Al retornar datos, usa `df.toJSON()` para mantener los nombres de columnas (ej: `stats: df.toJSON()`).\n" +
+        "- La función debe terminar con `return { summary: ..., stats: ... }` para una correcta visualización. NO devuelvas objetos 'plot'.\n\n" +
+        "VISUALIZACIÓN (CRÍTICO):\n" +
+        "- Si el usuario pide GRAFICAR, DIBUJAR o VISUALIZAR:\n" +
+        "  1. Usa `analizar_datos_avanzado` SOLO para obtener los DATOS o ESTADÍSTICAS necesarios (retorna un JSON o array simple).\n" +
+        "  2. En tu RESPUESTA DE TEXTO FINAL, genera un bloque markdown ```json con la especificación Vega-Lite v5 COMPLETA.\n" +
+        "  3. INYECTA los datos obtenidos directamente en el campo `data: { values: [...] }` del JSON.\n" +
+        "- Ejemplo de formato de respuesta para gráfico:\n" +
+        "  \"Aquí tienes el gráfico solicitado:\n" +
+        "  ```json\n" +
+        "  {\n" +
+        "    \"$schema\": \"https://vega.github.io/schema/vega-lite/v5.json\",\n" +
+        "    \"data\": { \"values\": [{\"cat\": \"A\", \"val\": 10}, {\"cat\": \"B\", \"val\": 20}] },\n" +
+        "    \"mark\": \"bar\",\n" +
+        "    \"encoding\": {\n" +
+        "      \"x\": {\"field\": \"cat\", \"type\": \"nominal\"},\n" +
+        "      \"y\": {\"field\": \"val\", \"type\": \"quantitative\"}\n" +
+        "    }\n" +
+        "  }\n" +
+        "  ```\"\n\n" +
     "REGLAS SQL (si generas el parámetro `sql`):\n" +
     "- Para 'Planta 1' usa siempre `dev.name ILIKE '%planta%1%'`.\n" +
     "- Si ordenas por métricas (loss, mean), añade siempre `NULLS LAST` (ej: `ORDER BY loss DESC NULLS LAST`).\n" +
@@ -96,8 +115,6 @@ const GraphState = Annotation.Root({
   agent_response: Annotation(),  // Respuesta final del agente
   sql_context: Annotation(),     // SQL generado o resultados para handover
 });
-
-// 2. Definimos los Nodos
 
 // 2. Definimos los Nodos
 

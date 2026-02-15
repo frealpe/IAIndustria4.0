@@ -17,12 +17,6 @@ const _nav = [
   },
   {
     component: CNavItem,
-    name: 'Historial',
-    to: '/historial',
-    icon: <CIcon icon={cilHistory} customClassName="nav-icon" />,
-  },
-  {
-    component: CNavItem,
     name: 'IA Training',
     to: '/training',
     icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
@@ -38,6 +32,12 @@ const _nav = [
     name: 'Ayuda',
     to: '/ajustes',
     icon: <CIcon icon={cilInfo} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Reporte',
+    to: '/historial',
+    icon: <CIcon icon={cilHistory} customClassName="nav-icon" />,
   },
 ]
 

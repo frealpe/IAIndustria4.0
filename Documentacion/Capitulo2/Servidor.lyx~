@@ -1,0 +1,1464 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass book
+\begin_preamble
+
+\end_preamble
+\use_default_options true
+\maintain_unincluded_children false
+\language spanish
+\language_package default
+\inputencoding iso8859-15
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures false
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style french
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle empty
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+Servidor 
+\end_layout
+
+\begin_layout Standard
+El servidor constituye el componente central del sistema y actúa como el
+ núcleo encargado de coordinar la comunicación, el procesamiento de datos
+ y la integración de servicios.
+ Su función principal es recibir las solicitudes provenientes de los clientes
+ a través de la API REST, gestionar la lógica de negocio mediante controladores
+ y servicios especializados, y garantizar la interacción con los distintos
+ subsistemas como la base de datos, los servicios de comunicación en tiempo
+ real y los módulos de inteligencia artificial.
+ Además, el servidor mantiene conexiones activas con tecnologías como MQTT
+ y WebSockets para permitir el manejo de datos en tiempo real, lo que resulta
+ fundamental en entornos IoT y aplicaciones de monitoreo continuo.
+ En conjunto, este componente opera como el orquestador general del sistema,
+ asegurando la correcta ejecución de los procesos, la disponibilidad de
+ los recursos y la coherencia en el flujo de información entre todas las
+ capas de la arquitectura ver 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Servidor"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename Servidor.png
+	lyxscale 15
+	width 15cm
+	height 15cm
+	keepAspectRatio
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Servidor
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Servidor"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Las variables de entorno son parámetros de configuración externos al código
+ que permiten definir valores clave para el funcionamiento de una aplicación
+ sin necesidad de modificarlos directamente en el programa.
+ Se utilizan para almacenar información sensible y configurable, como puertos
+ de ejecución, credenciales de servicios de inteligencia artificial, direcciones
+ de bases de datos, datos de conexión a brokers MQTT, rutas de certificados
+ de seguridad y parámetros de servicios locales como modelos de IA.
+ Su principal ventaja es que facilitan la portabilidad, la seguridad y la
+ flexibilidad del sistema, ya que permiten adaptar la aplicación a distintos
+ entornos (desarrollo, pruebas o producción) simplemente cambiando estos
+ valores, sin alterar la lógica del software ver.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:variables-de-entorno"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+# Puerto del servidor Express (Debe coincidir con VITE_API_URL en el frontend)
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+PORT=8080
+\end_layout
+
+\begin_layout Plain Layout
+
+# Clave de OpenAI para servicios de IA
+\end_layout
+
+\begin_layout Plain Layout
+
+OPENAI_API_KEY=TU_API_KEY
+\end_layout
+
+\begin_layout Plain Layout
+
+GOOGLE_API_KEY=TU_GOOGLE_KEY
+\end_layout
+
+\begin_layout Plain Layout
+
+# Configuración del Broker MQTT 
+\end_layout
+
+\begin_layout Plain Layout
+
+BROKER=mqtt://localhost:1883 
+\end_layout
+
+\begin_layout Plain Layout
+
+MQTT_USER=plcuser 
+\end_layout
+
+\begin_layout Plain Layout
+
+MQTT_PASS=plc
+\end_layout
+
+\begin_layout Plain Layout
+
+# Configuración OPC UA
+\end_layout
+
+\begin_layout Plain Layout
+
+SERVER_IP=192.168.20.23
+\end_layout
+
+\begin_layout Plain Layout
+
+OPC_ENDPOINT=opc.tcp://:4334/Plc/PlcOpcServer
+\end_layout
+
+\begin_layout Plain Layout
+
+OPC_HOST= OPC_PORT=4334 
+\end_layout
+
+\begin_layout Plain Layout
+
+OPC_PATH=/Plc/PlcOpcServer
+\end_layout
+
+\begin_layout Plain Layout
+
+# Base de Datos Neon PostgreSQL
+\end_layout
+
+\begin_layout Plain Layout
+
+PG_HOST=ep-aged-sea-adtvsspi-pooler.c-2.us-east-1.aws.neon.tech
+\end_layout
+
+\begin_layout Plain Layout
+
+PG_PORT=5432 
+\end_layout
+
+\begin_layout Plain Layout
+
+PG_USER=neondb_owner 
+\end_layout
+
+\begin_layout Plain Layout
+
+PG_PASSWORD=******** 
+\end_layout
+
+\begin_layout Plain Layout
+
+PG_DBNAME=neondb
+\end_layout
+
+\begin_layout Plain Layout
+
+# Configuración Ollama Local
+\end_layout
+
+\begin_layout Plain Layout
+
+OPENAI_BASE_URL=http://localhost:11434/v1
+\end_layout
+
+\begin_layout Plain Layout
+
+OPENAI_MODEL=gpt-4o
+\end_layout
+
+\begin_layout Plain Layout
+
+SSL_ENABLED=true 
+\end_layout
+
+\begin_layout Plain Layout
+
+TLS_KEY_PATH=./certs/server.key
+\end_layout
+
+\begin_layout Plain Layout
+
+TLS_CERT_PATH=./certs/server.crt
+\end_layout
+
+\begin_layout Plain Layout
+
+TLS_CA_PATH=./certs/ca.crt 
+\end_layout
+
+\begin_layout Plain Layout
+
+MQTT_REJECT_UNAUTHORIZED=false
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+variables de entorno 
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:variables-de-entorno"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Capa de Inicio — app.js
+\end_layout
+
+\begin_layout Standard
+Esta es la primera capa del sistema y funciona como el punto de arranque
+ de toda la aplicación.
+ Su responsabilidad principal es iniciar el entorno del servidor, cargar
+ configuraciones básicas como variables de entorno y definir el puerto en
+ el que se ejecutará la aplicación.
+ Además, delega la inicialización del sistema al módulo central del servidor.
+ En términos simples, esta capa actúa como el “interruptor de encendido”
+ del backend ver
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Arranque-del-sistema"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+ALGORITMO InicializarAppJS
+\end_layout
+
+\begin_layout Plain Layout
+
+INICIO
+\end_layout
+
+\begin_layout Plain Layout
+
+    // Paso 1: Configurar entorno
+\end_layout
+
+\begin_layout Plain Layout
+
+	    CargarModulo(dotenv)     
+\end_layout
+
+\begin_layout Plain Layout
+
+		CargarModulo(dotenv-expand)
+\end_layout
+
+\begin_layout Plain Layout
+
+    // Paso 2: Leer archivo .env
+\end_layout
+
+\begin_layout Plain Layout
+
+	    variables  Ejecutar(dotenv.config)
+\end_layout
+
+\begin_layout Plain Layout
+
+    // Paso 3: Expandir variables   
+\end_layout
+
+\begin_layout Plain Layout
+
+	    Ejecutar(dotenvExpand.expand, variables)
+\end_layout
+
+\begin_layout Plain Layout
+
+    // Paso 4: Importar servidor principal  
+\end_layout
+
+\begin_layout Plain Layout
+
+	   ServerClase  ImportarModulo("lib/server")
+\end_layout
+
+\begin_layout Plain Layout
+
+    // Paso 5: Crear instancia del servidor   
+\end_layout
+
+\begin_layout Plain Layout
+
+	   servidor  CrearInstancia(ServerClase)
+\end_layout
+
+\begin_layout Plain Layout
+
+    // Paso 6: Iniciar servidor  
+\end_layout
+
+\begin_layout Plain Layout
+
+	   EjecutarMetodo(servidor.listen)
+\end_layout
+
+\begin_layout Plain Layout
+
+FIN 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Arranque del sistema 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Arranque-del-sistema"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Núcleo del Servidor — server.js
+\end_layout
+
+\begin_layout Standard
+Esta capa representa el corazón del sistema backend.
+ Aquí se configura la aplicación principal, se establecen las conexiones
+ con la base de datos, se inicializan los servicios de comunicación como
+ MQTT y WebSockets, y se preparan todos los módulos necesarios para que
+ el servidor funcione correctamente.
+ Su función principal es coordinar y centralizar el arranque de todos los
+ servicios 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Sistema-Servidor"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+ALGORITMO SistemaServidor
+\end_layout
+
+\begin_layout Plain Layout
+
+INICIO     
+\end_layout
+
+\begin_layout Plain Layout
+
+// Capa 1: Inicio del Sistema     
+\end_layout
+
+\begin_layout Plain Layout
+
+	CargarVariablesEntorno()
+\end_layout
+
+\begin_layout Plain Layout
+
+    puerto  ObtenerPuerto()
+\end_layout
+
+\begin_layout Plain Layout
+
+// Capa 2: Núcleo del Servidor
+\end_layout
+
+\begin_layout Plain Layout
+
+    servidor CrearServidor()
+\end_layout
+
+\begin_layout Plain Layout
+
+    ConfigurarExpress(servidor)
+\end_layout
+
+\begin_layout Plain Layout
+
+    ConectarBaseDatos()
+\end_layout
+
+\begin_layout Plain Layout
+
+    InicializarMQTT()
+\end_layout
+
+\begin_layout Plain Layout
+
+    InicializarWebSockets()
+\end_layout
+
+\begin_layout Plain Layout
+
+    RegistrarRutas()
+\end_layout
+
+\begin_layout Plain Layout
+
+    IniciarEscucha(puerto) 
+\end_layout
+
+\begin_layout Plain Layout
+
+FIN 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Sistema Servidor 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Sistema-Servidor"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Capa de Comunicación — Express (API REST)
+\end_layout
+
+\begin_layout Standard
+Esta capa permite la interacción entre los clientes y el servidor mediante
+ solicitudes HTTP.
+ Se encarga de recibir peticiones, dirigirlas a las rutas correspondientes
+ y devolver respuestas estructuradas.
+ Es básicamente la puerta de entrada del sistema, ya que gestiona toda la
+ comunicación externa con aplicaciones web, móviles o servicios externos
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Comunicación-HTTP"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+PROCEDIMIENTO ManejarSolicitudHTTP(solicitud)
+\end_layout
+
+\begin_layout Plain Layout
+
+INICIO     
+\end_layout
+
+\begin_layout Plain Layout
+
+	ruta  IdentificarRuta(solicitud)
+\end_layout
+
+\begin_layout Plain Layout
+
+    ValidarFormato(solicitud)
+\end_layout
+
+\begin_layout Plain Layout
+
+    router  SeleccionarRouter(ruta)
+\end_layout
+
+\begin_layout Plain Layout
+
+    EnviarASiguienteCapa(router, solicitud) 
+\end_layout
+
+\begin_layout Plain Layout
+
+FIN 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Comunicación HTTP
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Comunicación-HTTP"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Capa de Enrutamiento — Routers
+\end_layout
+
+\begin_layout Standard
+Los routers organizan las rutas del sistema según su funcionalidad.
+ Se encargan de dirigir cada solicitud hacia el controlador adecuado dependiendo
+ del tipo de operación solicitada, como consultas de datos o interacciones
+ con inteligencia artificial.
+ Esta capa permite mantener una estructura ordenada y modular en la API
+ ver 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Enrutamiento"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+PROCEDIMIENTO RouterProcesarSolicitud(solicitud)
+\end_layout
+
+\begin_layout Plain Layout
+
+INICIO
+\end_layout
+
+\begin_layout Plain Layout
+
+	tipoOperacion DeterminarTipo(solicitud)
+\end_layout
+
+\begin_layout Plain Layout
+
+    SI tipoOperacion = "CHAT" ENTONCES
+\end_layout
+
+\begin_layout Plain Layout
+
+        controlador  ChatController
+\end_layout
+
+\begin_layout Plain Layout
+
+    SINO
+\end_layout
+
+\begin_layout Plain Layout
+
+        controlador  DataController
+\end_layout
+
+\begin_layout Plain Layout
+
+    FIN SI
+\end_layout
+
+\begin_layout Plain Layout
+
+         EnviarASiguienteCapa(controlador, solicitud)
+\end_layout
+
+\begin_layout Plain Layout
+
+FIN 
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Enrutamiento 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Enrutamiento"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Capa de Control — Controllers
+\end_layout
+
+\begin_layout Standard
+Los controladores actúan como intermediarios entre las solicitudes de los
+ usuarios y la lógica interna del sistema.
+ Procesan las peticiones, validan los datos recibidos y coordinan la ejecución
+ de servicios internos.
+ Su objetivo es transformar una solicitud en una acción concreta dentro
+ del sistema ver 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Controladores"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+PROCEDIMIENTO ControllerEjecutar(solicitud)
+\end_layout
+
+\begin_layout Plain Layout
+
+INICIO
+\end_layout
+
+\begin_layout Plain Layout
+
+    ValidarParametros(solicitud)
+\end_layout
+
+\begin_layout Plain Layout
+
+         servicio  DeterminarServicio(solicitud)
+\end_layout
+
+\begin_layout Plain Layout
+
+         resultado  EjecutarServicio(servicio, solicitud)
+\end_layout
+
+\begin_layout Plain Layout
+
+         ConstruirRespuesta(resultado)
+\end_layout
+
+\begin_layout Plain Layout
+
+    EnviarRespuestaCliente()
+\end_layout
+
+\begin_layout Plain Layout
+
+FIN 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Controladores 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Controladores"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Capa de Lógica de Negocio — Servicios
+\end_layout
+
+\begin_layout Standard
+En esta capa se ejecutan las operaciones principales del sistema.
+ Aquí se encuentran los servicios que manejan procesos como la inteligencia
+ artificial multi-agente, el análisis de datos y la interacción con herramientas
+ especializadas.
+ Esta capa es donde realmente se toman decisiones y se ejecutan los procesos
+ complejos ver 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Lógica-de-Negocio"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+PROCEDIMIENTO EjecutarServicio(servicio, solicitud)
+\end_layout
+
+\begin_layout Plain Layout
+
+INICIO
+\end_layout
+
+\begin_layout Plain Layout
+
+    SI servicio = "IA" ENTONCES
+\end_layout
+
+\begin_layout Plain Layout
+
+        resultado  MultiAgentProcesar(solicitud)
+\end_layout
+
+\begin_layout Plain Layout
+
+    SINO SI servicio = "DATOS" ENTONCES
+\end_layout
+
+\begin_layout Plain Layout
+
+        resultado  MCPProcesarConsulta(solicitud)
+\end_layout
+
+\begin_layout Plain Layout
+
+    FIN SI
+\end_layout
+
+\begin_layout Plain Layout
+
+         RETORNAR resultado
+\end_layout
+
+\begin_layout Plain Layout
+
+FIN 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Lógica de Negocio
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Lógica-de-Negocio"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Capa de Herramientas — MCP Service y Helpers
+\end_layout
+
+\begin_layout Standard
+Esta capa proporciona funcionalidades específicas que los servicios necesitan
+ para operar, como ejecutar consultas SQL, procesar datos estadísticos o
+ manipular información en estructuras avanzadas.
+ Actúa como un conjunto de utilidades que amplían las capacidades del sistema
+ ver
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Herramientas-MCP"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+PROCEDIMIENTO MCPProcesarConsulta(solicitud)
+\end_layout
+
+\begin_layout Plain Layout
+
+INICIO
+\end_layout
+
+\begin_layout Plain Layout
+
+    tipoHerramienta IdentificarHerramienta(solicitud)
+\end_layout
+
+\begin_layout Plain Layout
+
+    SI tipoHerramienta = "SQL" ENTONCES
+\end_layout
+
+\begin_layout Plain Layout
+
+        datos  EjecutarConsultaSQL(solicitud)
+\end_layout
+
+\begin_layout Plain Layout
+
+    SINO SI tipoHerramienta = "ANALISIS" ENTONCES
+\end_layout
+
+\begin_layout Plain Layout
+
+        datos  EjecutarAnalisisDatos(solicitud)
+\end_layout
+
+\begin_layout Plain Layout
+
+    FIN SI
+\end_layout
+
+\begin_layout Plain Layout
+
+    RETORNAR datos
+\end_layout
+
+\begin_layout Plain Layout
+
+FIN 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Herramientas MCP 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Herramientas-MCP"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Capa de Persistencia — Base de Datos y Modelos
+\end_layout
+
+\begin_layout Standard
+Es la capa encargada de almacenar y recuperar la información del sistema.
+ Aquí se definen los modelos de datos, las estructuras de almacenamiento
+ y las conexiones con el motor de base de datos.
+ Garantiza la integridad y disponibilidad de la información ver
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Persistencia-de-Datos"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+PROCEDIMIENTO EjecutarConsultaSQL(solicitud)
+\end_layout
+
+\begin_layout Plain Layout
+
+INICIO     
+\end_layout
+
+\begin_layout Plain Layout
+
+	conexion ObtenerConexionBD()
+\end_layout
+
+\begin_layout Plain Layout
+
+    consulta TraducirConsulta(solicitud)
+\end_layout
+
+\begin_layout Plain Layout
+
+    resultado EjecutarEnBaseDatos(conexion, consulta)
+\end_layout
+
+\begin_layout Plain Layout
+
+    RETORNAR resultado
+\end_layout
+
+\begin_layout Plain Layout
+
+FIN 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Persistencia de Datos
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Persistencia-de-Datos"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Capa de Comunicación en Tiempo Real — MQTT y WebSockets
+\end_layout
+
+\begin_layout Standard
+Esta capa permite el intercambio continuo de datos en tiempo real.
+ MQTT facilita la comunicación con dispositivos IoT, mientras que los WebSockets
+ permiten enviar información instantánea a los clientes conectados.
+ Es esencial para sistemas de monitoreo y telemetría ver 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Comunicación-en-Tiempo"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+PROCEDIMIENTO GestionarTiempoReal()
+\end_layout
+
+\begin_layout Plain Layout
+
+INICIO
+\end_layout
+
+\begin_layout Plain Layout
+
+    ConectarBrokerMQTT()
+\end_layout
+
+\begin_layout Plain Layout
+
+    SuscribirseTopicos()
+\end_layout
+
+\begin_layout Plain Layout
+
+    MIENTRAS sistemaActivo HACER
+\end_layout
+
+\begin_layout Plain Layout
+
+        mensaje RecibirMensajeMQTT()
+\end_layout
+
+\begin_layout Plain Layout
+
+        ProcesarDatos(mensaje)        
+\end_layout
+
+\begin_layout Plain Layout
+
+        EmitirEventoWebSocket(mensaje)   
+\end_layout
+
+\begin_layout Plain Layout
+
+	FIN MIENTRAS
+\end_layout
+
+\begin_layout Plain Layout
+
+FIN 
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Comunicación en Tiempo Real
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Comunicación-en-Tiempo"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

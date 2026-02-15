@@ -1,8 +1,8 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
-import { CCard, CCardBody, CCardHeader, CButton, CSpinner } from '@coreui/react-pro';
+import { CCard, CCardBody, CCardHeader, CSpinner } from '@coreui/react-pro';
 import { VegaLite } from 'react-vega';
-import DeviceChartsService from '../../service/charts/DeviceChartsService';
 import AdcRealtimeChartVega from './AdcRealtimeChartVega';
+import BeeswarmChart from './BeeswarmChart';
 
 const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null, selectedAnomalyIds = [] }) => {
     // Transform data for Vega
@@ -18,6 +18,7 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null,
                         ...d,
                         timestamp: new Date(d.timestamp),
                         voltage: isNaN(+v) ? 0 : +v, // Ensure numeric value
+                        loss: d.loss !== undefined ? +d.loss : 0, // Ensure numeric loss
                         deviceUid: d.device_uid || d.deviceUid || d.deviceId || 'Unknown',
                         anomalyLabel: d.isAnomaly ? 'Anomalía' : 'Normal',
                         isSelected: selectedAnomalyIds.includes(d.id || d.prueba)
@@ -31,13 +32,14 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null,
         if (!data || data.length === 0) return null;
         const total = data.length;
         const anomalies = data.filter(d => d.isAnomaly).length;
-
         const voltages = data.map(d => +d.voltaje || +d.voltage).filter(v => !isNaN(v));
-        if (voltages.length === 0) return { total, normal: total - anomalies, anomalies, mean: 0, stdDev: 0 };
 
-        const mean = voltages.reduce((a, b) => a + b, 0) / voltages.length;
-        const varSum = voltages.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0);
-        const stdDev = Math.sqrt(varSum / voltages.length) || 0.01;
+        let mean = 0, stdDev = 0;
+        if (voltages.length > 0) {
+            mean = voltages.reduce((a, b) => a + b, 0) / voltages.length;
+            const varSum = voltages.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0);
+            stdDev = Math.sqrt(varSum / voltages.length) || 0.01;
+        }
 
         return {
             total,
@@ -175,7 +177,7 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null,
         return {
             $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
             width: 'container',
-            height: 160,
+            height: 100, // Reduced height for split view
             autosize: { type: 'fit', contains: 'padding' },
             layer: [
                 // 1. DATA HISTOGRAM (Frequency Axis - Left)
@@ -192,7 +194,7 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null,
                         y: {
                             aggregate: 'count',
                             type: 'quantitative',
-                            title: 'Frecuencia (Histo)',
+                            title: 'Freq',
                             axis: { titleColor: '#6c757d' }
                         }
                     }
@@ -215,7 +217,7 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null,
                         y: {
                             field: 'density',
                             type: 'quantitative',
-                            title: 'Densidad (Prob)',
+                            title: 'Dens',
                             axis: { orient: 'right', titleColor: '#0d6efd' }
                         }
                     }
@@ -256,6 +258,23 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null,
 
     if (!data && autoLoad) return <CSpinner color="primary" />;
 
+    // Prepare data for Beeswarm (Non-cumulative, just current packet/point)
+    const recentData = chartData.table.slice(-50);
+    const lastPointData = chartData.table.slice(-1);
+
+    const expandedBeeswarmData = useMemo(() => {
+        // "Density of 20 per sample": Generate 20 points for single point to visualize "cloud"
+        return lastPointData.flatMap(d => {
+            return Array.from({ length: 20 }).map((_, i) => ({
+                ...d,
+                // Use LOSS mapped to VALUE for Beeswarm
+                // Add tiny jitter for loss (values are small, e.g. 0.02)
+                value: (d.loss !== undefined ? d.loss : 0) + (Math.random() - 0.5) * 0.002,
+                id: `${d.id}_${i}` // Unique ID for D3
+            }));
+        });
+    }, [lastPointData]);
+
     return (
         <div className="device-charts-container w-100 h-100" style={{ display: 'grid', gridTemplateRows: '50% 50%', gap: '10px' }}>
             {/* 1. TOP ROW: Time Series (50% Height) */}
@@ -278,43 +297,55 @@ const DeviceCharts = ({ data = [], autoLoad = true, highlightedTimestamp = null,
                 </CCard>
             </div>
 
-            {/* 2. BOTTOM ROW: Distribution & Realtime (50% Height) */}
+            {/* 2. BOTTOM ROW: Beeswarm (Left) + Split Realtime/Dist (Right) - (50% Height) */}
             <div className="w-100 h-100 overflow-hidden" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                {/* Distribution Pie Chart */}
+
+                {/* LEFT CARD: Beeswarm (Dodge Penguins) */}
                 <div className="h-100">
                     <CCard className="h-100 border-0 shadow-sm">
                         <CCardHeader className="p-1 bg-light border-0">
-                            <strong>📊 Distribución (Gaussiana)</strong>
+                            <strong>� Distribución (Dodge Penguins)</strong>
                         </CCardHeader>
-                        <CCardBody className="p-0 d-flex justify-content-center align-items-center">
-                            {stats && stats.total > 1 ? (
-                                <VegaLite spec={distributionSpec} data={chartData} actions={false} style={{ width: '100%' }} />
-                            ) : (
-                                <div className="text-muted small">Esperando datos suficientes...</div>
-                            )}
+                        <CCardBody className="p-0 d-flex justify-content-center align-items-center" style={{ overflow: 'hidden' }}>
+                            <BeeswarmChart
+                                data={expandedBeeswarmData}
+                                width={chartWidth ? chartWidth / 2 : 400}
+                                height={200}
+                            />
                         </CCardBody>
                     </CCard>
                 </div>
 
-                {/* Realtime Signal Chart */}
+                {/* RIGHT CARD: Split View (Realtime + Normal Distribution) */}
                 <div className="h-100">
                     <CCard className="h-100 border-0 shadow-sm">
                         <CCardHeader className="p-1 bg-light border-0 d-flex justify-content-between align-items-center">
-                            <strong>🔴 Señal en Tiempo Real</strong>
+                            <strong>� Señal + Distribución Normal</strong>
                             {stats && (
                                 <div className="d-flex gap-2 small border-start ps-2 border-secondary">
-                                    <span className="text-muted" style={{ fontSize: '0.75rem' }}>Total: <b>{stats.total}</b></span>
-                                    <span className="text-success" style={{ fontSize: '0.75rem' }}>OK: <b>{stats.normal}</b></span>
+                                    <span className="text-muted" style={{ fontSize: '0.66rem' }}>Total: <b>{stats.total}</b></span>
                                     <span className="text-danger" style={{ fontSize: '0.75rem' }}>⚠ <b>{stats.anomalies}</b></span>
                                 </div>
                             )}
                         </CCardHeader>
-                        <CCardBody className="p-0 d-flex flex-column justify-content-center">
-                            <AdcRealtimeChartVega
-                                data={chartData.table.slice(-50)} // Window of last 50 points for better real-time feel
-                                compact={true}
-                                height={160}
-                            />
+                        <CCardBody className="p-0 d-flex flex-column" style={{ overflow: 'hidden' }}>
+                            {/* TOP: Realtime Signal - Centered */}
+                            <div style={{ flex: '1', borderBottom: '1px solid #eee', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <AdcRealtimeChartVega
+                                    data={recentData} // Window of last 50 points
+                                    compact={true}
+                                    height={100}
+                                />
+                            </div>
+
+                            {/* BOTTOM: Normal Distribution (Gaussian) - Centered */}
+                            <div style={{ flex: '1', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {stats && stats.total > 1 ? (
+                                    <VegaLite spec={distributionSpec} data={chartData} actions={false} style={{ width: '100%' }} />
+                                ) : (
+                                    <div className="text-muted small">Esperando datos...</div>
+                                )}
+                            </div>
                         </CCardBody>
                     </CCard>
                 </div>

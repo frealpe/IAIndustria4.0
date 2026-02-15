@@ -1,83 +1,138 @@
+
+---
+config:
+  layout: elk
+---
+graph TD
+    App["🚀 app.js"] --> Server["🏗️ lib/server.js"]
+    
+    subgraph Core ["Núcleo del Servidor"]
+        Server -->|Configura| Express["Express App"]
+        Server -->|Conecta| DB["🗄️ Database<br>(database/config.js)"]
+        Server -->|Conecta| MQTT["📡 MQTT Service<br>(mqtt/conectMqtt.js)"]
+        Server -->|Inicia| Socket["🔌 Socket Service<br>(services/SocketService.js)"]
+    end
+
+    subgraph API ["Capa API REST"]
+        Express -->|Rutas /api/chat| ChatRouter["routers/chat.js"]
+        Express -->|Rutas /api/data| DataRouter["routers/data.js"]
+        
+        ChatRouter --> ChatController["🕹️ controllers/chat.js"]
+        DataRouter --> DataController["🕹️ controllers/data.js"]
+    end
+
+    subgraph Logic ["Lógica de Negocio & AI"]
+        ChatController -->|Orquesta| MultiAgent["🧠 MultiAgentService.js"]
+        MultiAgent -->|Usa Herramientas| McpService["🛠️ McpService.js"]
+        
+        McpService -->|Análisis de Datos| AnalysisHelper["🧪 analysisHelper.js<br>(Danfo.js)"]
+        McpService -->|Consultas SQL| DB
+    end
+
+    subgraph Models ["Modelos de Datos"]
+        DataController --> DatosModel["📄 DatosModel.js"]
+        McpService --> DatosModel
+        McpService --> ModeloEntrenado["📄 ModeloEntrenado.js"]
+    end
+    style App fill:#1e88e5,stroke:#0d47a1,color:#fff
+    style Server fill:#42a5f5,stroke:#0d47a1,color:#fff
+    style MultiAgent fill:#8e24aa,stroke:#4a148c,color:#fff
+    style AnalysisHelper fill:#43a047,stroke:#1b5e20,color:#fff
+    style DB fill:#fb8c00,stroke:#e65100,color:#fff
+    style MQTT fill:#f4511e,stroke:#bf360c,color:#fff
+
+
 ---
 config:
   layout: elk
 ---
 graph TD
 
-    %% =====================
-    %% USER LAYER
-    %% =====================
-    User([👤 Usuario]) --> Orchestrator{🧠 Orchestrator Node}
+subgraph IoT["ESP32 Device"]
+    direction TB
+    Sensors["Sensores ADC + Relays"]
+    Firmware["C++ Firmware"]
+    Network["Red Local WiFi"]
 
-    %% =====================
-    %% MULTI AGENT SERVICE
-    %% =====================
-    subgraph MultiAgentService [🤖 Servicio Multi-Agente]
-        direction TB
-        
-        SQLExpert[📊 Agent\nSQL Expert]
-        DataScientist[📈 Agent\nData Scientist]
-        Validator{✅ Validador JSON}
-        StructuredResponse([📦 Respuesta\nEstructurada])
-        
-        Orchestrator -- "Consulta / Datos Crudos" --> SQLExpert
-        Orchestrator -- "Análisis / Tendencias" --> DataScientist
-        
-        SQLExpert --> Validator
-        DataScientist --> Validator
-        
-        Validator --> StructuredResponse
+    Sensors -->|Leer Actuar| Firmware
+    Firmware -->|WiFi DHCP| Network
+end
+
+subgraph Infra["Infraestructura"]
+    MQTT_Broker["MQTT Broker Mosquitto"]
+    Database["PostgreSQL Neon"]
+end
+
+subgraph Backend["Backend Node.js"]
+    direction TB
+
+    subgraph Comms["Comunicacion"]
+        MQTT_Service["MQTT Service"]
+        Socket_Service["Socket.IO"]
+        Express_Router["Express API"]
     end
 
-    %% =====================
-    %% MCP SERVICE
-    %% =====================
-    subgraph McpService [🏭 Servidor MCP Industrial]
-        direction TB
-        
-        Tools[(🧰 Tools Registry)]
-        
-        query_db["query_db\n(SQL Crudo)"]
-        leer_archivos["leer_archivos_proyecto\n(File System)"]
-        analizar_datos["analizar_datos_avanzado"]
-        
-        InternalSQL[_executeQuery]
-        DB[(🐘 PostgreSQL)]
-        Danfo[Danfo.js\nanalysisHelper]
-        SocketOut[[📡 SocketService\nmcpdatos]]
-
-        Tools --> query_db
-        Tools --> leer_archivos
-        Tools --> analizar_datos
-        
-        query_db --> InternalSQL
-        analizar_datos --> InternalSQL
-        
-        InternalSQL --> DB
-        InternalSQL --> SocketOut
-        
-        analizar_datos --> Danfo
-        Danfo --> SocketOut
+    subgraph Logic["Logica IA"]
+        LangGraph["LangGraph"]
+        Supervisor["Supervisor Agent"]
+        SQL_Agent["SQL Agent"]
+        Data_Agent["Data Agent"]
+        MCP_Tools["MCP Tools"]
+        Danfo_Logic["Danfo Analysis"]
     end
 
-    %% =====================
-    %% CONNECTIONS
-    %% =====================
-    SQLExpert ==> Tools
-    DataScientist ==> Tools
+    Controller["Controllers"]
+end
 
-    StructuredResponse --> User
-    SocketOut -.-> Frontend([🖥️ Frontend UI\nGráficas en Tiempo Real])
+subgraph AI["Modelos IA"]
+    GPT4["OpenAI GPT4o"]
+    DeepSeek["Ollama Llama"]
+end
 
-    %% =====================
-    %% STYLES
-    %% =====================
-    style MultiAgentService fill:#f5f7ff,stroke:#5c7cff,stroke-width:2px
-    style McpService fill:#f6fff5,stroke:#2e7d32,stroke-width:2px
+subgraph Clients["Clientes"]
+    Web_App["React Dashboard"]
+    Postman["Postman"]
+end
+Firmware -->|Publica JSON| MQTT_Broker
+MQTT_Broker --> MQTT_Service
+MQTT_Service --> Database
+MQTT_Service --> Socket_Service
 
-    style SQLExpert fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    style DataScientist fill:#ede7f6,stroke:#4527a0,stroke-width:2px
+Web_App --> Express_Router
+Web_App --> Socket_Service
+Socket_Service --> Web_App
+Express_Router --> Controller
 
-    style DB fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    style SocketOut fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+Controller --> LangGraph
+LangGraph --> Supervisor
+Supervisor --> SQL_Agent
+Supervisor --> Data_Agent
 
+SQL_Agent --> MCP_Tools
+Data_Agent --> MCP_Tools
+
+MCP_Tools --> Database
+MCP_Tools --> Danfo_Logic
+Danfo_Logic --> Data_Agent
+
+Supervisor -.-> GPT4
+Data_Agent -.-> GPT4
+SQL_Agent -.-> DeepSeek
+
+classDef iot fill:#FFF3CD,stroke:#856404,stroke-width:2px,color:#533F03;
+class Sensors,Firmware,Network iot;
+
+classDef infra fill:#E2E3E5,stroke:#41464B,stroke-width:2px,color:#212529;
+class MQTT_Broker,Database infra;
+
+classDef backend fill:#D1E7DD,stroke:#0F5132,stroke-width:2px,color:#0A3622;
+class MQTT_Service,Socket_Service,Express_Router,Controller,Danfo_Logic backend;
+
+classDef logic fill:#CFE2FF,stroke:#084298,stroke-width:2px,color:#052C65;
+class LangGraph,Supervisor,SQL_Agent,Data_Agent,MCP_Tools logic;
+
+classDef ai fill:#F8D7DA,stroke:#842029,stroke-width:2px,color:#58151C;
+class GPT4,DeepSeek ai;
+
+classDef client fill:#E7F1FF,stroke:#0D6EFD,stroke-width:2px,color:#084298;
+class Web_App,Postman client;

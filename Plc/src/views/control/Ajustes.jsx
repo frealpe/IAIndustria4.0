@@ -21,27 +21,14 @@ const Ajustes = () => {
                             💡 Guía de Uso del Asistente
                         </CNavLink>
                     </CNavItem>
-                    <CNavItem>
-                        <CNavLink
-                            active={activeTab === 2}
-                            onClick={() => setActiveTab(2)}
-                            style={{ cursor: 'pointer' }}
-                        >
-                            ⚙️ Configuración
-                        </CNavLink>
-                    </CNavItem>
+
                 </CNav>
 
                 <CTabContent className="mt-3">
                     <CTabPane visible={activeTab === 1}>
                         <AgentGuideHelper />
                     </CTabPane>
-                    <CTabPane visible={activeTab === 2}>
-                        <div className="alert alert-info">
-                            <h5>Configuración General</h5>
-                            <p>Esta sección estará disponible próximamente para configurar preferencias de la aplicación.</p>
-                        </div>
-                    </CTabPane>
+
                 </CTabContent>
             </div>
         </div>

@@ -4417,7 +4417,108 @@ status open
 
 \begin_layout Plain Layout
 
+const char *root_ca =     "-----BEGIN CERTIFICATE-----
+\backslash
+n"     "MIID+TCCAuGgAwIBAgIUC8dGw8Wq8dHaQpaeZ+ZAriKw+/QwDQYJKoZIhvcNAQEL
+\backslash
+n"     "BQAwgYsxCzAJBgNVBAYTAkNPMQ4wDAYDVQQIDAVDYXVjYTEQMA4GA1UEBwwHUG9w
+\backslash
+n"     "YXlhbjEMMAoGA1UECgwDUGxjMRMwEQYDVQQLDApBdXRvbWF0aWNhMQ8wDQYDVQQD
+\backslash
+n"     "DAZNY3BfSUExJjAkBgkqhkiG9w0BCQEWF2ZyZWFscGVAdW5pY2F1Y2EuZWR1LmNv
+\backslash
+n"     "MB4XDTI2MDIxNDAwNDI1MFoXDTM2MDIxMjAwNDI1MFowgYsxCzAJBgNVBAYTAkNP
+\backslash
+n"     "MQ4wDAYDVQQIDAVDYXVjYTEQMA4GA1UEBwwHUG9wYXlhbjEMMAoGA1UECgwDUGxj
+\backslash
+n"     "MRMwEQYDVQQLDApBdXRvbWF0aWNhMQ8wDQYDVQQDDAZNY3BfSUExJjAkBgkqhkiG
+\backslash
+n"     "9w0BCQEWF2ZyZWFscGVAdW5pY2F1Y2EuZWR1LmNvMIIBIjANBgkqhkiG9w0BAQEF
+\backslash
+n"     "AAOCAQ8AMIIBCgKCAQEAuaJtcSkurCxuOuZ4mV6xhSkW3fAH9uF2hU8wKy201mGq
+\backslash
+n"     "cwLdY2dk6K/MhXS+/0RfTXrG02sqzDDVnMv350wYo6EecroygonRmOVXSTlafKyC
+\backslash
+n"     "0p7GqQGOL/XsuhhDorJvnEuqhIQGFKUSrZO6IvzEmxguCt/vJj5zsoRMaT3izjuP
+\backslash
+n"     "se0uku0xsAJVp37UDlYdaGACz2y6N94x7aFtaKY38iMvZJx3+jejc6r9/ZVRPx2r
+\backslash
+n"     "DV4SjfRnFEjy4uK9ZLDTSIgXTpZla6pz38Wgfv9zifMlttqipVOgurLX+4IV+5rH
+\backslash
+n"     "bIJA6gqG4VOyw76wK0puc+mfmHhRwTRr9k54zmYsnwIDAQABo1MwUTAdBgNVHQ4E
+\backslash
+n"     "FgQUcMRAgf4Hsr7NMzeBgROxQfYgfm4wHwYDVR0jBBgwFoAUcMRAgf4Hsr7NMzeB
+\backslash
+n"     "gROxQfYgfm4wDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEATE7w
+\backslash
+n"     "FwUgGRWaucsGJMgjY9f3TuqWwcCW1dZ58MkXawJjNFQ6nXnKsfdNC4nw046dKRax
+\backslash
+n"     "z3khg2bUfdArnaAkPx4taFFvP7OSyFlFlbN7zmvKkuDgZ2JsHXNRzjLGEW3gj2SR
+\backslash
+n"     "0l4AO3E2doCx0gVO0vEbs6kJC/u9lJj2QRdfz+AbQeQn7FDu0Fr3MG8nN4gcRuZk
+\backslash
+n"     "vv7xZLM/VwllLPKC/DkNXMAzC3hYdvO3eQQRde01oDH9nVmhxI/2XSbbKN8/UsON
+\backslash
+n"     "f8w6h+PU84b1zacd/LiCwTdDB3+3V0xCzbEUJouMf44pyYyBFVlMX+2LvovNSz+1
+\backslash
+n"     "h50cZWe7HxAWGJaGUg==
+\backslash
+n"     "-----END CERTIFICATE-----
+\backslash
+n";
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
 boolean mqtt_connect() {
+\end_layout
+
+\begin_layout Plain Layout
+
+  if (mqtt_port == 8883) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    wifiClient.setCACert(root_ca);
+\end_layout
+
+\begin_layout Plain Layout
+
+    log("MQTT: Usando conexión segura (TLS)");
+\end_layout
+
+\begin_layout Plain Layout
+
+  } else {
+\end_layout
+
+\begin_layout Plain Layout
+
+    wifiClient.setInsecure(); // Opcional: permitir conexiones sin validar
+ CA si
+\end_layout
+
+\begin_layout Plain Layout
+
+                              // no es puerto 8883     log("MQTT: Usando
+ conexión normal");   }
 \end_layout
 
 \begin_layout Plain Layout
@@ -4428,6 +4529,11 @@ boolean mqtt_connect() {
 \begin_layout Plain Layout
 
   mqttClient.setCallback(callback);
+\end_layout
+
+\begin_layout Plain Layout
+
+  mqttClient.setBufferSize(1024 * 5); // Establecer buffer antes de conectar
 \end_layout
 
 \begin_layout Plain Layout
@@ -4595,6 +4701,38 @@ name "alg:Función-mqtt_connect"
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+El fragmento de código implementa una lógica de conmutación de seguridad
+ en la capa de transporte del cliente MQTT.
+ El flujo condiciona la configuración del cliente Wi-Fi basándose en el
+ puerto de red definido: si se detecta el puerto 8883 (estándar para tráfico
+ cifrado), se carga un certificado raíz (root_ca) que permite al dispositivo
+ verificar la identidad del broker y establecer un túnel TLS/SSL, garantizando
+ la autenticidad y el cifrado de los datos.
+ Por el contrario, si se utiliza cualquier otro puerto, el código desactiva
+ las validaciones de seguridad mediante setInsecure(), permitiendo una conexión
+ rápida y sin cifrado, lo cual es útil para pruebas en redes locales controladas
+ pero deja la comunicación vulnerable a interceptaciones en entornos de
+ producción.
+\end_layout
+
+\begin_layout Standard
+Componentes clave del código: setCACert(root_ca): Es el "pasaporte" que
+ el dispositivo usa para confiar en el servidor.
+ Sin esto, el ESP32 no sabría si el broker es el original o un impostor.
+\end_layout
+
+\begin_layout Standard
+setInsecure(): Indica al stack de red que ignore la verificación de certificados.
+ Es cómodo para desarrollo, pero arriesgado porque no hay cifrado real de
+ punto a punto.
+\end_layout
+
+\begin_layout Standard
+Puerto 8883: Es la convención de IANA para MQTTS.
+ Usar el puerto 1883 (el estándar normal) ignoraría estas líneas de seguridad.
 \end_layout
 
 \begin_layout Standard

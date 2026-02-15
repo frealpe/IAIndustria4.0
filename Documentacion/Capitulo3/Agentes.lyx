@@ -1,0 +1,619 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass book
+\begin_preamble
+\usepackage{babel}
+\end_preamble
+\use_default_options false
+\maintain_unincluded_children false
+\language spanish
+\language_package default
+\inputencoding iso8859-15
+\fontencoding T1
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 0
+\use_package cancel 0
+\use_package esint 1
+\use_package mathdots 0
+\use_package mathtools 0
+\use_package mhchem 0
+\use_package stackrel 0
+\use_package stmaryrd 0
+\use_package undertilde 0
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 0
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style french
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle empty
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+Agentes
+\end_layout
+
+\begin_layout Section
+Modelos de IA locales
+\end_layout
+
+\begin_layout Standard
+La diferencia fundamental entre un modelo local y uno en línea reside en
+ la soberanía de los datos y la latencia.
+ Mientras que un modelo en línea (como GPT-4 o Claude) depende de servidores
+ externos, conexión a internet y políticas de privacidad de terceros, un
+ modelo local se ejecuta íntegramente en tu hardware, garantizando una privacida
+d absoluta y permitiendo el funcionamiento sin conexión.
+ Sin embargo, el modelo local está limitado por la potencia de tu GPU (VRAM),
+ mientras que los modelos en la nube aprovechan infraestructuras masivas
+ de centros de datos para ofrecer capacidades de razonamiento superiores
+ a costa de una mayor latencia de red y posibles costos por suscripción
+ o uso de API.
+\end_layout
+
+\begin_layout Standard
+Guía de Instalación de Modelos Locales Para correr modelos de lenguaje (LLMs)
+ en tu propia máquina de forma sencilla, la herramienta estándar actualmente
+ es Ollama.
+\end_layout
+
+\begin_layout Enumerate
+Instalación del Entorno Descarga: Ve a 
+\begin_inset Flex URL
+status open
+
+\begin_layout Plain Layout
+
+www.ollama.com 
+\end_layout
+
+\end_inset
+
+y descarga la versión para tu sistema operativo (Windows, macOS o Linux).
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Ejecución: Una vez instalado, abre una terminal (CMD en Windows o Terminal
+ en Mac/Linux).
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Descarga de Modelos Existen diferentes tamaños según tu hardware.
+ Los más comunes son:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Llama 3 (8B): Necesitas al menos 8GB de RAM/VRAM.
+\end_layout
+
+\begin_layout Standard
+Mistral: Muy eficiente y balanceado.
+\end_layout
+
+\begin_layout Standard
+DeepSeek-Coder: Excelente para el desarrollo de software y circuitos.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Para instalar uno, escribe en tu terminal:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Bash:
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+ollama run llama3
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Configuración para un Rendimiento Óptimo para que el modelo corra de forma
+ fluida, debes considerar lo siguiente:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Prioridad de GPU: Asegúrate de tener instalados los drivers de NVIDIA (CUDA).
+ Ollama detectará automáticamente tu tarjeta de video para acelerar el proceso.
+\end_layout
+
+\begin_layout Standard
+Cuantización: Los modelos vienen en versiones "comprimidas" (ej.
+ Q4_K_M).
+ Esto permite que un modelo grande quepa en una tarjeta de video comercial
+ sin perder mucha precisión.
+\end_layout
+
+\begin_layout Standard
+Context Window: Si vas a pasarle esquemáticos largos o mucho código, asegúrate
+ de configurar el límite de memoria en la aplicación que uses como interfaz.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+El servicio de Ollama permiten mejorar el rendimiento cuando se trabajan
+ modelos de inteligencia artificial locales, ya que habilitan la ejecución
+ simultánea y el mantenimiento de varios modelos cargados en memoria.
+ La variable OLLAMA_NUM_PARALLEL=2 define cuántas solicitudes pueden procesarse
+ al mismo tiempo, lo que es especialmente útil en sistemas con múltiples
+ agentes o aplicaciones que realizan consultas concurrentes.
+ Por su parte, OLLAMA_MAX_LOADED_MODELS=2 indica cuántos modelos pueden
+ permanecer cargados en la RAM sin tener que descargarse y recargarse constantem
+ente, reduciendo significativamente los tiempos de respuesta.
+ En conjunto, estas opciones optimizan el uso de recursos del sistema y
+ permiten ejecutar, por ejemplo, un modelo para análisis de datos y otro
+ para generación de código de manera paralela, algo clave en arquitecturas
+ modernas de backend con IA local, ver 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Configuración-de-modelos"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\align center
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+sudo systemctl edit ollama.service
+\end_layout
+
+\begin_layout Plain Layout
+
+#Copia y pega
+\end_layout
+
+\begin_layout Plain Layout
+
+[Service] 
+\end_layout
+
+\begin_layout Plain Layout
+
+Environment="OLLAMA_NUM_PARALLEL=2"
+\end_layout
+
+\begin_layout Plain Layout
+
+Environment="OLLAMA_MAX_LOADED_MODELS=2"
+\end_layout
+
+\begin_layout Plain Layout
+
+#Guarda y restauar el sistema
+\end_layout
+
+\begin_layout Plain Layout
+
+sudo systemctl daemon-reload
+\end_layout
+
+\begin_layout Plain Layout
+
+sudo systemctl restart ollama
+\end_layout
+
+\begin_layout Plain Layout
+
+#Para probar se debe correr en terminales distinitos
+\end_layout
+
+\begin_layout Plain Layout
+
+ollama run llama3.1 
+\end_layout
+
+\begin_layout Plain Layout
+
+ollama run deepseek-coder:6.7b
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Configuración de modelos locales
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Configuración-de-modelos"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Section
+Servicio Multi agente
+\end_layout
+
+\begin_layout Standard
+El 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Diagrama-Multi-agente"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+diagrama de secuencia describe el flujo completo de interacción entre el
+ usuario y el sistema de agentes inteligentes dentro de la arquitectura
+ del proyecto.
+ El proceso inicia cuando el usuario, desde el frontend, envía una solicitud
+ al endpoint /api/chat, incluyendo no solo el mensaje de texto sino también
+ el contexto de la interfaz, como identificadores seleccionados o información
+ adicional proveniente de la aplicación.
+ Esta solicitud es recibida por el Router, el cual se encarga de direccionarla
+ hacia el ChatController, componente responsable de validar los datos de
+ entrada, estructurar el contexto del sistema e integrar elementos relevantes
+ provenientes de la interfaz de usuario.
+\end_layout
+
+\begin_layout Standard
+Posteriormente, el controlador envía la consulta al MultiAgentService, que
+ constituye el núcleo inteligente del sistema.
+ En esta etapa se construye dinámicamente un grafo de agentes utilizando
+ LangGraph, permitiendo que el sistema determine de manera autónoma qué
+ tipo de agente debe responder según la intención de la consulta.
+ Para ello, el servicio consulta al modelo de lenguaje, que actúa como orquestad
+or, evaluando si la pregunta requiere acceso a datos, análisis estadístico
+ o una respuesta general.
+ Una vez identificada la intención, el sistema activa el agente correspondiente,
+ el cual utiliza el modelo de inteligencia artificial para generar una respuesta
+ contextualizada y, si es necesario, procesar información adicional.
+\end_layout
+
+\begin_layout Standard
+Finalmente, el servicio retorna al controlador una respuesta estructurada
+ que puede incluir texto explicativo y datos procesados.
+ El controlador envía esta información al usuario en formato JSON, permitiendo
+ que el frontend presente resultados en tiempo real, gráficos o análisis
+ detallados.
+ Este flujo refleja cómo el sistema integra comunicación web, procesamiento
+ contextual, orquestación de agentes y modelos de inteligencia artificial
+ para ofrecer respuestas inteligentes basadas tanto en la consulta del usuario
+ como en el contexto operativo del sistema.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename Secuencia.png
+	lyxscale 15
+	width 15cm
+	height 15cm
+	keepAspectRatio
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Diagrama Multi agente
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Diagrama-Multi-agente"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+La Grafica 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Diseño-Multiagente"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ muestra las acciones que cada uno de los bloques representa.
+\end_layout
+
+\begin_layout Enumerate
+MultiAgentService (LangGraph) – Cerebro del sistema
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Este bloque, llamado Brain, es el núcleo inteligente del sistema.
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Orchestrator Node: actúa como coordinador.
+ Decide la intención de la consulta: si es simple (acceso a base de datos)
+ o compleja (requiere análisis de datos).
+\end_layout
+
+\begin_layout Enumerate
+SQL Expert Node: maneja consultas simples directamente sobre la base de
+ datos.
+\end_layout
+
+\begin_layout Enumerate
+Data Scientist Node: se activa cuando se requiere un análisis más avanzado
+ o procesamiento de datos complejo.
+\end_layout
+
+\begin_layout Enumerate
+La flecha SQL_Node -.-> Data_Node representa un “handover”: si una consulta
+ simple necesita análisis adicional, se transfiere automáticamente al agente
+ de datos.
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Enumerate
+McpService – Herramientas de soporte
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Este bloque contiene las herramientas o funciones que usan los agentes:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Tool query_db: ejecuta consultas SQL sobre los modelos de datos.
+\end_layout
+
+\begin_layout Enumerate
+Tool analizar_datos_avanzado: realiza procesamiento y análisis avanzado
+ de los datos.
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Enumerate
+Capas de Datos (Models)
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Aquí se representan los modelos y scripts que gestionan la información:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+DatosModel.js: gestiona la tabla principal de datos (datos).
+\end_layout
+
+\begin_layout Enumerate
+ModeloEntrenado.js: almacena y gestiona modelos de inteligencia artificial
+ previamente entrenados.
+\end_layout
+
+\begin_layout Enumerate
+AnalysisHelper.js (Danfo): lógica para análisis avanzado usando Danfo.js (similar
+ a Pandas en JavaScript).
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Enumerate
+Base de Datos (PostgreSQL)
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Representa el almacenamiento físico de la información:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Tabla datos: contiene la información principal que consultan los agentes.
+\end_layout
+
+\begin_layout Enumerate
+Tabla modelo_entrenado: almacena los modelos de IA entrenados que pueden
+ ser reutilizados.
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Enumerate
+Flujo de información
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+El Orchestrator decide qué agente debe atender la consulta.
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Los agentes llaman a las herramientas según el tipo de operación (consulta
+ simple o análisis avanzado).
+\end_layout
+
+\begin_layout Enumerate
+Las herramientas interactúan con los Modelos (DatosModel y AnalysisHelper)
+ y ejecutan operaciones sobre la Base de Datos.
+\end_layout
+
+\begin_layout Enumerate
+Los datos procesados se retornan hacia los agentes y finalmente al Orchestrator,
+ que devuelve la respuesta al sistema que hizo la solicitud.
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename MultiAgente.png
+	lyxscale 15
+	width 15cm
+	height 15cm
+	keepAspectRatio
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Diseño Multiagente
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Diseño-Multiagente"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

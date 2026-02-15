@@ -3,140 +3,92 @@ config:
   layout: elk
 ---
 graph TD
-    subgraph IoT_Hardware ["ESP32 Device"]
-        direction TB
-        Sensors["🔌 Sensores\nADC y Relays"] -->|Leer Actuar| Firmware["C++ Firmware"]
-        Firmware -->|"WiFi DHCP"| Network["📶 Red Local"]
-    end
-    subgraph Infrastructure ["Infraestructura Local Nube"]
-        MQTT_Broker["📡 MQTT Broker\nMosquitto"]
-        Database["🗄️ Base de Datos\nSQL"]
-    end
-    subgraph Backend_Server ["Servidor Node.js Backend"]
-        direction TB
-        subgraph Comms ["Capa Comunicacion"]
-            MQTT_Service["MQTT Service"]
-            Socket_Service["Socket IO Service"]
-            Express_Router["Express Routers"]
-        end
-        subgraph Logic ["Logica y AI"]
-            LangGraph["🧠 MultiAgent\nLangGraph"]
-            Supervisor["🕵️ Supervisor Agent"]
-            SQL_Agent["💾 SQL Agent"]
-            Data_Agent["📊 Data Scientist Agent"]
-            MCP_Tools["🛠️ MCP Tools"]
-        end
-        
-        Controller["Controllers\nChat y Data"]
-    end
-    subgraph IA_Models ["Modelos de IA"]
-        GPT4["☁️ OpenAI GPT-4o"]
-        DeepSeek["🏠 Local Ollama\nDeepSeek"]
-    end
-    subgraph Clients ["Clientes Frontend"]
-        Web_App["🌐 Web Dashboard"]
-        Postman["🔧 Postman\nAPI Client"]
-    end
-    Firmware -->|Publica JSON| MQTT_Broker
-    MQTT_Broker -->|Suscribe| MQTT_Service
-    MQTT_Service -->|Guarda Datos| Database
-    MQTT_Service -->|Evento Nuevo| Socket_Service
-    Web_App -->|POST chat| Express_Router
-    Web_App -->|WebSocket| Socket_Service
-    
-    Express_Router --> Controller
-    Controller -->|Procesa Query| LangGraph
-    LangGraph --> Supervisor
-    Supervisor -->|Decide| SQL_Agent
-    Supervisor -->|Decide| Data_Agent
-    
-    SQL_Agent --> MCP_Tools
-    Data_Agent --> MCP_Tools
-    
-    MCP_Tools -->|Ejecuta SQL| Database
-    Supervisor -.-> GPT4
-    Data_Agent -.-> GPT4
-    SQL_Agent -.-> DeepSeek
-    LangGraph --> Controller
-    Controller --> Express_Router
-    Express_Router --> Web_App
-    Socket_Service -->|Push Updates| Web_App
-    classDef iot fill:#FFF3CD,stroke:#856404,stroke-width:2px,color:#533F03;
-    class Sensors,Firmware,Network iot;
 
-    classDef infra fill:#E2E3E5,stroke:#41464B,stroke-width:2px,color:#212529;
-    class MQTT_Broker,Database infra;
+subgraph IoT["ESP32 Device"]
+    direction TB
+    Sensors["Sensores ADC + Relays"]
+    Firmware["C++ Firmware"]
+    Network["Red Local WiFi"]
 
-    classDef backend fill:#D1E7DD,stroke:#0F5132,stroke-width:2px,color:#0A3622;
-    class MQTT_Service,Socket_Service,Express_Router,Controller backend;
+    Sensors -->|Leer Actuar| Firmware
+    Firmware -->|WiFi DHCP| Network
+end
 
-    classDef logic fill:#CFE2FF,stroke:#084298,stroke-width:2px,color:#052C65;
-    class LangGraph,Supervisor,SQL_Agent,Data_Agent,MCP_Tools logic;
+subgraph Infra["Infraestructura"]
+    MQTT_Broker["MQTT Broker Mosquitto"]
+    Database["PostgreSQL Neon"]
+end
 
-    classDef ai fill:#F8D7DA,stroke:#842029,stroke-width:2px,color:#58151C;
-    class GPT4,DeepSeek ai;
+subgraph Backend["Backend Node.js"]
+    direction TB
 
-    classDef client fill:#E7F1FF,stroke:#0D6EFD,stroke-width:2px,color:#084298;
-    class Web_App,Postman client;
-graph TD
-    subgraph Frontend [React Client]
-        Control[Control.jsx]
-        Asistente[AsistenteBlock.jsx]
-        Table[TableHOC.jsx]
-        SocketClient[Socket Context]
+    subgraph Comms["Comunicacion"]
+        MQTT_Service["MQTT Service"]
+        Socket_Service["Socket.IO"]
+        Express_Router["Express API"]
     end
 
-    subgraph Backend [Express Server]
-        Controller[ChatController.js]
-        
-        subgraph MultiAgentSystem [MultiAgentService.js]
-            Supervisor[Enrutador / Supervisor]
-            AgentSQL[🤖 SQL Expert]
-            AgentData[🤖 Data Scientist]
-        end
-
-        subgraph Tooling [McpService.js]
-            ToolQuery[Tool: query_db]
-            ToolAnalyze[Tool: analizar_datos_avanzado]
-            Helper[analysisHelper.js <br> (Danfo.js Logic)]
-        end
-
-        SocketServer[SocketService.js]
+    subgraph Logic["Logica IA"]
+        LangGraph["LangGraph"]
+        Supervisor["Supervisor Agent"]
+        SQL_Agent["SQL Agent"]
+        Data_Agent["Data Agent"]
+        MCP_Tools["MCP Tools"]
+        Danfo_Logic["Danfo Analysis"]
     end
 
-    subgraph Infrastructure
-        DB[(PostgreSQL Database)]
-    end
+    Controller["Controllers"]
+end
 
-    %% Flujos Principales
-    Control -->|Selecciona Prueba| Asistente
-    Control -->|Visualiza RAW Data| SocketClient
-    
-    Asistente -->|POST /chat <br> {msg, selectedIds}| Controller
-    
-    Controller -->|Inyecta Contexto| Supervisor
-    
-    %% Lógica de Agentes
-    Supervisor -->|Intención SQL| AgentSQL
-    Supervisor -->|Intención Analítica| AgentData
-    
-    AgentSQL -->|Usa| ToolQuery
-    AgentData -->|Usa| ToolAnalyze
-    
-    %% Ejecución de Herramientas
-    ToolQuery -->|Query SQL| DB
-    ToolAnalyze -->|Query SQL| DB
-    ToolAnalyze -->|Calcula| Helper
-    
-    %% Retorno de Datos Heavy
-    DB -.->|Datos Pesados para Gráfica| SocketServer
-    SocketServer -.->|Emite 'mcpdatos'| SocketClient
+subgraph AI["Modelos IA"]
+    GPT4["OpenAI GPT4o"]
+    DeepSeek["Ollama Llama"]
+end
 
-    %% Respuesta Chat
-    AgentSQL -->|Respuesta Texto| Controller
-    AgentData -->|Respuesta Texto| Controller
+subgraph Clients["Clientes"]
+    Web_App["React Dashboard"]
     
-    style Supervisor fill:#f9f,stroke:#333,stroke-width:2px
-    style AgentSQL fill:#bbf,stroke:#333
-    style AgentData fill:#bbf,stroke:#333
-    style DB fill:#ff9,stroke:#333
+end
+Firmware -->|Publica JSON| MQTT_Broker
+MQTT_Broker --> MQTT_Service
+MQTT_Service --> Database
+MQTT_Service --> Socket_Service
+
+Web_App --> Express_Router
+Web_App --> Socket_Service
+Socket_Service --> Web_App
+Express_Router --> Controller
+
+Controller --> LangGraph
+LangGraph --> Supervisor
+Supervisor --> SQL_Agent
+Supervisor --> Data_Agent
+
+SQL_Agent --> MCP_Tools
+Data_Agent --> MCP_Tools
+
+MCP_Tools --> Database
+MCP_Tools --> Danfo_Logic
+Danfo_Logic --> Data_Agent
+
+Supervisor -.-> GPT4
+Data_Agent -.-> GPT4
+SQL_Agent -.-> DeepSeek
+
+classDef iot fill:#FFF3CD,stroke:#856404,stroke-width:2px,color:#533F03;
+class Sensors,Firmware,Network iot;
+
+classDef infra fill:#E2E3E5,stroke:#41464B,stroke-width:2px,color:#212529;
+class MQTT_Broker,Database infra;
+
+classDef backend fill:#D1E7DD,stroke:#0F5132,stroke-width:2px,color:#0A3622;
+class MQTT_Service,Socket_Service,Express_Router,Controller,Danfo_Logic backend;
+
+classDef logic fill:#CFE2FF,stroke:#084298,stroke-width:2px,color:#052C65;
+class LangGraph,Supervisor,SQL_Agent,Data_Agent,MCP_Tools logic;
+
+classDef ai fill:#F8D7DA,stroke:#842029,stroke-width:2px,color:#58151C;
+class GPT4,DeepSeek ai;
+
+classDef client fill:#E7F1FF,stroke:#0D6EFD,stroke-width:2px,color:#084298;
+class Web_App client;
