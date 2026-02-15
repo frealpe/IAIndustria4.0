@@ -376,13 +376,23 @@ function executeDanfoCode(data, codigo) {
         }
         // Añadir toJSON a Series si no existe para evitar errores deprecados en versiones de danfo
         try {
-            if (!dfd.Series.prototype.hasOwnProperty('toJSON')) {
-                Object.defineProperty(dfd.Series.prototype, 'toJSON', {
+            // Force override toJSON to avoid "deprecated" error from Danfo v1+
+            Object.defineProperty(dfd.Series.prototype, 'toJSON', {
+                configurable: true,
+                writable: true,
+                value: function() {
+                   // Use the static method which is the correct way in v1+
+                   return dfd.toJSON(this);
+                }
+            });
+            
+            // Also for DataFrame just in case
+            if (dfd.DataFrame) {
+                 Object.defineProperty(dfd.DataFrame.prototype, 'toJSON', {
                     configurable: true,
                     writable: true,
                     value: function() {
-                        // devolver array de valores (forma simple y estable)
-                        return Array.isArray(this.values) ? this.values : [];
+                       return dfd.toJSON(this);
                     }
                 });
             }
@@ -394,12 +404,52 @@ function executeDanfoCode(data, codigo) {
         helpers.castSeriesToFloat = function(series) {
             try {
                 // series puede ser un objeto Series de Danfo o un array
-                const vals = Array.isArray(series.values) ? series.values.map(v => Number(v === null || v === undefined || v === '' ? NaN : v)) : [];
+                let vals = [];
+                if (Array.isArray(series)) {
+                    vals = series;
+                } else if (series && series.values) {
+                     vals = series.values;
+                }
+                
+                // Asegurar que es array plano de números
+                const numericVals = vals.map(v => {
+                    const n = parseFloat(v);
+                    return isNaN(n) ? 0 : n;
+                });
+
                 // Retornamos una Serie de Danfo con valores numéricos
-                return new dfd.Series(vals);
+                // FIXED: Return the raw array if needed, but wrapper expects object. 
+                // Using Series is okay if we use it correctly.
+                // But dfd.DataFrame constructor might fail with Series.
+                // Let's attach a method to convert to Array easily or return Series.
+                
+                // Better approach: Let's patch the DataFrame constructor in our sandbox SHIM
+                return new dfd.Series(numericVals);
             } catch (e) {
-                return new dfd.Series([]);
+                console.warn("castSeriesToFloat error:", e.message);
+                return new dfd.Series([0]);
             }
+        };
+
+        // SHIM: Patch DataFrame constructor behavior inside execution scope? 
+        // No, we cannot easily patch 'new dfd.DataFrame'.
+        // Instead, let's inject a helper 'helpers.toDataFrame(series, cols)'
+        helpers.toDataFrame = function(seriesOrArray, columns) {
+             let data = seriesOrArray;
+             if (seriesOrArray instanceof dfd.Series) {
+                 data = seriesOrArray.values;
+             }
+             
+             // Si es un array plano de números y se pasa 1 columna, Danfo espera un objeto { col: [vals] }
+             // o un array de arrays [[v1], [v2]]
+             if (Array.isArray(data) && columns && columns.length === 1) {
+                 const colName = columns[0];
+                 const obj = {};
+                 obj[colName] = data;
+                 return new dfd.DataFrame(obj);
+             }
+             
+             return new dfd.DataFrame(data, { columns });
         };
 
         // Agregar utilidades estadísticas avanzadas
@@ -643,6 +693,40 @@ function executeDanfoCode(data, codigo) {
             return csv;
         };
 
+        // NEW HELPER: Flatten JSON column (e.g. 'resultado' -> key 'rawValues')
+        helpers.flattenColumn = function(df, colName, key) {
+            try {
+                // df[colName] gives Series
+                // Access values
+                const series = df[colName];
+                if (!series) return new dfd.Series([]);
+
+                const vals = series.values || [];
+                const flattened = [];
+                
+                vals.forEach(v => {
+                    let obj = v;
+                    if (typeof v === 'string') {
+                        try { obj = JSON.parse(v); } catch(e) {}
+                    }
+                    
+                    if (obj && typeof obj === 'object') {
+                        const target = key ? obj[key] : obj;
+                        if (Array.isArray(target)) {
+                            target.forEach(t => flattened.push(t));
+                        } else if (target !== undefined) {
+                            flattened.push(target);
+                        }
+                    }
+                });
+                
+                return new dfd.Series(flattened);
+            } catch (e) {
+                console.warn("flattenColumn error:", e.message);
+                return new dfd.Series([]);
+            }
+        };
+
         // ------- Shims y adaptadores para compatibilidad con código generado -------
         // Añadimos dfd.range si no existe
         try {
@@ -719,12 +803,40 @@ function executeDanfoCode(data, codigo) {
 
         // --- PROCESAMIENTO UNIFICADO DEL RESULTADO ---
         // Convertimos cualquier cosa (Series, DataFrame, Array) a algo legible por el usuario
+        // --- PROCESAMIENTO UNIFICADO DEL RESULTADO ---
+        // Convertimos cualquier cosa (Series, DataFrame, Array) a algo legible por el usuario
+        // Recursivamente
         const processResult = (res) => {
-            if (res === null || res === undefined) return "null";
-            if (res instanceof dfd.Series) return res.values;
-            if (res instanceof dfd.DataFrame) return dfd.toJSON(res);
-            if (typeof res === 'object' && res.hasOwnProperty('values')) return res.values; // Para shims
-            return res;
+            if (res === null || res === undefined) return null;
+            if (typeof res === 'string' || typeof res === 'number' || typeof res === 'boolean') return res;
+            
+            // Danfo objects
+            if (res instanceof dfd.Series) {
+                // Return array of values
+                return res.values;
+            }
+            if (res instanceof dfd.DataFrame) {
+                // Return JSON array of objects
+                return dfd.toJSON(res);
+            }
+            
+            // Arrays: map recursively
+            if (Array.isArray(res)) {
+                return res.map(processResult);
+            }
+            
+            // Objects: map values recursively
+            if (typeof res === 'object') {
+                const out = {};
+                for (const key in res) {
+                    if (res.hasOwnProperty(key)) {
+                        out[key] = processResult(res[key]);
+                    }
+                }
+                return out;
+            }
+            
+            return String(res);
         };
 
         const finalDataResult = processResult(executionResult);

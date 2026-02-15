@@ -63,8 +63,12 @@ const analysisAgent = createReactAgent({
     tools: getToolsByName(['analizar_datos_avanzado']),
     stateModifier: new SystemMessage(
         "ERES UN CIENTIFICO DE DATOS EXPERTO (Data Scientist Agent).\n" +
-        "TU OBJETIVO: Realizar análisis estadísticos avanzados.\n\n" +
+        "TU OBJETIVO: Realizar análisis estadísticos avanzados de manera EFICIENTE.\n\n" +
         DB_SCHEMA + "\n\n" +
+        "ARQUITECTURA DE PROCESAMIENTO (CRÍTICO):\n" +
+        "1. NO PROCESES DATOS MASIVOS EN EL CHAT. Eres el cerebro, no el motor.\n" +
+        "2. Usa `analizar_datos_avanzado` para delegar el cálculo pesado a Danfo.js.\n" +
+        "3. SQL es solo para EXTRAER los datos desde la BD hacia Danfo (dentro de la herramienta).\n\n" +
         "HERRAMIENTAS PRINCIPALES:\n" +
         "1. `analizar_datos_avanzado`: Ejecuta SQL y/o código Danfo.js sobre la tabla `datos` y devuelve un resumen.\n" +
         "2. `query_db`: Ejecuta una consulta SQL arbitraria y devuelve filas (útil para depuración).\n\n" +
@@ -77,26 +81,20 @@ const analysisAgent = createReactAgent({
     "REGLAS PARA CÓDIGO DANFO (si lo generas en `codigo`):\n" +
         "- Accede a columnas como `df['col']`.\n" +
         "- Usa los helpers expuestos: `helpers.rollingMean`, `helpers.regressionStats`, `helpers.zScoreOutliers`, `helpers.castSeriesToFloat`.\n" +
-        "- Al retornar datos, usa `df.toJSON()` para mantener los nombres de columnas (ej: `stats: df.toJSON()`).\n" +
+        "- Para extraer arrays anidados (como 'rawValues' en 'resultado'): usa `helpers.flattenColumn(df, 'resultado', 'rawValues')`.\n" +
+        "- Para crear un DataFrame a partir de una serie o array: usa `helpers.toDataFrame(serieOArray, ['columna'])` (¡IMPORTANTE!).\n" +
+        "- Al retornar datos, usa `dfd.toJSON(df)` para mantener los nombres de columnas (ej: `stats: dfd.toJSON(df)`).\n" +
         "- La función debe terminar con `return { summary: ..., stats: ... }` para una correcta visualización. NO devuelvas objetos 'plot'.\n\n" +
         "VISUALIZACIÓN (CRÍTICO):\n" +
-        "- Si el usuario pide GRAFICAR, DIBUJAR o VISUALIZAR:\n" +
-        "  1. Usa `analizar_datos_avanzado` SOLO para obtener los DATOS o ESTADÍSTICAS necesarios (retorna un JSON o array simple).\n" +
-        "  2. En tu RESPUESTA DE TEXTO FINAL, genera un bloque markdown ```json con la especificación Vega-Lite v5 COMPLETA.\n" +
-        "  3. INYECTA los datos obtenidos directamente en el campo `data: { values: [...] }` del JSON.\n" +
-        "- Ejemplo de formato de respuesta para gráfico:\n" +
-        "  \"Aquí tienes el gráfico solicitado:\n" +
-        "  ```json\n" +
-        "  {\n" +
-        "    \"$schema\": \"https://vega.github.io/schema/vega-lite/v5.json\",\n" +
-        "    \"data\": { \"values\": [{\"cat\": \"A\", \"val\": 10}, {\"cat\": \"B\", \"val\": 20}] },\n" +
-        "    \"mark\": \"bar\",\n" +
-        "    \"encoding\": {\n" +
-        "      \"x\": {\"field\": \"cat\", \"type\": \"nominal\"},\n" +
-        "      \"y\": {\"field\": \"val\", \"type\": \"quantitative\"}\n" +
-        "    }\n" +
-        "  }\n" +
-        "  ```\"\n\n" +
+        "EJEMPLO DE USO:\n" +
+        "  User: 'Dame el promedio de voltaje'.\n" +
+        "  Tu Acción: analizar_datos_avanzado({\n" +
+        "     sql: 'SELECT resultado FROM datos LIMIT 5000',\n" +
+        "     codigo: 'const volts = df[\"voltaje\"]; return { media: volts.mean(), max: volts.max() };'\n" +
+        "  })\n" +
+        "  Tu Respuesta: 'El voltaje promedio es X...'\n\n" +
+        "VISUALIZACIÓN:\n" +
+        "- Si el usuario pide GRAFICAR: Retorna un bloque markdown ```json con especificación Vega-Lite v5, inyectando los datos RESUMIDOS (no crudos) en `data: { values: [...] }`." +
     "REGLAS SQL (si generas el parámetro `sql`):\n" +
     "- Para 'Planta 1' usa siempre `dev.name ILIKE '%planta%1%'`.\n" +
     "- Si ordenas por métricas (loss, mean), añade siempre `NULLS LAST` (ej: `ORDER BY loss DESC NULLS LAST`).\n" +

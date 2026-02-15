@@ -67,6 +67,11 @@ class ChatController {
             const { text, data } = await chatService.processQuery(queryText, history);
             
             // Devolvemos la respuesta generada por el agente
+            console.log("📤 [ChatController] Sending response to frontend:", text.substring(0, 200) + "...");
+            // Log full response if it contains JSON to debug visualization
+            if (text.includes("```json")) {
+                 console.log("📊 [ChatController] Detected JSON block in response!");
+            }
             res.json({ response: text, data });
         } catch (error) {
             // Manejo de errores del servidor
