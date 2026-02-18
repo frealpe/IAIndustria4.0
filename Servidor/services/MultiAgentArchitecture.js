@@ -31,27 +31,23 @@ const sqlIntelligenceAgent = async (state) => {
     console.error("[DEBUG_SQL] Analyzing task:", state.task);
     const { task } = state;
     
-    // We reuse the logic from the previous SQL Agent but strictly for SQL generation
-    const tool = mcpService.getTool("query_db"); // We use the schema from query_db tool to inform the LLM
+    const prompt = `Eres un Experto en SQL para un sistema de manufactura.
+    Genera una consulta SQL para PostgreSQL basada en la tarea del usuario.
     
-    const prompt = `Eres un Agente SQL Industrial.
-    TU OBJETIVO: Generar una consulta SQL SELECT válida y optimizada basada en la solicitud del usuario.
+    TABLAS DISPONIBLES:
+    - datos: id, device_uid, mean, created_at
+    - devices: id, device_uid, name, description
     
-    ESQUEMA DE BASE DE DATOS:
-    ${require("../constants/schema").DB_SCHEMA}
+    REGLAS ESTRICTAS:
+    1. Devuelve SOLAMENTE el código SQL plano.
+    2. NO uses bloques de Markdown (sin \`\`\`sql).
+    3. NO incluyas explicaciones ni comentarios.
+    4. Usa JOIN entre "datos" y "devices" usando "device_uid".
+    5. ROBUSTEZ: Si piden un rango de tiempo, usa UNION con los últimos 5 registros para asegurar que el usuario vea datos si el rango está vacío.
+    6. Siempre añade LIMIT 100.
     
-    REGLAS ESTRICTAS DE SQL:
-    1. Solo genera la consulta SQL. NADA de texto adicional.
-    2. Usa la tabla 'datos' para los registros de sensores.
-    3. La columna de voltaje/promedio es 'mean' (NUMERIC). NO uses 'valor'.
-    4. El nombre del dispositivo está en devices.name. NO uses devices.planta.
-    5. Une tablas con: datos.device_uid = devices.device_uid.
-    6. Trae datos crudos (SELECT *) y deja que el DATA_SCIENTIST los procese.
-    7. Usa LIMIT 50 por defecto si no se pide una cantidad específica.
-    8. Devuelve un JSON: { "sql": "SELECT ..." }
-    
-    SOLICITUD: ${task}
-    `;
+    TAREA: ${task}
+    SQL:`;
 
     try {
         const model = getChatModel({ temperature: 0 });
@@ -128,118 +124,152 @@ const dataRetrievalAgent = async (state) => {
 };
 
 const autonomousDataScientist = async (state) => {
-    console.log("➡️ [Data Scientist] Analyzing data...");
+    console.log("➡️ [Data Scientist] ENTERPRISE MODE: Starting 6-Phase Analysis...");
     const { raw_data, task } = state;
 
     if (!raw_data || raw_data.length === 0) {
-        return { errors: ["No data to analyze"], current_agent: "data_scientist" };
+        console.warn("   ⚠️ No data received for analysis.");
+        return { 
+            analysis_result: { 
+                source: "robustness_fallback",
+                resumen: "No se encontraron datos en el rango de tiempo o dispositivo seleccionado. Por favor, verifica si la planta está activa o intenta con un rango más amplio.",
+                metrias: [],
+                root_cause: "La consulta a la base de datos devolvió 0 resultados."
+            }, 
+            current_agent: "data_scientist" 
+        };
     }
 
     try {
         const rowCount = raw_data.length;
+        const latestTime = new Date(raw_data[0].created_at);
+        const now = new Date();
+        const diffMinutes = Math.abs(now - latestTime) / (1000 * 60);
+        const isStale = diffMinutes > 30; // More than 30 mins old
+
         const columns = Object.keys(raw_data[0] || {});
-        const hasNumericColumns = columns.some(c => c === 'mean' || c === 'valor' || c === 'voltaje');
+        const hasNumericColumns = columns.some(c => c === 'mean' || c === 'valor' || c === 'voltaje' || c === 'resultado');
         
         // --- STEP 1: Decide Decision (Danfo vs Mental) ---
-        // If dataset has numeric columns and more than 20 rows, it should use Danfo
-        const useDanfo = rowCount > 20 && hasNumericColumns;
+        // Industrial Enterprise Rule: Always use Danfo if rowCount > 10
+        const useDanfo = rowCount > 10 && hasNumericColumns;
 
-        let finalAnalysis = null;
+        let enterpriseResults = {
+            source: "enterprise_autonomous_analysis",
+            statistics: {},
+            features: {},
+            anomalies: { source: "statistical_detection", details: {} },
+            trends: {},
+            forecast: {},
+            root_cause: ""
+        };
 
         if (useDanfo) {
-            console.log(`   🧮 Using Danfo.js for mathematical analysis (${rowCount} rows)...`);
+            console.log(`   🧮 Phase 1-5: Executing mathematical pipeline (${rowCount} rows)...`);
             
-            // --- STEP 2: Generate Danfo Execution Code ---
-            const codeGenPrompt = `Eres un Científico de Datos experto en Danfo.js. 
-            Genera código JavaScript usando Danfo para analizar el dataset. 
+            // --- STEP 2: Generate Comprehensive Danfo Code ---
+            const codeGenPrompt = `Eres un Científico de Datos Industrial experto en Danfo.js. 
+            Genera un script robusto para analizar este dataset en 5 fases matemáticas.
             
             ESQUEMA: ${columns.join(", ")}
             TAREA: ${task}
             
-            REGLAS:
-            1. El código debe usar la variable 'df' (Dataframe ya disponible).
-            2. NO declares 'dfd' ni uses 'require'. Las variables 'df', 'dfd' y 'helpers' YA están disponibles en el ámbito global.
-            3. LOS DATOS YA VIENEN FILTRADOS por el Agente SQL. NO intentes filtrar por 'name' o 'planta' de nuevo a menos que sea estrictamente necesario.
-            4. IMPORTANTE: Las columnas numéricas (como 'mean') suelen venir como string. Usa df['mean'].asType('float32') antes de calcular estadísticas.
-            5. Debe calcular estadísticas clave (promedio, máximo, mínimo, desviación estándar).
-            6. El código DEBE RETORNAR un objeto plano al final: return { ... }.
-            7. NO uses .plot() ni nodeplotlib.
+            REGLAS TÉCNICAS (ESTRICTAS):
+            1. Devuelve SOLAMENTE el código JavaScript ejecutable. NO incluyas explicaciones.
+            2. Usa 'df' (Dataframe ya disponible). 'dfd' y 'helpers' también están disponibles.
+            3. NO declares 'dfd' ni uses 'require'.
+            4. IMPORTANTE: No uses df['col'] = series para asignar. Usa: const newDf = df.addColumn('name', series) o trabaja con Series independientes.
+            5. Convierte columnas numéricas (ej: 'mean') con df['mean'].asType('float32').
+            6. PROHIBIDO: No uses .plot(), ni helpers.plot, ni ninguna función de graficación. Devuelve solo DATOS.
             
-            CÓDIGO (Devuelve solo el código JS):`;
+            PLANTILLA SUGERIDA (Sigue esta lógica):
+            const col = df['mean'].asType('float32');
+            const stats = { mean: col.mean(), std: col.std(), max: col.max(), min: col.min() };
+            const zscore = col.sub(stats.mean).div(stats.std).abs();
+            const outliers = zscore.gt(3);
+            const trend = helpers.regressionSlope(col.values);
+            const forecast = helpers.movingAverage(col.values.slice(-10), 3);
+            
+            return {
+                statistics: stats,
+                features: { rolling_mean: helpers.movingAverage(col.values, 5) },
+                anomalies: { count: col.values.filter((_,i) => zscore.values[i] > 3).length, details: [] },
+                trends: { slope: trend },
+                forecast: { next: forecast.slice(-5), confidence: "medium" }
+            };`;
 
             const model = getChatModel({ temperature: 0 });
             const codeResponse = await model.invoke([new HumanMessage(codeGenPrompt)]);
-            const code = codeResponse.content.replace(/```javascript/g, "").replace(/```/g, "").trim();
+            
+            // Robust extraction: find the code between blocks or the whole content
+            let code = codeResponse.content;
+            if (code.includes("```")) {
+                const parts = code.split("```");
+                code = parts[1];
+                if (code.startsWith("javascript")) code = code.replace("javascript", "");
+                if (code.startsWith("js")) code = code.replace("js", "");
+            }
+            code = code.trim();
 
-            // --- STEP 3: Execute Tool ---
+            console.log("   📜 FULL GENERATED CODE:\n" + "=".repeat(40) + "\n" + code + "\n" + "=".repeat(40));
+
             const result = await mcpService.runTool("analizar_datos_locales", {
                 datos: raw_data,
                 codigo: code
             });
 
-            if (!result.ok || !result.parsed || result.parsed.status === "error") {
-                console.warn("   ⚠️ Danfo Execution failed:", result.parsed?.metadata?.error || "Unknown error");
-                console.warn("   ⚠️ Falling back to mental analysis");
+            if (result.ok && result.parsed && result.parsed.status !== "error") {
+                const math = result.parsed.data || result.parsed.result;
+                Object.assign(enterpriseResults, math);
+                console.log("   ✅ Mathematical pipeline complete.");
             } else {
-                const mathResults = result.parsed.data || result.parsed.result;
-                console.log("   ✅ Mathematical results obtained.");
-
-                // --- STEP 4: Summarize Results ---
-                const summaryPrompt = `Eres un Científico de Datos. Resume estos resultados matemáticos para el usuario.
-                
-                RESULTADOS: ${JSON.stringify(mathResults)}
-                TAREA: ${task}
-                
-                FORMATO JSON EXIGIDO:
-                {
-                  "resumen": "Interpretación experta de los datos",
-                  "metrias": [ { "label": "Nombre", "value": "valor", "status": "ok|warning|danger" }, ... ],
-                  "source": "danfo_analysis"
-                }`;
-                
-                const summaryResponse = await model.invoke([new HumanMessage(summaryPrompt)]);
-                try {
-                    const text = summaryResponse.content.replace(/```json/g, "").replace(/```/g, "").trim();
-                    finalAnalysis = JSON.parse(text);
-                } catch(e) {
-                    finalAnalysis = { resumen: summaryResponse.content, metrias: [], source: "danfo_analysis" };
-                }
+                console.warn("   ⚠️ Math failed, using fallback summary", result.parsed?.metadata?.error);
             }
         }
 
-        // --- FALLBACK: Mental Analysis (If not using Danfo or tool failed) ---
-        if (!finalAnalysis) {
-            console.log("   🧠 Performing mental statistical estimation...");
-            const prompt = `Eres un Científico de Datos Autónomo.
-            Analiza el dataset proporcionado (basado en muestra) y extrae estadísticas estimadas.
-            
-            DATASET MUESTRA: ${JSON.stringify((raw_data || []).slice(0, 5))}
-            TOTAL FILAS: ${rowCount}
-            TAREA: ${task}
-            
-            FORMATO JSON:
-            {
-              "resumen": "Texto con conclusiones",
-              "metrias": [ { "label": "Nombre", "value": "valor", "status": "ok|warning|danger" }, ... ],
-              "source": "mental_estimation"
-            }`;
-
-            const model = getChatModel({ temperature: 0 });
-            const response = await model.invoke([new HumanMessage(prompt)]);
-            try {
-                 const text = response.content.replace(/```json/g, "").replace(/```/g, "").trim();
-                 finalAnalysis = JSON.parse(text);
-            } catch(e) {
-                 finalAnalysis = { resumen: response.content, metrias: [], source: "mental_estimation" };
-            }
+        // --- STEP 3: Phase 6 - Root Cause Analysis & Human Summary ---
+        console.log("   🧪 Phase 6: Generating Root Cause Analysis & Insights...");
+        const summaryPrompt = `Eres un Experto en Inteligencia Industrial. 
+        Analiza los resultados matemáticos y genera un informe de nivel "Enterprise".
+        
+        DATOS MATEMÁTICOS: ${JSON.stringify(enterpriseResults)}
+        TAREA ORIGINAL: ${task}
+        MUESTRA DATOS: ${JSON.stringify(raw_data.slice(0, 3))}
+        
+        OBJETIVO:
+        1. Explica la "Causa Raíz" (Root Cause) de las tendencias o anomalías detectadas.
+        2. Proporciona un resumen ejecutivo de alto nivel.
+        3. Formatea las métricas para que sean legibles.
+        
+        FORMATO JSON EXIGIDO:
+        {
+          "resumen": "Resumen ejecutivo con hallazgos clave",
+          "metrias": [ { "label": "Nombre", "value": "valor", "status": "ok|warning|danger" }, ... ],
+          "root_cause": "Explicación técnica de la causa raíz",
+          "source": "enterprise_autonomous_analysis"
+        }`;
+        
+        const model = getChatModel({ temperature: 0 });
+        const summaryResponse = await model.invoke([new HumanMessage(summaryPrompt)]);
+        
+        try {
+            const parsed = JSON.parse(summaryResponse.content.replace(/```json/g, "").replace(/```/g, "").trim());
+            Object.assign(enterpriseResults, parsed);
+        } catch(e) {
+            enterpriseResults.resumen = summaryResponse.content;
+            enterpriseResults.root_cause = "Error al parsear RCA avanzado.";
         }
 
-        console.log(`   ✅ Analysis complete (Source: ${finalAnalysis.source}).`);
-        return { analysis_result: finalAnalysis, current_agent: "data_scientist" };
+        if (isStale) {
+            enterpriseResults.resumen = `⚠️ **Nota: Los datos mostrados tienen una antigüedad de ${Math.round(diffMinutes)} minutos.**\n\n` + (enterpriseResults.resumen || "");
+        }
+
+        console.log(`   ✅ Enterprise Analysis Complete.`);
+        return { analysis_result: enterpriseResults, current_agent: "data_scientist" };
 
     } catch (error) {
-        console.error("   ❌ Analysis Failed:", error);
-        return { errors: [`Analysis: ${error.message}`] };
+        console.error("   ❌ Enterprise Analysis Failed:", error);
+        return { errors: [`Enterprise DS: ${error.message}`] };
     }
 };
 
@@ -288,29 +318,37 @@ const visualizationIntelligenceAgent = async (state) => {
     console.log("➡️ [Vis Intelligence] Designing charts...");
     const { raw_data, analysis_result, anomaly_insights } = state;
     
+    if (!raw_data || raw_data.length === 0) {
+        console.warn("   ⚠️ Skipping chart: No data available.");
+        return { vega_lite_spec: null, current_agent: "visualization_intelligence" };
+    }
+
     // Construct Vega-Lite Spec
     const prompt = `Eres un Experto en Visualización de Datos (Vega-Lite).
-    Genera un JSON de Vega-Lite válido para visualizar estos datos.
+    Genera un JSON de Vega-Lite válido para visualizar los resultados analíticos industriales.
     
-    CONTEXTO:
-    - Datos: ${raw_data?.length || 0} filas.
+    CONTEXTO ENTERPRISE:
+    - Datos: ${raw_data?.length || 0} registros.
     - Campos: ${Object.keys((raw_data && raw_data[0]) || {}).join(", ")}
-    - Análisis: ${JSON.stringify(analysis_result || {})} (Usa resumen y metrias)
+    - Análisis: ${JSON.stringify(analysis_result || {})} 
     - Anomalías: ${JSON.stringify(anomaly_insights || {})}
     
-    REGLAS:
-    1. Usa SIEMPRE "data": { "values": [...] } e INCLUYE LOS DATOS (máximo 50 puntos para gráficas ligeras, o todos si son pocos).
-    2. Si hay campo de tiempo (created_at, timestamp), úsalo en el eje X.
-    3. Si hay anomalías, resáltalas en rojo.
-    4. Devuelve SOLO el JSON. NADA de texto explicativo ni antes ni después.
-    5. Si no hay datos, genera un gráfico vacío pero válido sintácticamente.
+    REGLAS DE DISEÑO:
+    1. Usa SIEMPRE "data": { "values": [...] }. 
+    2. IMPORTANTE: El JSON debe ser 100% VÁLIDO. NO uses comentarios (// ...) ni puntos suspensivos dentro del JSON. Si hay muchos datos, incluye solo los primeros 50 elementos reales.
+    3. Si hay "forecast" (predicción), añádela al gráfico.
+    3. Si hay "features" (como rolling_mean), graba una segunda línea para mostrar la tendencia suavizada.
+    4. Usa colores industriales (azul para datos, naranja para tendencias, rojo para anomalías).
+    5. Devuelve SOLO el objeto JSON. Sin Markdown, sin texto explicativo.
     
-    JSON VEGA-LITE (SIN TEXTO EXTRA):
-    `;
+    JSON VEGA-LITE:`;
     
     try {
         const model = getChatModel({ temperature: 0 });
         const response = await model.invoke([new HumanMessage(prompt)]);
+        
+        console.log("   📊 [Vis Gen] LLM Response received (first 100 chars):", response.content.substring(0, 100) + "...");
+        
         let spec = null;
         try {
             // Robust Parsing: Extract JSON object from potential markdown or text
@@ -356,8 +394,13 @@ const dashboardOrchestrationAgent = async (state) => {
         title: "Industrial AI Dashboard",
         resumen: analysis_result?.resumen || "Análisis completado.",
         metrias: analysis_result?.metrias || [],
-        anomalies: anomaly_insights,
+        anomalies: analysis_result?.anomalies || anomaly_insights, // Prefer statistical anomalies
         source: analysis_result?.source || "unknown",
+        root_cause: analysis_result?.root_cause || "",
+        statistics: analysis_result?.statistics || {},
+        features: analysis_result?.features || {},
+        trends: analysis_result?.trends || {},
+        forecast: analysis_result?.forecast || {},
         charts: vega_lite_spec ? [{ title: "Tendencia del Proceso", spec: vega_lite_spec }] : []
     };
 
