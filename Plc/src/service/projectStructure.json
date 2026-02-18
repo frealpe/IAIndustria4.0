@@ -5,7 +5,7 @@
     {
       "path": "/home/fabio/Escritorio/IA/MCP/.gitignore",
       "name": ".gitignore",
-      "size": 361
+      "size": 429
     },
     {
       "path": "/home/fabio/Escritorio/IA/MCP/ARCHITECTURE.md",
@@ -1484,7 +1484,7 @@
                 {
                   "path": "/home/fabio/Escritorio/IA/MCP/Plc/src/components/AppHeader.js",
                   "name": "AppHeader.js",
-                  "size": 7355
+                  "size": 8439
                 },
                 {
                   "path": "/home/fabio/Escritorio/IA/MCP/Plc/src/components/AppSidebar.css",
@@ -1621,7 +1621,7 @@
                     {
                       "path": "/home/fabio/Escritorio/IA/MCP/Plc/src/components/graficos/VegaChart.jsx",
                       "name": "VegaChart.jsx",
-                      "size": 1327
+                      "size": 1615
                     }
                   ]
                 },
@@ -1648,7 +1648,7 @@
                     {
                       "path": "/home/fabio/Escritorio/IA/MCP/Plc/src/components/help/AgentGuideHelper.jsx",
                       "name": "AgentGuideHelper.jsx",
-                      "size": 9114
+                      "size": 9825
                     },
                     {
                       "path": "/home/fabio/Escritorio/IA/MCP/Plc/src/components/help/helps.js",
@@ -1705,7 +1705,7 @@
                     {
                       "path": "/home/fabio/Escritorio/IA/MCP/Plc/src/components/tablas/TableHOC.jsx",
                       "name": "TableHOC.jsx",
-                      "size": 10641
+                      "size": 10619
                     }
                   ]
                 },
@@ -1716,7 +1716,7 @@
                     {
                       "path": "/home/fabio/Escritorio/IA/MCP/Plc/src/components/tarjeta/GptMessage.jsx",
                       "name": "GptMessage.jsx",
-                      "size": 6843
+                      "size": 6406
                     },
                     {
                       "path": "/home/fabio/Escritorio/IA/MCP/Plc/src/components/tarjeta/MyMessage.jsx",
@@ -1749,7 +1749,7 @@
                 {
                   "path": "/home/fabio/Escritorio/IA/MCP/Plc/src/context/SocketContext.js",
                   "name": "SocketContext.js",
-                  "size": 587
+                  "size": 687
                 }
               ]
             },
@@ -1948,7 +1948,7 @@
                 {
                   "path": "/home/fabio/Escritorio/IA/MCP/Plc/src/service/projectStructure.json",
                   "name": "projectStructure.json",
-                  "size": 154123
+                  "size": 155320
                 }
               ]
             },
@@ -2107,7 +2107,7 @@
         {
           "path": "/home/fabio/Escritorio/IA/MCP/Plc/vite.log",
           "name": "vite.log",
-          "size": 1070
+          "size": 3218
         },
         {
           "path": "/home/fabio/Escritorio/IA/MCP/Plc/yarn-error.log",
@@ -2202,6 +2202,11 @@
           ]
         },
         {
+          "path": "/home/fabio/Escritorio/IA/MCP/Servidor/check_db_state.js",
+          "name": "check_db_state.js",
+          "size": 567
+        },
+        {
           "path": "/home/fabio/Escritorio/IA/MCP/Servidor/check_table.js",
           "name": "check_table.js",
           "size": 784
@@ -2239,7 +2244,7 @@
             {
               "path": "/home/fabio/Escritorio/IA/MCP/Servidor/constants/projectStructure.json",
               "name": "projectStructure.json",
-              "size": 154123
+              "size": 155320
             },
             {
               "path": "/home/fabio/Escritorio/IA/MCP/Servidor/constants/schema.js",
@@ -2255,7 +2260,7 @@
             {
               "path": "/home/fabio/Escritorio/IA/MCP/Servidor/controllers/ChatController.js",
               "name": "ChatController.js",
-              "size": 5385
+              "size": 4577
             },
             {
               "path": "/home/fabio/Escritorio/IA/MCP/Servidor/controllers/DataController.js",
@@ -2800,7 +2805,7 @@
         {
           "path": "/home/fabio/Escritorio/IA/MCP/Servidor/server.log",
           "name": "server.log",
-          "size": 672
+          "size": 30668
         },
         {
           "path": "/home/fabio/Escritorio/IA/MCP/Servidor/server8082.log",
@@ -2819,12 +2824,17 @@
             {
               "path": "/home/fabio/Escritorio/IA/MCP/Servidor/services/McpService.js",
               "name": "McpService.js",
-              "size": 5685
+              "size": 5703
+            },
+            {
+              "path": "/home/fabio/Escritorio/IA/MCP/Servidor/services/MultiAgentArchitecture.js",
+              "name": "MultiAgentArchitecture.js",
+              "size": 17071
             },
             {
               "path": "/home/fabio/Escritorio/IA/MCP/Servidor/services/MultiAgentService.js",
               "name": "MultiAgentService.js",
-              "size": 21718
+              "size": 1929
             },
             {
               "path": "/home/fabio/Escritorio/IA/MCP/Servidor/services/RuntimeAnalysisEngine.js",
@@ -2888,6 +2898,16 @@
           "path": "/home/fabio/Escritorio/IA/MCP/Servidor/test_ai_connectivity.js",
           "name": "test_ai_connectivity.js",
           "size": 546
+        },
+        {
+          "path": "/home/fabio/Escritorio/IA/MCP/Servidor/test_architecture_pipeline.js",
+          "name": "test_architecture_pipeline.js",
+          "size": 1434
+        },
+        {
+          "path": "/home/fabio/Escritorio/IA/MCP/Servidor/test_comparison_prompt.js",
+          "name": "test_comparison_prompt.js",
+          "size": 1181
         },
         {
           "path": "/home/fabio/Escritorio/IA/MCP/Servidor/test_full_flow.js",

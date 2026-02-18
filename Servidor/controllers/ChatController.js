@@ -64,34 +64,20 @@ class ChatController {
             const history = req.body.history || [];
 
             // Llamamos al servicio principal (Agente LangChain) con el prompt enriquecido y el historial
-            const { text, data } = await chatService.processQuery(queryText, history);
+            const { text, data, visualization } = await chatService.processQuery(queryText, history);
             
             // Devolvemos la respuesta generada por el agente
-            console.log("📤 [ChatController] Sending response to frontend:", text.substring(0, 200) + "...");
+            console.log("📤 [ChatController] Sending response to frontend:", text?.substring(0, 200) + "...");
             
-            let visualization = null;
-            let finalResponseText = text;
-
-            try {
-                // Limpiar posibles bloques de código markdown ```json ... ```
-                const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/```\s*([\s\S]*?)\s*```/);
-                const jsonString = jsonMatch ? jsonMatch[1] : text;
-
-                // Intentar parsear si parece un objeto JSON
-                if (jsonString.trim().startsWith("{")) {
-                    const parsed = JSON.parse(jsonString);
-                    
-                    // Si tiene estructura válida de Data Scientist
-                    if (parsed.response && (parsed.visualization || parsed.data)) {
-                        finalResponseText = parsed.response; // Usar el texto limpio
-                        visualization = parsed.visualization || null;
-                    }
-                }
-            } catch (e) {
-                console.warn("⚠️ [ChatController] Could not parse JSON for visualization:", e.message);
+            if (visualization) {
+                console.log("📊 [ChatController] Visualization found and being sent to frontend");
             }
 
-            res.json({ response: finalResponseText, data, visualization });
+            res.json({ 
+                response: text, 
+                data: data || [], 
+                visualization: visualization || null 
+            });
         } catch (error) {
             // Manejo de errores del servidor
             console.error("Chat Error:", error);

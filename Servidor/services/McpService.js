@@ -2,9 +2,8 @@ const fs = require("fs");
 const path = require("path");
 const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
 const { z } = require("zod");
-const { analyzeData, executeDanfoCode } = require("../helpers/analysisHelper");
+const { executeDanfoCode } = require("../helpers/analysisHelper");
 const { dbConnection } = require("../database/config");
-const socketService = require("./SocketService");
 const { DB_SCHEMA } = require("../constants/schema");
 
 class McpService {
@@ -139,6 +138,10 @@ class McpService {
 
     getRawTools() {
         return this.tools || [];
+    }
+
+    getTool(name) {
+        return this.tools.find(t => t.name === name);
     }
 
     /**
