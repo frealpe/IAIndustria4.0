@@ -37,3 +37,8 @@ compiled.json
 *.swp
 *.swo
 .qodo/
+
+# Logs and temp files
+*.log
+response*.json
+synthetic_response.json

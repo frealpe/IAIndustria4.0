@@ -1,417 +1,629 @@
 const { HumanMessage, SystemMessage } = require("@langchain/core/messages");
 const { createReactAgent } = require("@langchain/langgraph/prebuilt");
 const { StateGraph, Annotation, START, END } = require("@langchain/langgraph");
+
 const mcpService = require("./McpService");
 const { tool } = require("@langchain/core/tools");
-const { getChatModel, getLocalModel } = require("./agentes/modelFactory");
-const { DB_SCHEMA } = require("../constants/schema");
-const { promisify } = require('util');
-const { exec } = require('child_process');
-const execP = promisify(exec);
+const { z } = require("zod");
 
-// Configuración del modelo base (Nube - Supervisor y Analista)
+const CacheService = require("./CacheService");
+const ResponseNormalizer = require("./enterprise/ResponseNormalizer");
+const OutputValidator = require("./enterprise/OutputValidator");
+
+const { DB_SCHEMA } = require("../constants/schema");
+
+const { getChatModel, getLocalModel } = require("./agentes/modelFactory");
 const model = getChatModel({ temperature: 0 });
 
-// Configuración del modelo Local (Ollama - DeepSeek Coder)
-const localModel = getLocalModel();
-
-// Importamos todas las herramientas del MCP
 const rawTools = mcpService.getRawTools();
 
-const getToolsByName = (names) => {
-    return rawTools
-        .filter(t => names.includes(t.name))
-        .map(t => tool(t.func, { 
-            name: t.name, 
-            description: t.description, 
-            schema: t.schema 
-        }));
-};
+const getToolsByName = (names) =>
+  rawTools
+    .filter(t => names.includes(t.name))
+    .map(t => tool(t.func, { name: t.name, description: t.description, schema: t.schema }));
 
-// --- Definición de Agentes ---
+/* =========================================================
+   SQL AGENT
+========================================================= */
 
 const sqlAgent = createReactAgent({
-    llm: model,
-    tools: getToolsByName(['query_db']),
-    stateModifier: new SystemMessage(
-        "Eres un Agente SQL Senior especializado en PostgreSQL para sistemas IoT con datos en JSONB.\n\n" +
-        "TU MISIÓN: Generar y ejecutar consultas SQL válidas, y presentar los resultados al usuario.\n\n" +
-        "=============================\n" +
-        "REGLAS DE SEGURIDAD Y FORMATO (OBLIGATORIAS)\n" +
-        "==================================\n\n" +
-        "1. SOLO consultas SELECT. PROHIBIDO: INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE.\n" +
-        "2. PRESENTACIÓN: Si la herramienta devuelve datos, muéstralos en un formato amigable (como una tabla markdown o una lista).\n" +
-        "3. NUNCA uses SELECT * salvo que se pida explícitamente.\n\n" +
-        "=============================\n" +
-        "ESQUEMA Y REGLAS JSONB\n" +
-        "=============================\n" +
-        DB_SCHEMA + "\n\n" +
-        "--- REGLAS DE SINTAXIS JSONB ---\n" +
-        "1. Para desglosar rawValues usa: `CROSS JOIN LATERAL jsonb_array_elements(d.resultado->'rawValues') AS r(rawValue)`\n" +
-        "2. Anomalías -> `(resultado->>'isAnomaly')::boolean IS TRUE`\n" +
-        "3. Filtros por valor -> `EXISTS (SELECT 1 FROM jsonb_array_elements(resultado->'rawValues') AS v WHERE (v->>'value')::numeric > 200)`\n" +
-        "4. Siempre usa alias para las tablas (ej: `datos AS d`).\n" +
-        "5. **JOIN:** Siempre usa `d.device_uid = dev.device_uid`.\n" +
-        "6. **FILTRO NOMBRE:** Usa `ILIKE '%plant%1%'` para 'Planta 1' o 'Planta1'.\n" +
-        "7. **MANEJO DE NULL:** Al ordenar por campos JSONB (como loss), usa `ORDER BY ... DESC NULLS LAST` para evitar registros incompletos.\n" +
-        "8. Datos recientes siempre requieren `ORDER BY d.created_at DESC LIMIT 50`."
-    )
+  llm: model,
+  tools: getToolsByName(['query_db']),
+  stateModifier: new SystemMessage(`
+Eres un Agente SQL Enterprise.
+
+REGLAS:
+
+1️⃣ SOLO SELECT
+2️⃣ NUNCA texto explicativo
+3️⃣ RESPONDE EXCLUSIVAMENTE EN JSON
+4️⃣ Si piden ANÁLISIS/TENDENCIAS/COMPARACIONES:
+   - TU MISION: Extraer el SUPERCONJUNTO de datos crudos necesarios.
+   - Ej: "Comparar últimos 10 vs últimos 100" -> Haz SELECT de los últimos 100 (el Data Scientist filtrará los 10).
+   - Si piden datos de "Planta1", busca en table 'devices' where name='Planta1' para obtener device_uid y filtrar 'datos'.
+   - NUNCA rechaces ni expliques. SOLO JSON.
+
+EJEMPLOS SQL VÁLIDOS:
+   - "Analiza Planta1": 
+     SELECT d.* FROM datos d JOIN devices dev ON d.device_uid = dev.device_uid WHERE dev.name = 'Planta1' ORDER BY d.created_at DESC LIMIT 100
+     (O usando subquery: SELECT * FROM datos WHERE device_uid = (SELECT device_uid FROM devices WHERE name = 'Planta1' LIMIT 1) LIMIT 100)
+
+JSON FORMAT:
+{
+ "status": "success",
+ "agent": "SQL_EXPERT",
+ "data": [],
+ "metadata": {
+   "row_count": number,
+   "sql_query": "SELECT ...",
+   "source": "database"
+ }
+}
+
+ESQUEMA:
+${DB_SCHEMA}
+`)
 });
+
+/* =========================================================
+   SQL EXPERT TOOL (Wrapper)
+========================================================= */
+
+const sqlExpertQueryTool = tool(
+  async ({ question }) => {
+    try {
+      console.log(`[SqlExpertTool] Processing: ${question}`);
+      const result = await sqlAgent.invoke({
+        messages: [new HumanMessage(question)]
+      });
+      let raw = result.messages.at(-1).content;
+      console.log("DEBUG: Raw SQL output:", raw.substring(0, 100));
+
+      // 1. Strip Markdown
+      raw = raw.replace(/```json/g, "").replace(/```/g, "").trim();
+
+      // 2. Parse JSON
+      let data = JSON.parse(raw);
+
+      // 3. Extract 'data' if wrapped
+      if (data.data && Array.isArray(data.data)) {
+          console.log("DEBUG: Extracting 'data' array from wrapper");
+          data = data.data;
+      }
+
+      // 4. Auto-convert numeric strings
+      if (Array.isArray(data)) {
+        data = data.map(row => {
+          const newRow = { ...row };
+          for (const key in newRow) {
+            const val = newRow[key];
+            if (typeof val === 'string' && !isNaN(val) && val.trim() !== '') {
+               newRow[key] = Number(val);
+            }
+          }
+          return newRow;
+        });
+      }
+      
+      // 5. Return as stringified JSON array
+      return JSON.stringify(data);
+    } catch (e) {
+      console.error("ERROR in sql_expert_query:", e);
+      return JSON.stringify({ error: e.message });
+    }
+  },
+  {
+    name: "sql_expert_query",
+    description: "Consulta la base de datos para obtener un dataset. Usar cuando NO se tienen datos.",
+    schema: z.object({
+      question: z.string().describe("Pregunta en lenguaje natural sobre los datos requeridos"),
+    }),
+  }
+);
+
+/* =========================================================
+   DATA SCIENTIST AGENT
+========================================================= */
 
 const analysisAgent = createReactAgent({
-    llm: model,
-    tools: getToolsByName(['analizar_datos_avanzado']),
-    stateModifier: new SystemMessage(
-        "ERES UN CIENTIFICO DE DATOS EXPERTO (Data Scientist Agent).\n" +
-        "TU OBJETIVO: Realizar análisis estadísticos avanzados de manera EFICIENTE.\n\n" +
-        DB_SCHEMA + "\n\n" +
-        "ARQUITECTURA DE PROCESAMIENTO (CRÍTICO):\n" +
-        "1. NO PROCESES DATOS MASIVOS EN EL CHAT. Eres el cerebro, no el motor.\n" +
-        "2. Usa `analizar_datos_avanzado` para delegar el cálculo pesado a Danfo.js.\n" +
-        "3. SQL es solo para EXTRAER los datos desde la BD hacia Danfo (dentro de la herramienta).\n\n" +
-        "HERRAMIENTAS PRINCIPALES:\n" +
-        "1. `analizar_datos_avanzado`: Ejecuta SQL y/o código Danfo.js sobre la tabla `datos` y devuelve un resumen.\n" +
-        "2. `query_db`: Ejecuta una consulta SQL arbitraria y devuelve filas (útil para depuración).\n\n" +
-        "POLÍTICA DE INVOCACIÓN DE TOOLS (IMPORTANTE):\n" +
-        "- Cuando necesites datos brutos para tu análisis, DEVUÉLVEME UN JSON ESTRICTO con la forma:\n" +
-        "  { \"action\": \"run_tool\", \"tool\": \"analizar_datos_avanzado\", \"args\": { /* argumentos del tool */ } }\n" +
-        "  - Ejemplo: { \"action\": \"run_tool\", \"tool\": \"analizar_datos_avanzado\", \"args\": { \"tabla\": \"datos\", \"sql\": \"SELECT ...\", \"codigo\": \"/* Danfo.js code */\" } }\n" +
-        "- Si solo quieres ejecutar SQL para inspección, usa `tool: \"query_db\"` y args: { sql: 'SELECT ...' }.\n" +
-        "- SIEMPRE devuelve JSON válido (NO markdown) cuando pidas ejecutar una herramienta.\n\n" +
-    "REGLAS PARA CÓDIGO DANFO (si lo generas en `codigo`):\n" +
-        "- Accede a columnas como `df['col']`.\n" +
-        "- Usa los helpers expuestos: `helpers.rollingMean`, `helpers.regressionStats`, `helpers.zScoreOutliers`, `helpers.castSeriesToFloat`.\n" +
-        "- Para extraer arrays anidados (como 'rawValues' en 'resultado'): usa `helpers.flattenColumn(df, 'resultado', 'rawValues')`.\n" +
-        "- Para crear un DataFrame a partir de una serie o array: usa `helpers.toDataFrame(serieOArray, ['columna'])` (¡IMPORTANTE!).\n" +
-        "- Al retornar datos, usa `dfd.toJSON(df)` para mantener los nombres de columnas (ej: `stats: dfd.toJSON(df)`).\n" +
-        "- La función debe terminar con `return { summary: ..., stats: ... }` para una correcta visualización. NO devuelvas objetos 'plot'.\n\n" +
-        "VISUALIZACIÓN (CRÍTICO):\n" +
-        "EJEMPLO DE USO:\n" +
-        "  User: 'Dame el promedio de voltaje'.\n" +
-        "  Tu Acción: analizar_datos_avanzado({\n" +
-        "     sql: 'SELECT resultado FROM datos LIMIT 5000',\n" +
-        "     codigo: 'const volts = df[\"voltaje\"]; return { media: volts.mean(), max: volts.max() };'\n" +
-        "  })\n" +
-        "  Tu Respuesta: 'El voltaje promedio es X...'\n\n" +
-        "VISUALIZACIÓN:\n" +
-        "- Si el usuario pide GRAFICAR: Retorna un bloque markdown ```json con especificación Vega-Lite v5, inyectando los datos RESUMIDOS (no crudos) en `data: { values: [...] }`." +
-    "REGLAS SQL (si generas el parámetro `sql`):\n" +
-    "- Para 'Planta 1' usa siempre `dev.name ILIKE '%planta%1%'`.\n" +
-    "- Si ordenas por métricas (loss, mean), añade siempre `NULLS LAST` (ej: `ORDER BY loss DESC NULLS LAST`).\n" +
-    "- Siempre une tablas por `d.device_uid = dev.device_uid`.\n\n" +
-    "RESPONDER: Si ejecutas una herramienta, devuelve SOLO el JSON de acción. Si solo vas a dar interpretación sin ejecutar código, devuelve un texto explicativo.\n\n" +
-    "🛑 REGLA ANTI-BUCLES: Si una herramienta falla con el mismo error más de 2 veces, DETENTE. No la vuelvas a llamar con los mismos parámetros. Reporta el error al usuario inmediatamente."
-    )
+  llm: model,
+  tools: [...getToolsByName(['analizar_datos_locales']), sqlExpertQueryTool],
+  stateModifier: new SystemMessage(`
+Eres un DATA SCIENTIST ENTERPRISE AUTÓNOMO especializado en análisis industrial automático.
+
+Tu misión es analizar datos de sensores, dispositivos y procesos industriales usando Danfo.js.
+
+═══════════════════════════════════
+🧠 ARQUITECTURA DE TRABAJO
+═══════════════════════════════════
+
+Trabajas dentro de un sistema multi-agente con acceso a herramientas.
+
+Tienes DOS herramientas principales:
+
+1️⃣ sql_expert_query → para obtener datos desde base de datos
+2️⃣ analizar_datos_locales → para ejecutar análisis Danfo.js
+
+Tu trabajo es decidir CUÁNDO usar cada una.
+
+═══════════════════════════════════════
+📡 ACCESO A DATOS (SQL EXPERT)
+═══════════════════════════════════════
+
+Si el usuario NO te proporciona datos explícitos:
+
+DEBES primero obtenerlos usando la herramienta:
+
+👉 sql_expert_query
+
+Formato obligatorio:
+
+{
+ "action": "run_tool",
+ "tool": "sql_expert_query",
+ "params": {
+   "question": "<pregunta en lenguaje natural sobre los datos que necesitas>"
+ }
+}
+
+Reglas:
+
+• NO generes SQL manualmente.
+• SOLO describe qué datos necesitas.
+• El SQL Expert generará la consulta inteligente.
+• La respuesta será un DATASET.
+
+═══════════════════════════════════════
+📥 FORMATO DEL DATASET
+═══════════════════════════════════════
+
+Los datos SIEMPRE vendrán en formato:
+
+{
+ "type": "dataset",
+ "rows": [...],
+ "schema": {...}
+}
+
+Debes usar SOLO el array "rows".
+
+═══════════════════════════════════════
+⚙️ EJECUCIÓN DE ANÁLISIS (DANFO)
+═══════════════════════════════════════
+
+Después de obtener datos:
+
+DEBES ejecutar análisis con la herramienta:
+
+👉 analizar_datos_locales
+
+Formato obligatorio:
+
+{
+ "action": "run_tool",
+ "tool": "analizar_datos_locales",
+ "params": {
+   "codigo": "<código Danfo ejecutable>"
+ }
+}
+
+═══════════════════════════════════════
+🧪 REGLAS DEL CÓDIGO DANFO
+═══════════════════════════════════════
+
+IMPORTANTE:
+
+• La variable \`df\` YA EXISTE
+• NO crear DataFrame
+• NO usar new dfd.DataFrame
+• NO usar await
+4. Código seguro:
+   - NO uses \`require\`, \`fs\`, \`child_process\`.
+   - NO intente graficar dentro del código (no \`nodeplotlib\`, no \`matplotlib\`, no \`.plot()\`).
+   - Solo usa \`df\` (DataFrame) y \`dfd\` (Danfo.js).
+   - Retorna siempre un objeto o valor simple.
+
+El código SIEMPRE debe terminar con:
+
+return <resultado>;
+
+Ejemplos válidos:
+
+return df.describe();
+
+return df["mean"].std();
+
+return df.groupby(["device"]).col(["mean"]).mean();
+
+═══════════════════════════════════════
+🧠 INTERPRETACIÓN DE RESULTADOS
+═══════════════════════════════════════
+
+Después de ejecutar el análisis:
+
+DEBES interpretar el resultado como un experto industrial.
+
+Ejemplos:
+
+• Calcular estabilidad → usar desviación estándar
+• Detectar anomalías → comparar percentiles
+• Evaluar tendencia → calcular medias móviles
+• Analizar señal → usar columna "mean"
+
+═══════════════════════════════════════
+📊 MAPPING SEMÁNTICO INDUSTRIAL
+═══════════════════════════════════════
+
+"Voltaje", "Señal", "Amplitud" → usar columna \`mean\`
+"Estabilidad" → desviación estándar
+"Variabilidad" → coeficiente de variación
+"Tendencia" → medias móviles
+"Anomalía" → percentiles extremos
+
+═══════════════════════════════════════
+🔁 FLUJO OBLIGATORIO DE TRABAJO
+═══════════════════════════════════════
+
+SIEMPRE sigue este orden:
+
+1️⃣ Determinar si necesitas datos
+2️⃣ Llamar sql_expert_query si faltan
+3️⃣ Recibir dataset
+4️⃣ Ejecutar análisis Danfo
+5️⃣ Interpretar resultados
+6️⃣ Entregar conclusión
+
+═══════════════════════════════════════
+📤 FORMATO DE RESPUESTA FINAL
+═══════════════════════════════════════
+
+PARA EJECUTAR HERRAMIENTAS:
+RESPONDE SOLO JSON:
+{
+ "action": "run_tool",
+ "tool": "...",
+ "params": { ... }
+}
+
+PARA RESPUESTA FINAL (CONCLUSIÓN):
+RESPONDE SIEMPRE EN ESTE FORMATO JSON:
+
+{
+  "response": "<tu explicación experta en texto>",
+  "data": <datos relevantes o null (array de objetos)>,
+  "visualization": <objeto Vega-Lite COMPLETO o null>
+}
+
+SI EL USUARIO PIDE GRÁFICA:
+1. Asegúrate de incluir los datos necesarios en la propiedad "data": {"values": [...]} DENTRO del objeto visualization.
+2. Usa esos datos para construir el objeto `visualization` usando Vega-Lite.
+3. El objeto `values` dentro de `data` en Vega-Lite DEBE ser un array de objetos.
+
+Ejemplo Vega-Lite:
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Tendencia",
+  "data": { "values": [ {"idx": 1, "val": 10}, {"idx": 2, "val": 12} ] },
+  "mark": "line",
+  "encoding": {
+    "x": {"field": "idx", "type": "ordinal"},
+    "y": {"field": "val", "type": "quantitative"}
+  }
+}
+
+═══════════════════════════════════════
+🚫 REGLAS CRÍTICAS
+═══════════════════════════════════════
+
+NUNCA:
+
+• inventar datos
+• generar SQL manual
+• analizar sin dataset
+• ejecutar código inseguro
+
+SIEMPRE:
+
+• obtener datos primero
+• usar herramientas correctamente
+• validar resultados
+`)
 });
 
-// --- Configuración LangGraph StateGraph ---
 
-// 1. Definimos el esquema del Estado
+/* =========================================================
+   STATE GRAPH
+========================================================= */
+
 const GraphState = Annotation.Root({
-  input: Annotation(),           // Entrada del usuario
-  user_intent: Annotation(),     // Decisión del supervisor
-  agent_response: Annotation(),  // Respuesta final del agente
-  sql_context: Annotation(),     // SQL generado o resultados para handover
+  input: Annotation(),
+  user_intent: Annotation(),
+  agent_response: Annotation(),
+  sql_data: Annotation(),
+  sql_query: Annotation(),
+  cache_hit: Annotation(),
+  analysis_history_id: Annotation(),
 });
 
-// 2. Definimos los Nodos
+/* =========================================================
+   ORCHESTRATOR
+========================================================= */
 
 const nodeOrchestrator = async (state) => {
-    console.log("--- 🕵️ Orchestrator evaluando solicitud ---");
-    
-    // Prompt del Sistema para el Orquestador
-    const systemPrompt = `Eres el Orquestador Principal de un sistema de análisis de datos industriales IoT.
-    Tu trabajo es clasificar la intención del usuario y asignar la tarea al agente experto adecuado.
-    
-    AGENTES DISPONIBLES:
-    1. SQL_EXPERT: Úsalo para consultas de DATOS CRUDOS, búsquedas por fechas, IDs, o listados simples de logs. 
-       - Ejemplos: "dame los últimos 10 logs", "busca el registro con id 500", "lista los dispositivos activos".
-    2. DATA_SCIENTIST: Úsalo para ANÁLISIS, ESTADÍSTICAS, COMPARACIONES, TENDENCIAS o DETECCIÓN DE ANOMALÍAS.
-       - Este agente es más "inteligente" para interpretar la señal.
-       - Ejemplos: "analiza las anomalías de hoy", "dame el promedio de pérdida", "hay tendencia de falla?", "calcula la media móvil".
+  const prompt = `
+Clasifica la intención del usuario:
 
-    REGLA DE DECISIÓN:
-    - Si la pregunta pide 'CÓMO' están los datos o 'QUÉ SIGNIFICA' algo -> DATA_SCIENTIST.
-    - Si la pregunta pide 'VER' o 'MOSTRAR' una lista sin procesar -> SQL_EXPERT.
-    
-    Responde ESTRICTAMENTE con un objeto JSON:
-    {
-        "next": "SQL_EXPERT" | "DATA_SCIENTIST",
-        "reason": "breve explicación"
-    }`;
+1. Si el usuario pide ANÁLISIS, INTERPRETACIÓN, ESTADÍSTICAS, PROMEDIOS, TENDENCIAS o COMPARACIONES (aunque no tenga datos) → Responde "DATA_SCIENTIST".
+   - Ej: "Analiza Planta1", "Dime si el voltaje es estable", "Dame estadísticas de los últimos 100".
+2. SOLO si el usuario pide listar, consultar o ver datos CRUDOS sin interpretación → Responde "SQL_EXPERT".
+   - Ej: "Muestrame los ultimos 10 registros", "Que dispositivos hay?".
 
-    // Contador de intentos para evitar reintentos infinitos en caso de parsing fallido
-    state._attempts = (state._attempts || 0) + 1;
-    if (state._attempts > 3) {
-        console.warn('Orquestador: excedido número máximo de intentos, aplicando fallback a SQL_EXPERT');
-        return { user_intent: 'SQL_EXPERT' };
-    }
+Responde JSON:
+{"next":"SQL_EXPERT"|"DATA_SCIENTIST"}
+`;
 
-    try {
-        const response = await model.invoke([
-            new SystemMessage(systemPrompt),
-            new HumanMessage(state.input)
-        ]);
+  const res = await model.invoke([
+    new SystemMessage(prompt),
+    new HumanMessage(state.input)
+  ]);
 
-        // Intentar parsear la respuesta JSON (limpiando posibles bloques de código markdown)
-        let content = String(response.content || '').replace(/```json/g, '').replace(/```/g, '').trim();
-        let decision;
-        try {
-            decision = JSON.parse(content);
-        } catch (e) {
-            console.warn('Orchestrator: no se pudo parsear salida LLM como JSON, usando fallback a SQL_EXPERT. Raw output:', content.substring(0, 400));
-            return { user_intent: 'SQL_EXPERT' };
-        }
-
-        console.log("🤖 Orchestrator Decision:", decision);
-        return { user_intent: decision.next };
-
-    } catch (error) {
-        console.error("⚠️ Error en Orchestrator, usando fallback:", error);
-        return { user_intent: "SQL_EXPERT" }; // Fallback seguro
-    }
+  try {
+    const intent = JSON.parse(res.content).next;
+    console.log(`[Orchestrator] Intent detected: ${intent}`);
+    return { user_intent: intent };
+  } catch {
+    return { user_intent: "SQL_EXPERT" };
+  }
 };
+
+/* =========================================================
+   SQL NODE (ENTERPRISE FIXED)
+========================================================= */
 
 const nodeSqlExpert = async (state) => {
-    console.log("--- 💾 SQL Expert ejecutando ---");
-    const result = await sqlAgent.invoke({
-        messages: [new HumanMessage(state.input)]
-    });
-    const lastMsg = result.messages[result.messages.length - 1];
-    
-    // Si el orquestador detectó que se requiere análisis después, guardamos el contexto
-    // o si el experto detectó datos, los pasamos.
-    return { 
-        agent_response: lastMsg.content,
-        sql_context: lastMsg.content // Guardamos lo que hizo para el siguiente nodo
+  const start = Date.now();
+
+  const result = await sqlAgent.invoke({
+    messages: [new HumanMessage(state.input)]
+  });
+  console.log(`[SqlExpert] Querying: ${state.input}`);
+  const raw = result.messages.at(-1).content;
+  console.log(`[SqlExpert] Raw Agent Response: ${raw}`);
+
+  try {
+    const normalized = ResponseNormalizer.normalize(raw);
+    const valid = OutputValidator.validateResponse(normalized);
+
+    if (!valid.success) {
+      console.error("❌ SQL Validation Failed:", valid.error.message);
+      console.error("📄 Raw Response:", raw);
+      // Return a diagnostic response instead of throwing
+      return {
+        agent_response: `SQL_EXPERT returned invalid response: ${valid.error.message}\nRaw: ${String(raw).slice(0,2000)}`,
+        sql_data: normalized?.data || [],
+        sql_query: normalized?.metadata?.sql_query,
+        execution_time_ms: Date.now() - start
+      };
+    }
+
+    console.log(`[SqlExpert] Rows retrieved: ${normalized.data.length}`);
+    return {
+      agent_response: raw,
+      sql_data: normalized.data,
+      sql_query: normalized.metadata?.sql_query,
+      execution_time_ms: Date.now() - start
     };
+
+  } catch (err) {
+    console.error('Error normalizing SQL response:', err.message);
+    return {
+      agent_response: `SQL_EXPERT produced non-JSON response or parsing failed: ${err.message}\nRaw: ${String(raw).slice(0,2000)}`,
+      sql_data: [],
+      sql_query: null,
+      execution_time_ms: Date.now() - start
+    };
+  }
 };
+
+
+/* =========================================================
+   DATA SCIENTIST NODE (ENTERPRISE FIXED)
+========================================================= */
 
 const nodeDataScientist = async (state) => {
-    console.log("--- 📊 Data Scientist ejecutando ---");
-    // Evitar re-ejecuciones múltiples del mismo nodo dentro de la misma invocación del grafo
-    if (state._data_scientist_ran) {
-        console.log('Data Scientist: salto de re-ejecución (ya se ejecutó en esta sesión)');
-        return { agent_response: 'Data Scientist: (resultado previamente calculado, salto de re-ejecución)' };
-    }
+  const { input, sql_data } = state;
+  const start = Date.now();
 
-    state._data_scientist_ran = true;
+  // Prepare initial context
+  // If we have sql_data passed in (legacy or manual injection), usage it.
+  // Otherwise, we pass the instruction and expect the agent to fetch data.
+  const initialContext = {
+    type: "dataset",
+    data_user_instruction: input,
+    rows: sql_data || [], // Might be empty initially
+    schema: { columns: sql_data && sql_data.length > 0 ? Object.keys(sql_data[0]) : [] }
+  };
 
+  let messages = [new HumanMessage(JSON.stringify(initialContext))];
+  
+  // Multi-turn loop for tool execution
+  const MAX_TURNS = 5;
+  let finalResponse = "";
+
+  for (let i = 0; i < MAX_TURNS; i++) {
+    console.log(`[DataScientist] Turn ${i+1}`);
+    const result = await analysisAgent.invoke({ messages });
+    const raw = result.messages.at(-1).content;
+    
+    // Parse response for tool calls
+    let toolCall = null;
     try {
-        // Enriquecer el input del Data Scientist con lo que encontró el SQL Expert si existe
-        let enrichedInput = state.input || '';
-        if (state.sql_context) {
-            console.log('--- 💡 Handover Context found! Enriqueciendo input del Data Scientist ---');
-            enrichedInput += `\n\n[CONTEXTO SQL PREVIO]: El SQL Expert ya ha buscado datos. Aquí está su reporte: \n${state.sql_context}. \n\nUSA ESTOS DATOS para realizar el análisis estadístico solicitado usando 'analizar_datos_avanzado'.`;
-        }
+      let text = String(raw || '').trim();
+      text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      const first = text.indexOf('{');
+      const last = text.lastIndexOf('}');
+      if (first !== -1 && last !== -1) {
+          const candidate = text.substring(first, last + 1);
+          const parsed = JSON.parse(candidate);
+          if (parsed && parsed.action === 'run_tool') {
+            toolCall = parsed;
+          }
+      }
+    } catch (e) { /* ignore */ }
 
-        // Si la consulta menciona 'anomalía' o 'anomalías' para Planta 1, ejecutamos
-        // el script especializado que ya implementa detección y exporta CSV.
-        const text = String(state.input || '').toLowerCase();
-        const wantsAnom = /anomal/i.test(text);
-        const wantsPlanta1 = /planta\s*1|plant\s*1/i.test(text);
-        if (wantsAnom && wantsPlanta1) {
-            try {
-                console.log('Data Scientist: ejecutando script de anomalías para Planta 1...');
-                // Ejecutar desde la raíz del proyecto
-                const root = require('path').join(__dirname, '..');
-                const { stdout, stderr } = await execP('node scripts/analyze_anomalies_planta1.js', { cwd: root, maxBuffer: 10 * 1024 * 1024 });
-                if (stderr) console.warn('analyze_anomalies_planta1 stderr:', stderr.substring(0, 200));
+    // Execute tool if found
+    if (toolCall) {
+      console.log(`[DataScientist] Executing tool: ${toolCall.tool}`);
+      let toolOutput = "";
 
-                // Intentar extraer el primer objeto JSON impreso por el script
-                const idx = stdout.indexOf('\n{');
-                let jsonPart = null;
-                if (idx !== -1) {
-                    // buscamos desde idx hasta la última '}' antes de 'CSV de anomal'
-                    const csvPos = stdout.indexOf('CSV de anomal', idx);
-                    const endPos = csvPos !== -1 ? csvPos : stdout.length;
-                    const candidate = stdout.substring(idx, endPos).trim();
-                    // A veces hay texto antes de la llave abierta; intentamos aislar el JSON
-                    const firstBrace = candidate.indexOf('{');
-                    const lastBrace = candidate.lastIndexOf('}');
-                    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-                        jsonPart = candidate.substring(firstBrace, lastBrace + 1);
-                    }
-                }
-
-                if (jsonPart) {
-                    let parsed;
-                    try {
-                        parsed = JSON.parse(jsonPart);
-                    } catch (e) {
-                        console.warn('No se pudo parsear JSON del script de anomalías:', e.message);
-                    }
-
-                    const csvLine = stdout.split('\n').find(l => l.includes('CSV de anomalías escrito en:')) || '';
-                    const csvPath = csvLine.split(':').slice(1).join(':').trim();
-
-                    const summaryText = `Data Scientist dice: Resumen de anomalías para Planta 1:\n${JSON.stringify(parsed, null, 2)}\nCSV: ${csvPath}`;
-                    return { agent_response: summaryText };
-                } else {
-                    console.warn('Data Scientist: no se encontró JSON en la salida del script, devolviendo salida cruda.');
-                    return { agent_response: `Data Scientist (raw): ${stdout.substring(0, 2000)}` };
-                }
-            } catch (errScript) {
-                console.error('Error ejecutando script de anomalías:', errScript.message);
-                // Caerá a la ejecución normal del agente más abajo
-            }
-        }
-
-        const result = await analysisAgent.invoke({
-            messages: [new HumanMessage(enrichedInput)]
-        }, { recursionLimit: 150 });
-        const lastMsg = result.messages[result.messages.length - 1];
-
-        // Intentar parsear la salida del agente como JSON para detectar acciones (run_tool)
-        let parsed = null;
+      if (toolCall.tool === 'sql_expert_query') {
         try {
-            const txt = String(lastMsg.content || '').trim();
-            // limpiar bloques de código si los hubiera
-            const cleaned = txt.replace(/```json/g, '').replace(/```/g, '').trim();
-            parsed = JSON.parse(cleaned);
+           // We use the tool wrapper directly
+           toolOutput = await sqlExpertQueryTool.invoke({ question: toolCall.params.question });
         } catch (e) {
-            parsed = null;
+           toolOutput = JSON.stringify({ error: `SQL Tool Failed: ${e.message}` });
         }
+      } 
+      else if (toolCall.tool === 'analizar_datos_locales') {
+         // Existing Danfo Logic
+         const params = toolCall.params || {};
+         // Ensure data availability
+         // Note: The agent should have received data from sql_expert_query and passed it back? 
+         // Or does the Danfo tool need the data from context?
+         // The prompt says: "Recibir dataset -> Ejecutar análisis".
+         // Typically the agent passes the data in params if it has it, OR it assumes the environment (variable `df`) has it.
+         // BUT our `analizar_datos_locales` implementation expects `datos` in params.
+         // If `sql_expert_query` returned data, it's in the conversation history as text.
+         // The Agent might try to put the HUGE dataset into the params of `analizar_datos_locales`.
+         // THIS IS A RISK.
+         // Optimization: If the Agent just says "use previous data", we can inject it.
+         // But let's assume the Agent follows instructions and puts data or we handle it.
+         
+         // Fix: If `params.datos` is missing but we have `rows` in context?
+         // Actually, if `sql_expert_query` was called, the OUTPUT is in the history.
+         // The Agent should technically pass it to `analizar_datos_locales`.
+         // Let's rely on the Agent doing it right or providing the data.
+         
+         if (!params.datos && initialContext.rows.length > 0) {
+            params.datos = initialContext.rows;
+         }
+         
+         // Validation
+         const codigo = String(params.codigo || '');
+         const forbidden = [/require\s*\(|\bfs\b|child_process|exec\s*\(|spawn\s*\(|eval\s*\(|new\s+Function|process\.|import\s+|await\s+/i];
+         const matched = forbidden.find(rx => rx.test(codigo));
+         if (matched) {
+             toolOutput = JSON.stringify({ error: `Code rejected: ${matched}` });
+         } else {
+             try {
+                const toolRun = await mcpService.runTool(toolCall.tool.replace("functions.", ""), params);
+                toolOutput = toolRun.parsed ? JSON.stringify(toolRun.parsed) : (toolRun.raw?.content?.[0]?.text || String(toolRun.raw));
+             } catch (e) {
+                toolOutput = JSON.stringify({ error: `Danfo Execution Failed: ${e.message}` });
+             }
+         }
+      } else {
+         toolOutput = JSON.stringify({ error: `Unknown tool: ${toolCall.tool}` });
+      }
 
-        if (parsed && parsed.action === 'run_tool' && parsed.tool) {
-            try {
-                const toolName = parsed.tool;
-                const args = parsed.args || {};
-                console.log(`Data Scientist: invoking tool ${toolName} with args`, args);
-
-                // Buscar la herramienta registrada en MCP
-                const rawTools = mcpService.getRawTools();
-                const toolEntry = rawTools.find(t => t.name === toolName);
-                if (!toolEntry) {
-                    return { agent_response: `Data Scientist error: Tool ${toolName} no está registrada.` };
-                }
-
-                // Sanitizar SQL si viene en args para corregir joins/qualifiers comunes
-                if (args && typeof args.sql === 'string') {
-                    let s = args.sql;
-                    // Normalizar espacios y newlines para facilitar las correcciones
-                    s = s.replace(/\s+/g, ' ').trim();
-                    // Colapsar espacios insertados en identificadores con guion bajo (ej: device_ id -> device_id)
-                    s = s.replace(/_\s+/g, '_').replace(/\s+_/g, '_');
-                    // Quitar espacios alrededor de puntos (ej: d . device_uid -> d.device_uid)
-                    s = s.replace(/\s*\.\s*/g, '.');
-                    // corregir joins incorrectos que usan device_id/id en vez de device_uid
-                    s = s.replace(/\bd\.device_id\s*=\s*dev\.id\b/ig, 'd.device_uid = dev.device_uid');
-                    s = s.replace(/\bdevice_id\s*=\s*dev\.id\b/ig, 'd.device_uid = dev.device_uid');
-                    s = s.replace(/\bd\.device_id\s*=\s*devices?\.id\b/ig, 'd.device_uid = dev.device_uid');
-                    // Si aparecen 'created_at' sin prefijo, añadir 'd.' para evitar ambigüedad
-                    try {
-                        s = s.replace(/(?<!\.)\bcreated_at\b/ig, 'd.created_at');
-                    } catch (e) {
-                        // fallback genérico
-                        s = s.replace(/\bcreated_at\b/ig, 'd.created_at');
-                    }
-                    // asegurar ORDER BY created_at -> ORDER BY d.created_at
-                    s = s.replace(/ORDER\s+BY\s+created_at/ig, 'ORDER BY d.created_at');
-                    args.sql = s;
-                    console.log('Data Scientist: SQL sanitizado ->', args.sql.substring(0, 500));
-                }
-
-                // Prevención de invocaciones repetidas: limitar ejecuciones de tool desde este nodo
-                state._tool_executions = (state._tool_executions || 0) + 1;
-                if (state._tool_executions > 3) {
-                    return { agent_response: 'Data Scientist: demasiadas ejecuciones de herramienta en este intento, abortando.' };
-                }
-
-                // Ejecutar la herramienta (wrapped handler)
-                const toolResult = await toolEntry.func(args);
-
-                // toolResult puede ser un objeto con content[] o un texto directo
-                if (toolResult && Array.isArray(toolResult.content) && toolResult.content.length > 0) {
-                    const text = toolResult.content.map(c => c.text || '').join('\n');
-                    return { agent_response: `Data Scientist (tool ${toolName}) dice: ${text}` };
-                }
-
-                if (toolResult && typeof toolResult === 'string') {
-                    return { agent_response: `Data Scientist (tool ${toolName}) dice: ${toolResult}` };
-                }
-
-                return { agent_response: `Data Scientist: ejecución de la herramienta ${toolName} completada.` };
-
-            } catch (errTool) {
-                console.error('Error invocando tool solicitada por Data Scientist:', errTool);
-                return { agent_response: `Data Scientist error ejecutando tool: ${errTool.message}` };
-            }
-        }
-
-        return { agent_response: `Data Scientist dice: ${lastMsg.content}` };
-    } catch (e) {
-        console.error('Error ejecutando Data Scientist:', e.message);
-        return { agent_response: `Data Scientist error: ${e.message}` };
+      // Append result
+      messages.push(new HumanMessage(raw)); // Agent's request
+      messages.push(new HumanMessage(JSON.stringify({ type: "tool_result", tool: toolCall.tool, output: toolOutput }))); // Result
+      
+    } else {
+      // Final response (no tool call)
+      finalResponse = raw;
+      break; 
     }
+  }
+
+  return {
+    agent_response: finalResponse,
+    execution_time_ms: Date.now() - start
+  };
 };
 
-// 3. Construimos el Grafo
-const workflow = new StateGraph(GraphState)
-    .addNode("orchestrator", nodeOrchestrator)
-    .addNode("sql_expert", nodeSqlExpert)
-    .addNode("data_scientist", nodeDataScientist)
-    // Conexiones
-    .addEdge(START, "orchestrator")
-    .addConditionalEdges(
-        "orchestrator",
-        (state) => state.user_intent, 
-        {
-            "SQL_EXPERT": "sql_expert",
-            "DATA_SCIENTIST": "data_scientist"
-        }
-    )
-    // El SQL Expert ahora puede pasar al Data Scientist si la consulta original pedía "Análisis"
-    .addConditionalEdges(
-        "sql_expert",
-        (state) => {
-            const text = (state.input || '').toLowerCase();
-            const seeksAnalysis = text.includes('analiz') || text.includes('estadístic') || text.includes('tendencia');
-            // Si ya corrió el data scientist, terminamos para evitar bucles
-            if (seeksAnalysis && !state._data_scientist_ran) {
-                console.log("🔄 Handover: SQL Expert -> Data Scientist para análisis.");
-                return "data_scientist";
-            }
-            return "end";
-        },
-        {
-            "data_scientist": "data_scientist",
-            "end": END
-        }
-    )
-    .addEdge("data_scientist", END);
 
-// 4. Compilamos
-// Compilamos el grafo con un límite de recursión mayor para evitar abortos prematuros
-// (esto no soluciona la raíz pero permite diagnósticos más profundos; además tenemos
-// un contador de intentos en el orquestador que evita bucles infinitos).
+/* =========================================================
+   GRAPH FLOW
+========================================================= */
+
+const workflow = new StateGraph(GraphState)
+  .addNode("orchestrator", nodeOrchestrator)
+  .addNode("sql_expert", nodeSqlExpert)
+  .addNode("data_scientist", nodeDataScientist)
+
+  .addEdge(START, "orchestrator")
+
+  .addConditionalEdges("orchestrator",
+    s => s.user_intent,
+    { SQL_EXPERT: "sql_expert", DATA_SCIENTIST: "data_scientist" })
+
+  .addConditionalEdges("sql_expert",
+    // SQL Expert now terminates after its job, assuming Data Scientist is called independently via Orchestrator
+    // OR if we want SQL expert to optionally chain, we can keep logic but usually Orchestrator decides.
+    // Simplifying: SQL Expert -> END (Frontend displays table).
+    // Data Scientist -> END (Frontend displays analysis).
+    (s) => "end",
+    { end: END })
+
+  .addEdge("data_scientist", END);
+
 const app = workflow.compile({ recursionLimit: 200 });
 
-/**
- * Servicio Orquestador Multi-Agente (Refactorizado con LangGraph StateGraph)
- */
+/* =========================================================
+   SERVICE
+========================================================= */
+
 class MultiAgentService {
-    
-    async processQuery(queryText) {
+  async processQuery(queryText) {
+    try {
+      const result = await app.invoke({ input: queryText });
+
+      let finalData = result.sql_data || null;
+      let finalVisualization = null;
+
+      // Si el agente es el Data Scientist, el resultado suele estar en result.agent_response como JSON
+      if (result.agent_response && typeof result.agent_response === 'string') {
         try {
-            console.log("🤖 StateGraph recibiendo consulta...");
-
-            const result = await app.invoke({ input: queryText });
-
-            const finalResponse = result.agent_response || "El agente no devolvió una respuesta clara.";
-
-            return {
-                text: finalResponse,
-                data: null
-            };
-
-        } catch (error) {
-            console.error("❌ Error en MultiAgentService (Graph):", error);
-            // Si el error tiene una respuesta detallada (como de OpenAI)
-            const errorMsg = error.message || "Error desconocido";
-            return { text: `Error en el grafo: ${errorMsg}`, data: null };
+          const text = result.agent_response.replace(/```json/g, "").replace(/```/g, "").trim();
+          const first = text.indexOf("{");
+          const last = text.lastIndexOf("}");
+          
+          if (first !== -1 && last !== -1) {
+            const parsed = JSON.parse(text.substring(first, last + 1));
+            
+            // Extraer campos de forma flexible
+            if (parsed.response || parsed.resumen || parsed.data || parsed.visualization) {
+              // Si no tenemos sql_data pero el JSON tiene data, lo usamos
+              if (!finalData && parsed.data) {
+                finalData = parsed.data;
+              }
+              if (parsed.visualization) {
+                finalVisualization = parsed.visualization;
+              }
+              // Si el texto base no existe, intentamos usar 'response' o 'resumen'
+              if (parsed.response || parsed.resumen) {
+                result.agent_response = parsed.response || parsed.resumen;
+              }
+            }
+          }
+        } catch (e) {
+          // No es JSON o no tiene el formato esperado, ignoramos
         }
+      }
+
+      return {
+        text: result.agent_response,
+        data: finalData,
+        visualization: finalVisualization,
+        cache: result.cache_hit || false
+      };
+    } catch (err) {
+      console.error('MultiAgentService.processQuery error:', err.message);
+      return { text: `Error processing query: ${err.message}`, data: null, cache: false };
     }
+  }
 }
 
 module.exports = new MultiAgentService();

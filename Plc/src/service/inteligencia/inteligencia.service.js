@@ -15,7 +15,8 @@ class InteligenciaService {
         ok: true,
         datos: {
           conversacion: datos.response,
-          resultado: datos.data, // Ahora mapeamos los datos side-channel del backend
+          resultado: datos.data, 
+          visualization: datos.visualization, // Map visualization from backend
           tipo: null
         }
       };

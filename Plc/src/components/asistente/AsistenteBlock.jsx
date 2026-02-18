@@ -31,14 +31,20 @@ const AsistenteBlock = ({ onNewData, selectedRows, selectedTable }) => {
         try {
             setIsLoading(true);
             const respuesta = await envioMensajeIA({ mensaje: mensajeNormalizado });
-            const { conversacion, resultado } = respuesta;
+            const { conversacion, resultado, visualization } = respuesta;
+
+            // Merge resultado and visualization into a single data object for GptMessage
+            console.log("🔍 [AsistenteBlock] Backend response:", respuesta);
+            console.log("🔍 [AsistenteBlock] Visualization extracted:", visualization);
+            const messageData = { ...(resultado || {}), visualization };
+            console.log("🔍 [AsistenteBlock] Message data merged:", messageData);
 
             setMessages((prev) => [
                 ...prev,
                 {
                     text: conversacion || "Respuesta vacía...",
                     isGpt: true,
-                    data: resultado || null
+                    data: messageData
                 }
             ]);
 
@@ -89,7 +95,7 @@ const AsistenteBlock = ({ onNewData, selectedRows, selectedTable }) => {
     return (
         <CCard className="h-100 shadow-sm d-flex flex-column">
             <CCardHeader className="bg-light d-flex justify-content-between align-items-center py-2">
-               
+
             </CCardHeader>
             <div
                 className="flex-grow-1 p-3 bg-light bg-opacity-10 d-flex flex-column"

@@ -10,6 +10,8 @@
 #include "mcp_tasks.hpp"
 #include "mcp_wifi.hpp"
 
+bool timeSynced = false;
+
 void setup() {
   Serial.begin(115200);
   setCpuFrequencyMhz(240);
@@ -31,15 +33,9 @@ void setup() {
     log("\n[ERROR]Error al leer el archivo de configuraciones Settings.json");
   }
 
-  // Migración automática a MQTTS (Puerto 8883)
-  if (mqtt_port == 1883) {
-    mqtt_port = 8883;
-    settingsSave();
-    log("\n[INFO] Migración a MQTTS: Puerto actualizado a 8883");
-  }
   settingPines();
   wifi_setup();
-  Serial.println("[INFO] setup() terminado"); // <-- línea añadida
+  initESPNow(); // Inicializar ESP-NOW despues del WiFi para compartir canal
   // Crear Tarea Reconexión WIFI
   xTaskCreate(TaskWifiReconnect, "TaskWifiReconnect", 1024 * 6, NULL, 3, NULL);
   // Crear Tarea Reconexión MQTT (Pila aumentada a 8K)

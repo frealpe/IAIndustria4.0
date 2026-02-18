@@ -4,100 +4,170 @@ const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
 const { z } = require("zod");
 const { analyzeData, executeDanfoCode } = require("../helpers/analysisHelper");
 const { dbConnection } = require("../database/config");
-const socketService = require("./SocketService"); 
+const socketService = require("./SocketService");
 const { DB_SCHEMA } = require("../constants/schema");
 
 class McpService {
     constructor() {
         if (McpService.instance) return McpService.instance;
-        this.server = new McpServer({ name: "Servidor MCP Industrial", version: "1.2.0" });
+        this.server = new McpServer({ name: "Servidor MCP Industrial", version: "2.0.1" });
         this.registerTools();
         McpService.instance = this;
     }
 
     registerTools() {
-        this.tools = []; 
+        this.tools = [];
+
         const register = (name, config, handler) => {
-            this.tools.push({ name, description: config.description, schema: config.inputSchema, func: handler });
+            this.tools.push({
+                name,
+                description: config.description,
+                schema: config.inputSchema,
+                func: handler
+            });
         };
 
+        /* ========================= QUERY DB ========================= */
+
         register("query_db", {
-            description: "Ejecuta SQL SELECT en PostgreSQL. Esquema:\n" + DB_SCHEMA + "\n💡 Para análisis estadísticos avanzados, regresiones y visualizaciones usa 'analizar_datos_avanzado'.",
-            inputSchema: z.object({ sql: z.string().describe("Consulta SQL") })
+            description: "Ejecuta SQL SELECT.\n" + DB_SCHEMA,
+            inputSchema: z.object({ sql: z.string() })
         }, async ({ sql }) => await this._executeQuery(sql));
 
-        register("leer_archivos_proyecto", {
-            description: "Lee archivos del proyecto. Útil para entender firmware.",
-            inputSchema: z.object({ ruta: z.string().describe("Ruta relativa") })
-        }, async ({ ruta }) => {
-            try {
-                const projectRoot = '/home/fabio/Escritorio/IA/MCP';
-                const fullPath = path.resolve(projectRoot, ruta);
-                if (!fullPath.startsWith(projectRoot)) return { content: [{ type: "text", text: "Acceso denegado." }], isError: true };
-                if (!fs.existsSync(fullPath)) return { content: [{ type: "text", text: "No existe." }], isError: true };
-                const stats = fs.lstatSync(fullPath);
-                if (stats.isDirectory()) return { content: [{ type: "text", text: `Directorio: ${fs.readdirSync(fullPath).join(', ')}` }] };
-                return { content: [{ type: "text", text: fs.readFileSync(fullPath, 'utf8') }] };
-            } catch (err) { return { content: [{ type: "text", text: err.message }], isError: true }; }
-        });
+        /* ========================= LOCAL ANALYSIS ========================= */
 
-        register("analizar_datos_avanzado", {
-            description: "ANALIZA DATOS. Requiere un SQL y opcionalmente código JS (Danfo) para usar helpers como regressionStats o zScoreOutliers.",
+        register("analizar_datos_locales", {
+            description: "Analiza JSON con Danfo.js. SOLO retorna datos crudos (números, arrays, objetos). NO genera gráficas ni imágenes.",
             inputSchema: z.object({
-                sql: z.string().describe("SQL para extraer datos"),
-                codigo: z.string().optional().describe("Código JS dinámico usando 'df' y 'helpers'")
+                datos: z.union([z.string(), z.array(z.record(z.any()))]),
+                codigo: z.string()
             })
-        }, async ({ sql, codigo }) => {
+        }, async ({ datos, codigo }) => {
+            console.log(`[McpService] analizar_datos_locales called. Code length: ${codigo.length}`);
             try {
-                console.log(`🔍 [ MCP ] analizando_datos_avanzado Request.`);
-                console.log(`   SQL: ${sql.substring(0, 100)}...`);
-                console.log(`   Internal Code provided: ${codigo ? 'YES' : 'NO'} (${codigo ? codigo.substring(0, 50) + '...' : ''})`);
+                let data = typeof datos === "string" ? JSON.parse(datos) : datos;
 
-                // Reutilizamos la lógica de consulta interna
-                console.log("   --> Executing SQL...");
-                const executionResult = await this._executeQuery(sql, [], true);
-                console.log(`   <-- SQL Result: ${executionResult.isError ? 'ERROR' : 'OK'}, Rows: ${executionResult.rows ? executionResult.rows.length : 0}`);
-                
-                if (executionResult.isError || !executionResult.rows) return executionResult;
+                if (!Array.isArray(data))
+                    return this._error("DATA", "Datos debe ser array");
 
-                const finalData = executionResult.rows.map(row => {
-                    let normalized = { ...row };
-                    if (row.resultado) {
-                        let rowData = typeof row.resultado === 'string' ? JSON.parse(row.resultado) : row.resultado;
-                        if (typeof rowData === 'object' && rowData !== null) Object.assign(normalized, rowData);
-                    }
-                    return normalized;
-                });
+                const result = executeDanfoCode(data, codigo);
 
-                console.log("   --> Running Analysis/Danfo...");
-                const finalResult = codigo ? executeDanfoCode(finalData, codigo) : analyzeData(finalData, 'datos');
-                console.log("   <-- Analysis Done.");
-                
-                socketService.emit('mcpdatos', { data: finalData, stats: finalResult.stats });
-                return { content: [{ type: "text", text: finalResult.output }] };
-            } catch (err) { 
-                console.error("❌ [MCP] analizar_datos_avanzado error:", err.message);
-                return { 
-                    content: [{ 
-                        type: "text", 
-                        text: `ANALYSIS_ERROR: ${err.message}\nGUIDANCE: Incluye este error en tu respuesta JSON dentro del campo 'resumen'.` 
-                    }], 
-                    isError: true 
-                }; 
+                if (!result.success)
+                    return this._error("DATA_SCIENTIST", result.error);
+
+                return this._success("DATA_SCIENTIST", result.result);
+
+            } catch (err) {
+                return this._error("DATA_SCIENTIST", err.message);
             }
         });
     }
 
-    getRawTools() { return this.tools || []; }
+    /* ========================= CORE QUERY ========================= */
 
     async _executeQuery(sql, params = [], internal = false) {
         try {
             const pool = dbConnection();
             const result = await pool.query(sql, params);
+
             if (internal) return { rows: result.rows };
-            if (result.rows.length > 5) socketService.emit('mcpdatos', result.rows);
-            return { content: [{ type: "text", text: JSON.stringify(result.rows, null, 2) }] };
-        } catch (err) { return { content: [{ type: "text", text: err.message }], isError: true }; }
+
+            return this._datasetResponse("SQL_EXPERT", result.rows, {
+                row_count: result.rows.length,
+                sql_query: sql
+            });
+
+        } catch (err) {
+            return this._error("SQL_EXPERT", err.message);
+        }
+    }
+
+    /* ========================= HELPERS ========================= */
+
+    _datasetResponse(agent, rows, metadata = {}) {
+        return {
+            content: [{
+                type: "text",
+                text: JSON.stringify({
+                    status: "success",
+                    agent,
+                    data: {
+                        type: "dataset",
+                        rows,
+                        schema: {
+                            columns: rows.length ? Object.keys(rows[0]) : []
+                        }
+                    },
+                    metadata: {
+                        row_count: rows.length,
+                        source: "database",
+                        ...metadata
+                    }
+                })
+            }]
+        };
+    }
+
+    _success(agent, data) {
+        return {
+            content: [{
+                type: "text",
+                text: JSON.stringify({
+                    status: "success",
+                    agent,
+                    data,
+                    metadata: {}
+                })
+            }]
+        };
+    }
+
+    _error(agent, message) {
+        return {
+            content: [{
+                type: "text",
+                text: JSON.stringify({
+                    status: "error",
+                    agent,
+                    data: null,
+                    metadata: { error: message }
+                })
+            }],
+            isError: true
+        };
+    }
+
+    getRawTools() {
+        return this.tools || [];
+    }
+
+    /**
+     * Ejecuta una herramienta registrada por nombre y devuelve un objeto JS parseado
+     * para facilitar su consumo programático.
+     */
+    async runTool(name, params) {
+        const tools = this.getRawTools();
+        const entry = tools.find(t => t.name === name);
+        if (!entry) throw new Error(`Tool not found: ${name}`);
+
+        const res = await entry.func(params);
+        // Intentar parsear content[0].text como JSON si existe
+        if (res && Array.isArray(res.content) && res.content[0] && typeof res.content[0].text === 'string') {
+            const txt = res.content[0].text;
+            try {
+                const first = txt.indexOf('{');
+                const last = txt.lastIndexOf('}');
+                if (first !== -1 && last !== -1) {
+                    const jsonText = txt.substring(first, last + 1);
+                    const parsed = JSON.parse(jsonText);
+                    return { ok: true, parsed, raw: res };
+                }
+            } catch (e) {
+                // fallthrough
+            }
+        }
+        return { ok: true, parsed: null, raw: res };
     }
 }
+
 module.exports = new McpService();

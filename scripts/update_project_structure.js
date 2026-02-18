@@ -15,7 +15,10 @@ const ignoredDirs = [
     '.pio', 
     '__pycache__',
     'coverage',
-    '.DS_Store'
+    '.DS_Store',
+    'Documentacion', // Excluir documentación
+    'public.zip', // Excluir zip grande
+    'Principal.pdf' // Excluir PDF principal
 ];
 
 function getDirectoryStructure(dirPath) {

@@ -26,7 +26,10 @@ const ignored = [
     'tmp',
     'temp',
     '.venv',
-    '.pio'
+    '.pio',
+    'Documentacion', // Excluir documentación
+    'public.zip', // Excluir zip grande
+    'Principal.pdf' // Excluir PDF principal
 ];
 
 function getStructure(dir) {

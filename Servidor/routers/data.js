@@ -15,7 +15,8 @@ const {
     getAllDevices,
     createDevice,
     updateDevice,
-    deleteDevice
+    deleteDevice,
+    getProjectStructure
 } = require('../controllers/DataController');
 
 const router = Router();
@@ -36,5 +37,6 @@ router.get('/trained-models', getTrainedModels);
 router.put('/trained-models/:model_id/activate', activateModel);
 router.delete('/trained-models/:model_id', deleteModel);
 router.post('/train-model', manualTrain);
+router.get('/project-structure', getProjectStructure);
 
 module.exports = router;

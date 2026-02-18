@@ -40,9 +40,9 @@ const AgentGuideHelper = () => {
             color: 'success',
             description: 'Análisis avanzados con cálculos estadísticos',
             prompts: [
-                '¿Cuál es el voltaje promedio, mínimo y máximo del dispositivo "Planta 1"?',
-                'Calcula la desviación estándar del voltaje para todos los dispositivos',
-                'Muéstrame la distribución del voltaje en un histograma',
+                '¿Cuál es el voltaje promedio (mean), mínimo y máximo del dispositivo "Planta 1"?',
+                'Calcula la desviación estándar de la señal ADC para los últimos 500 registros',
+                'Analiza los últimos 100 registros de Planta1. Calcula el promedio y la desviación estándar del voltaje, y genera una gráfica de distribución (histograma) de los valores.',
                 'Calcula el coeficiente de variación del voltaje para determinar la estabilidad',
             ]
         },
@@ -54,7 +54,8 @@ const AgentGuideHelper = () => {
             prompts: [
                 '¿El voltaje está aumentando o disminuyendo con el tiempo? Muestra la tendencia',
                 'Calcula la regresión lineal del voltaje en el tiempo y dame el coeficiente R²',
-                'Basándote en la tendencia actual, ¿qué voltaje esperamos en las próximas 24 horas?',
+                'Obtén los últimos 200 registros y calcula una media móvil de la señal ADC. Muéstrame el resultado en una gráfica de líneas.',
+                'Muestra la tendencia del voltaje de los últimos 200 registros. Crea un gráfico de líneas que muestre cómo ha variado el voltaje en el tiempo y dime si observas alguna inestabilidad.',
                 'Calcula el promedio móvil de 10 puntos del voltaje y grafícalo',
             ]
         },
@@ -65,7 +66,8 @@ const AgentGuideHelper = () => {
             description: 'Identificación y análisis de datos anómalos',
             prompts: [
                 '¿Cuántas anomalías se han detectado en la última semana?',
-                'Identifica anomalías usando Z-score con umbral de 3 desviaciones estándar',
+                'Crea un gráfico de barras que compare cuántas anomalías se han detectado frente a registros normales usando el campo isAnomaly.',
+                'Busca las anomalías registradas en la última hora. Genera un resumen estadístico que incluya el total de datos, cuántos son anomalías y el porcentaje de error. Acompaña el análisis con una gráfica de dispersión resaltando los puntos fuera de rango.',
                 '¿Qué dispositivo tiene la tasa más alta de anomalías?',
                 'Identifica outliers usando el método IQR y muéstralos en un gráfico',
             ]
@@ -76,9 +78,9 @@ const AgentGuideHelper = () => {
             color: 'info',
             description: 'Gráficas y visualizaciones de datos',
             prompts: [
-                'Grafica el voltaje en el tiempo para el ESP32-001 de los últimos 200 puntos',
-                'Crea un gráfico comparando el voltaje de todos los dispositivos',
-                'Muestra un boxplot del voltaje agrupado por dispositivo',
+                'Analiza los últimos 100 registros de la tabla datos. Genera una gráfica de líneas que muestre el valor mean a lo largo del tiempo.',
+                'Crea un gráfico comparando el voltaje (mean) de todos los dispositivos registrados',
+                'Muestra un boxplot del voltaje (mean) agrupado por dispositivo',
                 'Crea un gráfico de barras mostrando el número de anomalías por dispositivo',
             ]
         },
@@ -89,8 +91,9 @@ const AgentGuideHelper = () => {
             description: 'Consultas complejas y casos de uso avanzados',
             prompts: [
                 '¿Cómo está funcionando el sistema?',
-                '¿Cuál dispositivo funciona mejor?',
+                '¿Cual dispositivo funciona mejor?',
                 '¿Hay algún problema con los sensores actualmente?',
+                'Compara el comportamiento del voltaje entre los registros de esta mañana y los de hace una hora. Estadísticamente, ¿cuál periodo fue más estable? Genera una gráfica comparativa.',
                 'Compara las métricas de todos los dispositivos y crea una tabla resumen',
             ]
         }

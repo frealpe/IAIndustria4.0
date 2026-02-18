@@ -460,6 +460,23 @@ const deleteDevice = async (req, res = response) => {
     }
 }
 
+const getProjectStructure = (req, res = response) => {
+    const path = require('path');
+    const fs = require('fs');
+    const filePath = path.join(__dirname, '../constants/projectStructure.json');
+
+    if (fs.existsSync(filePath)) {
+        res.download(filePath, 'projectStructure.json', (err) => {
+            if (err) {
+                console.error("Error downloading project structure:", err);
+                res.status(500).send("Error downloading file");
+            }
+        });
+    } else {
+        res.status(404).json({ msg: "Project structure file not found" });
+    }
+};
+
 module.exports = {
     getCaracterizacion,
     getComparacion,
@@ -476,5 +493,6 @@ module.exports = {
     updateDevice,
     deleteDevice,
     deleteModel,
-    manualTrain
+    manualTrain,
+    getProjectStructure
 };

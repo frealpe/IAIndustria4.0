@@ -35,28 +35,28 @@ boolean mqtt_willRetain = false;
 // -------------------------------------------------------------------
 const char *root_ca =
     "-----BEGIN CERTIFICATE-----\n"
-    "MIID+TCCAuGgAwIBAgIUC8dGw8Wq8dHaQpaeZ+ZAriKw+/QwDQYJKoZIhvcNAQEL\n"
-    "BQAwgYsxCzAJBgNVBAYTAkNPMQ4wDAYDVQQIDAVDYXVjYTEQMA4GA1UEBwwHUG9w\n"
-    "YXlhbjEMMAoGA1UECgwDUGxjMRMwEQYDVQQLDApBdXRvbWF0aWNhMQ8wDQYDVQQD\n"
-    "DAZNY3BfSUExJjAkBgkqhkiG9w0BCQEWF2ZyZWFscGVAdW5pY2F1Y2EuZWR1LmNv\n"
-    "MB4XDTI2MDIxNDAwNDI1MFoXDTM2MDIxMjAwNDI1MFowgYsxCzAJBgNVBAYTAkNP\n"
-    "MQ4wDAYDVQQIDAVDYXVjYTEQMA4GA1UEBwwHUG9wYXlhbjEMMAoGA1UECgwDUGxj\n"
-    "MRMwEQYDVQQLDApBdXRvbWF0aWNhMQ8wDQYDVQQDDAZNY3BfSUExJjAkBgkqhkiG\n"
-    "9w0BCQEWF2ZyZWFscGVAdW5pY2F1Y2EuZWR1LmNvMIIBIjANBgkqhkiG9w0BAQEF\n"
-    "AAOCAQ8AMIIBCgKCAQEAuaJtcSkurCxuOuZ4mV6xhSkW3fAH9uF2hU8wKy201mGq\n"
-    "cwLdY2dk6K/MhXS+/0RfTXrG02sqzDDVnMv350wYo6EecroygonRmOVXSTlafKyC\n"
-    "0p7GqQGOL/XsuhhDorJvnEuqhIQGFKUSrZO6IvzEmxguCt/vJj5zsoRMaT3izjuP\n"
-    "se0uku0xsAJVp37UDlYdaGACz2y6N94x7aFtaKY38iMvZJx3+jejc6r9/ZVRPx2r\n"
-    "DV4SjfRnFEjy4uK9ZLDTSIgXTpZla6pz38Wgfv9zifMlttqipVOgurLX+4IV+5rH\n"
-    "bIJA6gqG4VOyw76wK0puc+mfmHhRwTRr9k54zmYsnwIDAQABo1MwUTAdBgNVHQ4E\n"
-    "FgQUcMRAgf4Hsr7NMzeBgROxQfYgfm4wHwYDVR0jBBgwFoAUcMRAgf4Hsr7NMzeB\n"
-    "gROxQfYgfm4wDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEATE7w\n"
-    "FwUgGRWaucsGJMgjY9f3TuqWwcCW1dZ58MkXawJjNFQ6nXnKsfdNC4nw046dKRax\n"
-    "z3khg2bUfdArnaAkPx4taFFvP7OSyFlFlbN7zmvKkuDgZ2JsHXNRzjLGEW3gj2SR\n"
-    "0l4AO3E2doCx0gVO0vEbs6kJC/u9lJj2QRdfz+AbQeQn7FDu0Fr3MG8nN4gcRuZk\n"
-    "vv7xZLM/VwllLPKC/DkNXMAzC3hYdvO3eQQRde01oDH9nVmhxI/2XSbbKN8/UsON\n"
-    "f8w6h+PU84b1zacd/LiCwTdDB3+3V0xCzbEUJouMf44pyYyBFVlMX+2LvovNSz+1\n"
-    "h50cZWe7HxAWGJaGUg==\n"
+    "MIIEAzCCAuugAwIBAgIUcoJlrbLpCh0cYLv6o+Ht24DHQDEwDQYJKoZIhvcNAQEL\n"
+    "BQAwgZAxCzAJBgNVBAYTAkNPMQ4wDAYDVQQIDAVDYXVjYTEQMA4GA1UEBwwHUG9w\n"
+    "YXlhbjERMA8GA1UECgwIVW5pY2F1Y2ExEzARBgNVBAsMCkF1dG9tYXRpY2ExDzAN\n"
+    "BgNVBAMMBk1jcF9JQTEmMCQGCSqGSIb3DQEJARYXZnJlYWxwZUB1bmljYXVjYS5l\n"
+    "ZHUuY28wHhcNMjYwMjE4MDAxMjI1WhcNMzYwMjE2MDAxMjI1WjCBkDELMAkGA1UE\n"
+    "BhMCQ08xDjAMBgNVBAgMBUNhdWNhMRAwDgYDVQQHDAdQb3BheWFuMREwDwYDVQQK\n"
+    "DAhVbmljYXVjYTETMBEGA1UECwwKQXV0b21hdGljYTEPMA0GA1UEAwwGTWNwX0lB\n"
+    "MSYwJAYJKoZIhvcNAQkBFhdmcmVhbHBlQHVuaWNhdWNhLmVkdS5jbzCCASIwDQYJ\n"
+    "KoZIhvcNAQEBBQADggEPADCCAQoCggEBAKQLJA4nII9BK/FDf+hMiGLvWgVSWqWX\n"
+    "yLuDuny45w3xLfRGw3qseLimoHhnDsVYQNqaaaC/rNfN90hpHol6FROO/OYfRDf0\n"
+    "8iBuoilU7tSpo+jzyKmpbCW32ckMpAeq3YTUecsLPJrLw5rBo17ZGHkSncIQBj2v\n"
+    "+YfW/HT6l69rebapf1DlOIbbdc21XgGcBYB3IMj3iybiChxeZdey7hdNt4FPC+Iv\n"
+    "5+jN28T5px/d7UwT4jUPI8iBblHU1Bsi59vTQg1vsH/VPOjBxHTYvbfjO68pzLwF\n"
+    "0dn5rvczuxonmPYmSXQYCC9n9xurvZMLMnQuhvsVDs1RY0E8+kBSNNMCAwEAAaNT\n"
+    "MFEwHQYDVR0OBBYEFHeRrr10oSW6C3p7GZPUtRyLOi37MB8GA1UdIwQYMBaAFHeR\n"
+    "rr10oSW6C3p7GZPUtRyLOi37MA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQEL\n"
+    "BQADggEBAJmOH6PMnI6fg1FzfZuw0bU62lTHZWJmUCFziM3bpRj7szF85N3qYex6\n"
+    "HdkTQdAoY+i8rDBnwAllgwsUHLu8pvJqxPAU6wVsI9LsSucfGZWIRgVmmd77FEjn\n"
+    "r2tra1o5TAYr92gboMbzJVWbatKqcYoeUeRLaHrUsHuVOoBfWNxPlRmUygTGd7bP\n"
+    "fEdFke8kpI5NH5DC1MSYSFXZFp2FohK4wfUBqGZIl+iyphGlzagmtTP3t30Yi+Jw\n"
+    "AEKph9IcCRdE6JByab/lvCcUOdvpjiEFnoe+xI7b9zAy00lXN3+xFbSEQ10I62/W\n"
+    "Kr7IPNJeVnVnpd1SaZQQal4mz2hYNTo=\n"
     "-----END CERTIFICATE-----\n";
 
 WiFiClientSecure wifiClient;
@@ -84,20 +84,29 @@ void mqtt_response(String method, String type, String msg, String value);
 // MQTT Connect
 // -------------------------------------------------------------------
 boolean mqtt_connect() {
+  int target_port = mqtt_port;
+  bool secure_attempt = (target_port == 8883);
+
   // Configurar Certificado si es puerto seguro (e.g. 8883)
-  if (mqtt_port == 8883) {
-    wifiClient.setCACert(root_ca);
-    log("MQTT: Usando conexión segura (TLS)");
+  if (secure_attempt) {
+    if (timeSynced) {
+      wifiClient.setCACert(root_ca);
+      log("MQTT: Usando conexión segura (TLS) con Verificación de Hora");
+    } else {
+      wifiClient.setInsecure();
+      log("MQTT: Usando conexión segura (TLS) SIN VERIFICACIÓN (NTP no "
+          "disponible)");
+    }
   } else {
-    wifiClient.setInsecure(); // Opcional: permitir conexiones sin validar CA si
-                              // no es puerto 8883
+    wifiClient.setInsecure();
     log("MQTT: Usando conexión normal");
   }
 
-  mqttClient.setServer(mqtt_server, mqtt_port);
+  mqttClient.setServer(mqtt_server, target_port);
   mqttClient.setCallback(callback);
   mqttClient.setBufferSize(1024 * 5); // Establecer buffer antes de conectar
-  log("MQTT: Intentando conexión al Broker MQTT...");
+  log("MQTT: Intentando conexión al Broker MQTT en " + String(mqtt_server) +
+      ":" + String(target_port) + "...");
 
   if (mqttClient.connect(mqtt_cloud_id, mqtt_user, mqtt_password,
                          mqtt_willTopic.c_str(), mqtt_willQoS, mqtt_willRetain,
@@ -118,11 +127,30 @@ boolean mqtt_connect() {
     String mqtt_willMessageCon =
         "{\"connected\": true, \"username\": \"" + String(mqtt_user) + "\" }";
     mqttClient.publish(mqtt_willTopic.c_str(), mqtt_willMessageCon.c_str());
+    return true;
   } else {
     log("ERROR: MQTT - Falló, código de error = " + String(mqttClient.state()));
-    return (0);
+
+    // [NEW] Fallback a puerto inseguro si el puerto seguro falló
+    if (secure_attempt) {
+      log("[ WARNING ] Reintentando conexión en modo inseguro (Puerto "
+          "1883)...");
+      target_port = 1883;
+      wifiClient.setInsecure();
+      mqttClient.setServer(mqtt_server, target_port);
+
+      if (mqttClient.connect(mqtt_cloud_id, mqtt_user, mqtt_password,
+                             mqtt_willTopic.c_str(), mqtt_willQoS,
+                             mqtt_willRetain, mqtt_willMessage.c_str())) {
+        log("INFO: Conectado al Broker MQTT (MODO INSEGURO) -> " +
+            String(mqtt_server));
+        return true;
+      } else {
+        log("ERROR: MQTT - También falló la conexión insegura.");
+      }
+    }
+    return false;
   }
-  return (1);
 }
 
 // -------------------------------------------------------------------
@@ -291,6 +319,7 @@ void mqtt_response(String method, String type, String msg, String value) {
   String data = "";
   DynamicJsonDocument jsonDoc(10240);
   DynamicJsonDocument jsonData(10240);
+  jsonData.clear();
   deserializeJson(jsonData, value);
 
   jsonDoc["method"] = method;

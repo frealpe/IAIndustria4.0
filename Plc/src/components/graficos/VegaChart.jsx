@@ -7,9 +7,16 @@ const VegaChart = ({ spec, height = 300 }) => {
     console.log("🎨 [VegaChart] Data points:", spec?.data?.values?.length || 0);
 
     // Validate spec
-    if (!spec || !spec.data || !spec.data.values) {
-        console.error("❌ [VegaChart] Invalid spec - missing data.values");
-        return <div className="text-danger p-3">Error: Spec inválido (falta data.values)</div>;
+    const hasData = spec?.data?.values && Array.isArray(spec.data.values) && spec.data.values.length > 0;
+
+    if (!hasData) {
+        console.warn("⚠️ [VegaChart] No data or invalid spec found:", spec);
+        return (
+            <div className="p-3 text-center border rounded bg-light">
+                <p className="text-muted mb-0">Esperando datos para visualizar...</p>
+                <small className="text-secondary">(No hay puntos de datos válidos en el spec)</small>
+            </div>
+        );
     }
 
     // Create spec with explicit numeric dimensions

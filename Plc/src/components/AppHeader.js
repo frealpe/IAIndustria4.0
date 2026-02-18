@@ -37,6 +37,8 @@ import {
   AppHeaderDropdown,  // Importa el componente AppHeaderDropdown (menú de usuario)
 } from './header/index'
 import { SocketContext } from '../context/SocketContext'
+import { getEnvVariables } from '../helpers/getEnvVariables'
+const { VITE_API_URL } = getEnvVariables()
 
 const AppHeader = () => {
   const headerRef = useRef()  // Crea una referencia para el encabezado
@@ -72,9 +74,35 @@ const AppHeader = () => {
         >
           <CIcon icon={cilMenu} size="lg" />  {/* Icono de menú */}
         </CHeaderToggler>
-        <span className={`ms-3 fw-bold ${online ? 'text-success' : 'text-danger'}`}>
-          IA 4.0 {online ? 'Online' : 'Offline'}
-        </span>
+        <div className="d-flex align-items-center flex-wrap">
+          <span className={`ms-3 fw-bold ${online ? 'text-success' : 'text-danger'}`}>
+            IA 4.0 {online ? 'Online' : 'Offline'}
+          </span>
+          {!online && (
+             <div className="d-flex gap-1 ms-2">
+               <a 
+                 href={`${VITE_API_URL}chat/test`} 
+                 target="_blank" 
+                 rel="noreferrer" 
+                 className="badge bg-warning text-dark text-decoration-none"
+                 style={{ fontSize: '0.65rem' }}
+                 title="Paso 1: Autorizar API"
+               >
+                 1. Autorizar API 🔑
+               </a>
+               <a 
+                 href="https://192.168.20.20:8084" 
+                 target="_blank" 
+                 rel="noreferrer" 
+                 className="badge bg-info text-dark text-decoration-none"
+                 style={{ fontSize: '0.65rem' }}
+                 title="Paso 2: Autorizar Tiempo Real (MQTT)"
+               >
+                 2. Autorizar MQTT 📡
+               </a>
+             </div>
+          )}
+        </div>
         
         {/* Barra de navegación dentro del encabezado */}
         <CHeaderNav className="ms-auto ms-md-0">

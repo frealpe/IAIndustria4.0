@@ -4,12 +4,13 @@
 // -------------------------------------------------------------------
 // Definiciones
 // -------------------------------------------------------------------
-#define WIFILED 12 // GPIO12 LED WIFI
-#define MQTTLED 2  // GPIO2 LED MQTT
-#define ADC_PIN 34 // ADC Canal 6 (GPIO 34)
-#define RELAY1 32  // GPIO32 para salida de Relay 1
-#define RELAY2 33  // GPIO33 para salida de Relay 2
-#define DIMMER 25  // GPIO25 LED INDICADOR DIMMER RED
+#define WIFILED 12        // GPIO12 LED WIFI
+#define MQTTLED 2         // GPIO2 LED MQTT
+#define ADC_PIN 34        // ADC Canal 6 (GPIO 34)
+#define RELAY1 32         // GPIO32 para salida de Relay 1
+#define RELAY2 33         // GPIO33 para salida de Relay 2
+#define DIMMER 25         // GPIO25 LED INDICADOR DIMMER RED
+#include "mcp_espnow.hpp" // Libreria ESP-NOW
 // -------------------------------------------------------------------
 // CALCULAR LA CAPACIDAD DEL JSON
 // Asistente ArduinoJson: https://arduinojson.org/v6/assistant/
@@ -99,4 +100,5 @@ const int ledChannel = 0; // definicion del canal - 0
 const int resolution = 8; // 8 bits -> 255
 int dim;                  // valor del dimmer a enviar ( 0 - 100 )
 
-#endif // MCP_HEADER_HPP
+extern bool timeSynced; // Flag para indicar si la hora esta sincronizada
+#endif                  // MCP_HEADER_HPP

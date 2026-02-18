@@ -3,46 +3,76 @@ config:
   layout: elk
 ---
 graph TD
-    subgraph Brain ["MultiAgentService (LangGraph)"]
-        Orchestrator["Orchestrator Node - Decide Intencion"]
-        
-        subgraph Agents ["Nodos Agentes"]
-            SQL_Node["SQL Expert Node"]
-            Data_Node["Data Scientist Node"]
-        end
-        
-        Orchestrator -->|Consulta Simple| SQL_Node
-        Orchestrator -->|Analisis Complejo| Data_Node
-        SQL_Node -.->|Handover si requiere analisis| Data_Node
+    subgraph MultiAgentService ["🤖 MultiAgentService.js (Cerebro)"]
+        direction TB
+        Orchestrator["🕵️ Orquestador"]
+        DS_Agent["📊 Data Scientist Agent"]
+        Prompt["📜 System Prompt (Reglas Danfo)"]
+        Orchestrator -->|"Detecta Intent Analytics"| DS_Agent
+        Prompt -.->|"Indica uso de helpers"| DS_Agent
+    end
+    subgraph McpService ["🛠️ McpService.js (Músculo)"]
+        direction TB
+        Tool_Analyze["🔧 analizar_datos_avanzado()"]
+        Run_SQL["Execute SQL Query"]
+        DS_Agent -->|"1. Llama Tool {sql, codigo}"| Tool_Analyze
+        Tool_Analyze -->|"2. Extrae Datos SQL"| Run_SQL
+    end
+    subgraph AnalysisEngine ["🧪 analysisHelper.js (Ejecución Segura)"]
+        direction TB
+        Exec_Sandbox["📦 Dynamic Function Sandbox"]
+        Helper_Flatten["🛠️ helpers.flattenColumn()"]
+        Helper_DF["🛠️ helpers.toDataFrame()"]
+        Helper_Cast["🛠️ helpers.castSeriesToFloat()"]
+        Tool_Analyze -->|"6. Envía Data + Código JS"| Exec_Sandbox
+        Exec_Sandbox -->|"7.1 Aplanar JSON"| Helper_Flatten
+        Exec_Sandbox -->|"7.2 Crear DataFrame"| Helper_DF
+        Exec_Sandbox -->|"7.3 Calcular Stats"| Exec_Sandbox
+        Exec_Sandbox -->|"8. Retorna Resumen JSON"| Tool_Analyze
+    end
+    subgraph Database ["🗄️ Infraestructura"]
+        PG["🐘 PostgreSQL"]
+        Run_SQL -->|"3. Query"| PG
+        PG -->|"4. Retorna N Filas (JSONB)"| Run_SQL
+        Run_SQL -->|"5. Data Cruda"| Tool_Analyze
+    end
+    Tool_Analyze -->|"9. Entrega Resultado Procesado"| DS_Agent
+    style MultiAgentService fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style McpService fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style AnalysisEngine fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Database fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
+    
+    ---
+config:
+  layout: elk
+---
+graph TD
+    subgraph Brain["🧠 CEREBRO: Agente IA"]
+        direction TB
+        Strategy["1. Diseña Estrategia"]
+        Code["2. Genera Código (SQL + Danfo.js)"]
+        Interpret["6. Interpreta Resultados"]
     end
 
-    subgraph Tools ["McpService Herramientas"]
-        Tool_Query["Tool query_db"]
-        Tool_Analyze["Tool analizar_datos_avanzado"]
+    subgraph Muscle["💪 MÚSCULO: Servidor + Danfo"]
+        direction TB
+        Tool["🛠️ Tool: analizar_datos_avanzado"]
+        DB[(🗄️ PostgreSQL)]
+        Engine["🧪 Motor Danfo.js"]
     end
-
-    subgraph Data_Layer ["Capas de Datos"]
-        DatosModel["DatosModel.js"]
-        ModeloEntrenado["ModeloEntrenado.js"]
-        AnalysisHelper["AnalysisHelper.js Danfo"]
-    end
-
-    subgraph DB ["PostgreSQL"]
-        Table_Datos[("Tabla datos")]
-        Table_Models[("Tabla modelo_entrenado")]
-    end
-
-    SQL_Node -->|Llama| Tool_Query
-    Data_Node -->|Llama| Tool_Analyze
-
-    Tool_Query -->|Ejecuta SQL| DatosModel
-    Tool_Analyze -->|Ejecuta SQL| DatosModel
-    Tool_Analyze -->|Procesa| AnalysisHelper
-
-    DatosModel -->|Lee Escribe| Table_Datos
-    ModeloEntrenado -->|Lee Escribe| Table_Models
-
-    style Brain fill:#e1f5fe,stroke:#01579b
-    style Tools fill:#fff9c4,stroke:#fbc02d
-    style Data_Layer fill:#e8f5e9,stroke:#2e7d32
-    style DB fill:#f3e5f5,stroke:#7b1fa2
+    Strategy --> Code
+    Code -->|Envía instrucciones| Tool
+    
+    Tool -->|Ejecuta SQL| DB
+    DB -->|Retorna 5000 filas Crudo| Tool
+    
+    Tool -->|Carga en DataFrame| Engine
+    Engine -->|Calcula estadísticas| Engine
+    Engine -->|Genera resumen JSON KB| Tool
+    
+    Tool -->|Retorna SOLO Resumen| Interpret
+    style Brain fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style Muscle fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style DB fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
+    style Engine fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+    style Tool fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px

@@ -59,6 +59,7 @@ export default defineConfig(({ mode }) => {
       extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.scss'],
     },
     server: {
+      host: true,
       port: 8086,
       strictPort: true,
       https: (process.env.SSL_ENABLED === 'true') ? {

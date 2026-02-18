@@ -135,7 +135,7 @@ void settingsReset() {
   strlcpy(mqtt_topic, "Plc/Esp32", sizeof(mqtt_topic));       // Topic MQTT
   strlcpy(mqtt_user, "plcuser", sizeof(mqtt_user));           // Usuario MQTT
   strlcpy(mqtt_password, "plc", sizeof(mqtt_password));       // Contraseña MQTT
-  strlcpy(mqtt_server, "192.168.20.23", sizeof(mqtt_server)); // Servidor MQTT
+  strlcpy(mqtt_server, "192.168.20.20", sizeof(mqtt_server)); // Servidor MQTT
   strlcpy(mqtt_cloud_id, deviceID().c_str(),
           sizeof(mqtt_cloud_id)); // ID Cliente MQTT
   mqtt_port = 8883;               // Puerto MQTT por defecto (Seguro)

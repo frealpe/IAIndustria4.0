@@ -423,26 +423,8 @@ name "fig:Diagrama-Multi-agente"
 
 \end_layout
 
-\begin_layout Enumerate
-El controlador actúa como la puerta de entrada.
- No hace el trabajo pesado (eso es para los Agentes en MultiAgentService
- ), pero es crucial porque prepara el terreno.
-\end_layout
-
-\begin_layout Enumerate
-Recepción (req.body): Express recibe tu POST en /api/chat.
- El cuerpo (req.body) puede traer: message: El texto que escribiste ("analiza
- estas anomalías").
- selectedTests: Array de IDs si marcaste checkboxes en la tabla.
- selectedTable: Nombre de la tabla donde buscar esos IDs.
- file: Si subiste un archivo CSV/JSON.
- Inyección de Contexto (Prompt Engineering): Antes de llamar a la IA, el
- controlador modifica tu mensaje original.
- Si hay selectedTests, le pega al final: " [SISTEMA]: El usuario seleccionó
- los IDs [1, 2, 3] de la tabla 'datos'..." Esto es vital porque el Agente no
- tiene ojos; solo sabe lo que le decimos en el texto.
- Delegación: Llama a MultiAgentService.processQuery(queryText, history) ver
- 
+\begin_layout Standard
+La Grafica 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "fig:Diseño-Multiagente"
@@ -452,9 +434,138 @@ noprefix "false"
 
 \end_inset
 
-.
+ muestra las acciones que cada uno de los bloques representa.
 \end_layout
 
+\begin_layout Enumerate
+MultiAgentService (LangGraph) – Cerebro del sistema
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Este bloque, llamado Brain, es el núcleo inteligente del sistema.
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Orchestrator Node: actúa como coordinador.
+ Decide la intención de la consulta: si es simple (acceso a base de datos)
+ o compleja (requiere análisis de datos).
+\end_layout
+
+\begin_layout Enumerate
+SQL Expert Node: maneja consultas simples directamente sobre la base de
+ datos.
+\end_layout
+
+\begin_layout Enumerate
+Data Scientist Node: se activa cuando se requiere un análisis más avanzado
+ o procesamiento de datos complejo.
+\end_layout
+
+\begin_layout Enumerate
+La flecha SQL_Node -.-> Data_Node representa un “handover”: si una consulta
+ simple necesita análisis adicional, se transfiere automáticamente al agente
+ de datos.
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Enumerate
+McpService – Herramientas de soporte
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Este bloque contiene las herramientas o funciones que usan los agentes:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Tool query_db: ejecuta consultas SQL sobre los modelos de datos.
+\end_layout
+
+\begin_layout Enumerate
+Tool analizar_datos_avanzado: realiza procesamiento y análisis avanzado
+ de los datos.
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Enumerate
+Capas de Datos (Models)
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Aquí se representan los modelos y scripts que gestionan la información:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+DatosModel.js: gestiona la tabla principal de datos (datos).
+\end_layout
+
+\begin_layout Enumerate
+ModeloEntrenado.js: almacena y gestiona modelos de inteligencia artificial
+ previamente entrenados.
+\end_layout
+
+\begin_layout Enumerate
+AnalysisHelper.js (Danfo): lógica para análisis avanzado usando Danfo.js (similar
+ a Pandas en JavaScript).
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Enumerate
+Base de Datos (PostgreSQL)
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Representa el almacenamiento físico de la información:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Tabla datos: contiene la información principal que consultan los agentes.
+\end_layout
+
+\begin_layout Enumerate
+Tabla modelo_entrenado: almacena los modelos de IA entrenados que pueden
+ ser reutilizados.
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Enumerate
+Flujo de información
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+El Orchestrator decide qué agente debe atender la consulta.
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Los agentes llaman a las herramientas según el tipo de operación (consulta
+ simple o análisis avanzado).
+\end_layout
+
+\begin_layout Enumerate
+Las herramientas interactúan con los Modelos (DatosModel y AnalysisHelper)
+ y ejecutan operaciones sobre la Base de Datos.
+\end_layout
+
+\begin_layout Enumerate
+Los datos procesados se retornan hacia los agentes y finalmente al Orchestrator,
+ que devuelve la respuesta al sistema que hizo la solicitud.
+\end_layout
+
+\end_deeper
+\end_deeper
 \begin_layout Standard
 \begin_inset Float figure
 placement H

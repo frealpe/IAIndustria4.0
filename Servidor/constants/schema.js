@@ -7,13 +7,13 @@ const DB_SCHEMA = `
 GENERAL DATABASE SCHEMA
 =============================
 
---- TABLE: Devices ---
+--- TABLE: devices ---
 Contains information about registered IoT devices.
 Columns:
 - id: SERIAL PRIMARY KEY
 - device_uid: VARCHAR(50) UNIQUE -> Logical identifier (e.g., ESP32_123)
 - mac_address: VARCHAR(17) UNIQUE -> Device MAC
-- name: VARCHAR(100) -> Descriptive name (e.g., 'Planta 1')
+- name: VARCHAR(100) -> Descriptive name (e.g. 'Planta1'). JOIN with 'datos' using device_uid to filter by name.
 - description: TEXT
 - is_active: BOOLEAN
 - created_at: TIMESTAMP
@@ -23,8 +23,8 @@ Columns:
 Contains inference results and sensor data from IoT devices.
 Columns:
 - id: SERIAL PRIMARY KEY
-- device_uid: TEXT -> FK to Devices.device_uid
-- device_id: INTEGER -> FK to Devices.id
+- device_uid: TEXT -> FK to devices.device_uid
+- device_id: INTEGER -> FK to devices.id
 - resultado: JSONB -> Main data payload
 - mean: NUMERIC -> Signal average
 - created_at: TIMESTAMPTZ
@@ -44,7 +44,7 @@ Columns:
 Contains IA models trained for each device.
 Columns:
 - id: SERIAL PRIMARY KEY
-- device_uid: VARCHAR(50) -> FK to Devices
+- device_uid: VARCHAR(50) -> FK to devices
 - model_path: TEXT -> File path
 - accuracy: NUMERIC
 - epochs: INTEGER

@@ -1,4 +1,5 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 const env = {
     MODEL_PROVIDER: process.env.MODEL_PROVIDER || 'openai', // 'openai' | 'gemini' | 'groq'

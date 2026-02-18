@@ -1,6 +1,7 @@
 #include <DNSServer.h> // Librería para el servidor DNS (necesario para portal cautivo en modo AP)
 #include <ESPmDNS.h> // Librería para mDNS (permite acceder como nombre.local)
 #include <WiFi.h>    // Librería para gestionar la conexión WiFi (STA y AP)
+#include <time.h>
 
 // Puerto predeterminado para el servidor DNS
 const byte DNSSERVER_PORT = 53;
@@ -54,6 +55,36 @@ void startAP() {
 }
 
 // -------------------------------------------------------------------
+// Sincronizar Hora mediante NTP (Necesario para SSL/TLS)
+// -------------------------------------------------------------------
+void syncTime() {
+  log("[ INFO ] Sincronizando hora mediante NTP...");
+  // Configuración para UTC-5 (basado en el tiempo local del usuario)
+  configTime(-5 * 3600, 0, "pool.ntp.org", "time.google.com");
+
+  struct tm timeinfo;
+  byte retry = 0;
+  while (!getLocalTime(&timeinfo) && retry < 15) {
+    retry++;
+    log("[ WARNING ] Esperando sincronización de hora (Intento " +
+        String(retry) + ")...");
+    vTaskDelay(1000);
+  }
+
+  if (retry < 15) {
+    timeSynced = true;
+    char timeStringBuff[64];
+    strftime(timeStringBuff, sizeof(timeStringBuff), "%Y-%m-%d %H:%M:%S",
+             &timeinfo);
+    log("[ INFO ] Hora sincronizada: " + String(timeStringBuff));
+  } else {
+    timeSynced = false;
+    log("[ ERROR ] No se pudo sincronizar la hora. Se usará modo inseguro para "
+        "MQTT.");
+  }
+}
+
+// -------------------------------------------------------------------
 // Iniciar WIFI Modo Estación (Cliente)
 // Intenta conectarse a una red WiFi existente (router).
 // -------------------------------------------------------------------
@@ -91,13 +122,16 @@ void startClient() {
     blinkRandomSingle(10, 100, WIFILED); // Patrón de led aleatorio
     wifi_mode = WIFI_STA;
     wifi_change = true;
+
+    // Sincronizar hora para validación de certificados SSL
+    syncTime();
+
   } else {
     // ESTADO: Falla de conexión
     log("[ ERROR ] WiFi no conectado");
     blinkRandomSingle(10, 100, WIFILED);
     wifi_change = true;
-    // startAP(); // COMENTADO: No queremos modo AP de emergencia si falla la
-    // conexión inicial
+    startAP(); // Reestablecer: Inicia AP si falla la conexión inicial
   }
 }
 
@@ -107,6 +141,7 @@ void startClient() {
 // -------------------------------------------------------------------
 void wifi_setup() {
   WiFi.disconnect(true);
+
   // 1) Si el usuario forzó el modo AP en la configuración
   if (ap_mode) {
     startAP();
@@ -146,8 +181,6 @@ void wifiLoop() {
     previousMillisWIFI = currentMillis;
 
     // Si falla 2 veces consecutivas (aprox 1 minuto)
-    // Se ha comentado para evitar que salte a modo AP solo
-    /*
     if (w == 2) {
       log("[ INFO ] Cambiando a Modo AP");
       wifi_change = true;
@@ -156,9 +189,6 @@ void wifiLoop() {
     } else {
       log("[ WARNING ] SSID " + String(wifi_ssid) + " desconectado ");
     }
-    */
-    log("[ WARNING ] SSID " + String(wifi_ssid) +
-        " desconectado. Reintentando... (" + String(w) + ")");
   } else {
     // Si está conectado, parpadeo "heartbeat" lento asíncrono
     blinkSingleAsy(10, 500, WIFILED);

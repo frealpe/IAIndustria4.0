@@ -26,6 +26,19 @@ function GptMessage({ text, data }) {
           {/* Si hay data estructurada, la mostramos de forma especial */}
           {data && (typeof data === 'object') ? (
             <div className="agent-structured-response">
+              {console.log("📌 [GptMessage] Data received:", data)}
+              {console.log("📌 [GptMessage] Visualization present:", !!data.visualization)}
+
+              {/* [NEW] Visualization from Data Scientist Agent */}
+              {data.visualization && (
+                <div className="mb-3 border rounded p-2 bg-white">
+                  <div className="fw-bold mb-2 text-primary" style={{ fontSize: '13px' }}>
+                    📊 Visualización Generada
+                  </div>
+                  <VegaChart spec={data.visualization} />
+                </div>
+              )}
+
               {/* Resumen Principal */}
               <div className="mb-3">
                 <Markdown
@@ -72,6 +85,7 @@ function GptMessage({ text, data }) {
                   <VegaChart spec={data.grafica} />
                 </div>
               )}
+
 
               {/* Gráficas Vega-Lite (nuevo formato charts array) */}
               {data.charts && Array.isArray(data.charts) && data.charts.length > 0 && (

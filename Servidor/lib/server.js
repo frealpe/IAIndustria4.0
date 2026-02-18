@@ -82,6 +82,10 @@ class Server {
     }
 
     middlewares() {
+        this.app.use((req, res, next) => {
+            console.log(`🌐 [Request] ${req.method} ${req.url}`);
+            next();
+        });
         this.app.use(cors());
         this.app.use(express.json());
         this.app.use(express.static('public'));
@@ -98,6 +102,14 @@ class Server {
         // IMPORTANTE: usar this.server.listen en lugar de this.app.listen
         this.server.listen(this.port, () => {
             console.log(`🚀 Servidor corriendo en ${this.protocol}://localhost:${this.port}`);
+            
+            // Generar/Actualizar estructura del proyecto al inicio
+            try {
+                const { generateProjectStructure } = require('../scripts/updateProjectStructure');
+                generateProjectStructure();
+            } catch (err) {
+                console.error("⚠️ Error actualizando estructura del proyecto:", err.message);
+            }
         });
     }
 }

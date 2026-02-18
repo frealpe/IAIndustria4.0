@@ -68,11 +68,30 @@ class ChatController {
             
             // Devolvemos la respuesta generada por el agente
             console.log("📤 [ChatController] Sending response to frontend:", text.substring(0, 200) + "...");
-            // Log full response if it contains JSON to debug visualization
-            if (text.includes("```json")) {
-                 console.log("📊 [ChatController] Detected JSON block in response!");
+            
+            let visualization = null;
+            let finalResponseText = text;
+
+            try {
+                // Limpiar posibles bloques de código markdown ```json ... ```
+                const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/```\s*([\s\S]*?)\s*```/);
+                const jsonString = jsonMatch ? jsonMatch[1] : text;
+
+                // Intentar parsear si parece un objeto JSON
+                if (jsonString.trim().startsWith("{")) {
+                    const parsed = JSON.parse(jsonString);
+                    
+                    // Si tiene estructura válida de Data Scientist
+                    if (parsed.response && (parsed.visualization || parsed.data)) {
+                        finalResponseText = parsed.response; // Usar el texto limpio
+                        visualization = parsed.visualization || null;
+                    }
+                }
+            } catch (e) {
+                console.warn("⚠️ [ChatController] Could not parse JSON for visualization:", e.message);
             }
-            res.json({ response: text, data });
+
+            res.json({ response: finalResponseText, data, visualization });
         } catch (error) {
             // Manejo de errores del servidor
             console.error("Chat Error:", error);

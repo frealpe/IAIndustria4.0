@@ -99,7 +99,7 @@ const TableHOC = ({ data, onRowClick, selectedIds = [], onSelectionChange, rende
                         <CTableRow>
                             <CTableHeaderCell scope="col" style={{ width: '40px' }}></CTableHeaderCell>
                             <CTableHeaderCell scope="col" style={{ width: '40px' }}>Sel</CTableHeaderCell>
-                            <CTableHeaderCell scope="col">Dispositivo</CTableHeaderCell> {/* Nueva Columna */}
+                            <CTableHeaderCell scope="col">Dispositivo</CTableHeaderCell>
                             {!hiddenColumns.includes('id') && <CTableHeaderCell scope="col">ID</CTableHeaderCell>}
                             <CTableHeaderCell scope="col">Fecha</CTableHeaderCell>
                             {!hideActions && <CTableHeaderCell scope="col" className="text-end">Acciones</CTableHeaderCell>}
